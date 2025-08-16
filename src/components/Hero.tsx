@@ -9,7 +9,7 @@ const Hero = () => {
       <div className="absolute inset-0 z-0">
         <img 
           src={heroImage} 
-          alt="BKR Catering - Exquisite Indian Catering Services"
+          alt="BKR South Indian Restaurant - Authentic South Indian Cuisine"
           className="w-full h-full object-cover opacity-20"
         />
         <div className="absolute inset-0 bg-gradient-hero opacity-80"></div>
@@ -65,7 +65,7 @@ const Hero = () => {
             
             <div className="bg-gradient-card rounded-2xl p-6 text-center shadow-elegant hover:shadow-glow transition-all duration-300">
               <ChefHat className="w-8 h-8 text-primary mx-auto mb-3" />
-              <div className="text-2xl font-bold text-foreground mb-1">50+</div>
+              <div className="text-2xl font-bold text-foreground mb-1">200+</div>
               <div className="text-sm text-muted-foreground">Menu Items</div>
             </div>
             

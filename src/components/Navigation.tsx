@@ -64,7 +64,7 @@ const Navigation = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background border-t border-border">
-            <a href="#home" className="text-foreground hover:text-primary block px-3 py-2 text-base font-medium">
+                        <a href="#home" className="text-foreground hover:text-primary block px-3 py-2 text-base font-medium">
               Home
             </a>
             <a href="#menu" className="text-foreground hover:text-primary block px-3 py-2 text-base font-medium">

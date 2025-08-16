@@ -2,78 +2,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Search, Star } from "lucide-react";
+import { Filter, Search, Star, ShoppingCart } from "lucide-react";
+import { menuData } from "@/data/menuData";
 
-// Sample menu data with bilingual support
-const menuItems = [
-  {
-    id: 1,
-    name_en: "Traditional Biryani",
-    name_ta: "பாரம்பரிய பிரியாணி",
-    category: "Main Course",
-    subCategory: "Rice Items",
-    isVegetarian: false,
-    price: 180,
-    description: "Fragrant basmati rice cooked with tender meat and aromatic spices",
-    tags: ["popular", "spicy", "traditional"],
-    rating: 4.8,
-    image: "https://images.unsplash.com/photo-1563379091339-03246963d51f?w=400"
-  },
-  {
-    id: 2,
-    name_en: "Sambar Rice",
-    name_ta: "சாம்பார் சாதம்",
-    category: "Main Course", 
-    subCategory: "Rice Items",
-    isVegetarian: true,
-    price: 120,
-    description: "Traditional South Indian comfort food with flavorful lentil curry",
-    tags: ["healthy", "traditional", "comfort"],
-    rating: 4.6,
-    image: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400"
-  },
-  {
-    id: 3,
-    name_en: "Masala Dosa",
-    name_ta: "மசாலா தோசை",
-    category: "Breakfast",
-    subCategory: "South Indian",
-    isVegetarian: true,
-    price: 80,
-    description: "Crispy fermented crepe filled with spiced potato mixture",
-    tags: ["breakfast", "crispy", "popular"],
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400"
-  },
-  {
-    id: 4,
-    name_en: "Chicken Curry",
-    name_ta: "கோழி கறி",
-    category: "Main Course",
-    subCategory: "Curries",
-    isVegetarian: false,
-    price: 200,
-    description: "Rich and spicy chicken curry cooked in traditional Tamil style",
-    tags: ["spicy", "rich", "traditional"],
-    rating: 4.9,
-    image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400"
-  },
-  {
-    id: 5,
-    name_en: "Payasam",
-    name_ta: "பாயசம்",
-    category: "Dessert",
-    subCategory: "Sweets",
-    isVegetarian: true,
-    price: 60,
-    description: "Traditional South Indian sweet pudding made with milk and jaggery",
-    tags: ["sweet", "traditional", "festival"],
-    rating: 4.5,
-    image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400"
-  }
-];
+// Comprehensive menu data with bilingual support
+const getAllMenuItems = () => {
+  const allItems: any[] = [];
+  Object.entries(menuData).forEach(([category, items]) => {
+    items.forEach(item => {
+      allItems.push({
+        ...item,
+        category: category,
+        subCategory: category,
+        description: `Delicious ${item.name_en.toLowerCase()} - a traditional South Indian delicacy`,
+        tags: ["traditional", "south-indian", item.isVegetarian ? "vegetarian" : "non-vegetarian"],
+        rating: 4.5 + Math.random() * 0.5 // Random rating between 4.5-5.0
+      });
+    });
+  });
+  return allItems;
+};
 
-const categories = ["All", "Breakfast", "Main Course", "Dessert"];
+const menuItems = getAllMenuItems();
+
+// Dynamic categories based on menu data
+const categories = ["All", ...Object.keys(menuData)];
 const filters = {
   dietary: ["All", "Vegetarian", "Non-Vegetarian"],
   price: ["All", "Under ₹100", "₹100-200", "Above ₹200"]
@@ -82,10 +35,38 @@ const filters = {
 const MenuSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedDietary, setSelectedDietary] = useState("All");
-  const [selectedPrice, setSelectedPrice] = useState("All");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [language, setLanguage] = useState<'en' | 'ta'>('en');
+  const [cart, setCart] = useState<{[key: number]: number}>({});
+  const [showCart, setShowCart] = useState(false);
+
+  // Cart management functions
+  const addToCart = (itemId: number) => {
+    setCart(prev => ({
+      ...prev,
+      [itemId]: (prev[itemId] || 0) + 1
+    }));
+  };
+
+  const removeFromCart = (itemId: number) => {
+    setCart(prev => {
+      const newCart = { ...prev };
+      if (newCart[itemId] > 1) {
+        newCart[itemId] -= 1;
+      } else {
+        delete newCart[itemId];
+      }
+      return newCart;
+    });
+  };
+
+
+
+  const getCartItemCount = () => {
+    return Object.values(cart).reduce((total, quantity) => total + quantity, 0);
+  };
 
   // Filter menu items
   const filteredItems = menuItems.filter(item => {
@@ -93,14 +74,10 @@ const MenuSection = () => {
     const matchesDietary = selectedDietary === "All" || 
       (selectedDietary === "Vegetarian" && item.isVegetarian) ||
       (selectedDietary === "Non-Vegetarian" && !item.isVegetarian);
-    const matchesPrice = selectedPrice === "All" ||
-      (selectedPrice === "Under ₹100" && item.price < 100) ||
-      (selectedPrice === "₹100-200" && item.price >= 100 && item.price <= 200) ||
-      (selectedPrice === "Above ₹200" && item.price > 200);
     const matchesSearch = item.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.name_ta.includes(searchTerm);
 
-    return matchesCategory && matchesDietary && matchesPrice && matchesSearch;
+    return matchesCategory && matchesDietary && matchesSearch;
   });
 
   return (
@@ -109,11 +86,12 @@ const MenuSection = () => {
         {/* Section Header */}
         <div className="text-center mb-12 animate-slide-up">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-            Our <span className="gradient-text">Authentic</span> Menu
+            Our <span className="gradient-text">Comprehensive</span> South Indian Menu
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Discover our carefully crafted menu featuring traditional South Indian cuisine 
-            prepared with the finest ingredients and authentic recipes.
+            Explore our extensive collection of over 200+ authentic South Indian dishes, 
+            from traditional breakfast items to elaborate lunch and dinner spreads. 
+            Every dish is crafted with authentic recipes and the finest ingredients.
           </p>
         </div>
 
@@ -154,6 +132,20 @@ const MenuSection = () => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCart(!showCart)}
+                className="relative"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Cart
+                {getCartItemCount() > 0 && (
+                  <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">
+                    {getCartItemCount()}
+                  </Badge>
+                )}
+              </Button>
             </div>
           </div>
 
@@ -191,21 +183,7 @@ const MenuSection = () => {
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Price Range</label>
-                  <div className="flex gap-2">
-                    {filters.price.map((option) => (
-                      <Button
-                        key={option}
-                        variant={selectedPrice === option ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSelectedPrice(option)}
-                      >
-                        {option}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+
               </div>
             </div>
           )}
@@ -249,10 +227,43 @@ const MenuSection = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-xl font-bold text-primary">₹{item.price}</div>
-                  <Button size="sm" variant="outline" className="hover:bg-primary hover:text-primary-foreground">
-                    Add to Cart
-                  </Button>
+                  <div className="text-sm text-muted-foreground">
+                    Head Count: {cart[item.id] || 0}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {cart[item.id] ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeFromCart(item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          -
+                        </Button>
+                        <span className="text-sm font-medium min-w-[20px] text-center">
+                          {cart[item.id]}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => addToCart(item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          +
+                        </Button>
+                      </>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="hover:bg-primary hover:text-primary-foreground"
+                        onClick={() => addToCart(item.id)}
+                      >
+                        Add Head Count
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -268,12 +279,93 @@ const MenuSection = () => {
               onClick={() => {
                 setSelectedCategory("All");
                 setSelectedDietary("All");
-                setSelectedPrice("All");
                 setSearchTerm("");
               }}
             >
               Clear Filters
             </Button>
+          </div>
+        )}
+
+        {/* Cart Display */}
+        {showCart && getCartItemCount() > 0 && (
+          <div className="mt-12 bg-secondary-warm rounded-lg p-6">
+            <h3 className="text-2xl font-bold text-foreground mb-4">Your Event Menu Selection</h3>
+            <div className="space-y-4">
+              {Object.entries(cart).map(([itemId, quantity]) => {
+                const item = menuItems.find(i => i.id === parseInt(itemId));
+                if (!item) return null;
+                return (
+                  <div key={itemId} className="flex items-center justify-between p-4 bg-background rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src={item.image} 
+                        alt={language === 'en' ? item.name_en : item.name_ta}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div>
+                        <h4 className="font-semibold text-foreground">
+                          {language === 'en' ? item.name_en : item.name_ta}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">Head Count: {quantity}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeFromCart(item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          -
+                        </Button>
+                        <span className="text-sm font-medium min-w-[20px] text-center">
+                          {quantity}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => addToCart(item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          +
+                        </Button>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-foreground">Head Count: {quantity}</div>
+                        <div className="text-sm text-muted-foreground">Selected for event</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-semibold text-foreground">Total Items: {getCartItemCount()}</div>
+                  <div className="text-2xl font-bold text-primary">Total Head Count: {getCartItemCount()}</div>
+                </div>
+                <div className="mt-4 flex gap-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setCart({})}
+                    className="flex-1"
+                  >
+                    Clear All
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    className="flex-1"
+                    onClick={() => {
+                      // Here you can integrate with the event planner
+                      alert(`Selected ${getCartItemCount()} items for your event! Total Head Count: ${getCartItemCount()}`);
+                    }}
+                  >
+                    Proceed to Event Planning
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
