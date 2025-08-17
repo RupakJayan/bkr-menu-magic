@@ -1,650 +1,623 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, MapPin, Clock, IndianRupee, Heart, FileText, ChefHat } from "lucide-react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { menuData, mealCategories } from "@/data/menuData";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Checkbox } from './ui/checkbox';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { 
+  Calendar, 
+  Clock, 
+  Users, 
+  FileText, 
+  Download, 
+  Share2,
+  Plus,
+  Minus,
+  Edit3,
+  Trash2
+} from 'lucide-react';
+import { 
+  eventSessions, 
+  categoryMapping, 
+  defaultHeadCounts,
+  type Session,
+  type SessionSelection 
+} from '../data/eventMenuData';
+import { menuData } from '../data/menuData';
+import jsPDF from 'jspdf';
 
-// Event types
-const eventTypes = [
-  { id: "wedding", name: "Wedding", icon: "💒", color: "text-pink-600", popular: true },
-  { id: "corporate", name: "Corporate", icon: "🏢", color: "text-blue-600", popular: true },
-  { id: "birthday", name: "Birthday", icon: "🎂", color: "text-purple-600", popular: false },
-  { id: "baby-shower", name: "Baby Shower", icon: "🍼", color: "text-green-600", popular: false },
-  { id: "engagement", name: "Engagement", icon: "💍", color: "text-yellow-600", popular: true },
-  { id: "housewarming", name: "Housewarming", icon: "🏠", color: "text-orange-600", popular: false }
-];
+interface EventPlannerProps {
+  language: 'en' | 'ta';
+}
 
-// Meal types with time slots
-const mealTypes = [
-  { id: "breakfast", name: "Morning Breakfast", time: "6:00 AM - 10:00 AM", icon: "🌅" },
-  { id: "lunch", name: "Lunch", time: "12:00 PM - 3:00 PM", icon: "☀️" },
-  { id: "dinner", name: "Dinner", time: "7:00 PM - 10:00 PM", icon: "🌙" },
-  { id: "snacks", name: "Evening Snacks", time: "4:00 PM - 6:00 PM", icon: "🍵" }
-];
+const EventPlanner: React.FC<EventPlannerProps> = ({ language }) => {
+  const [selectedSessions, setSelectedSessions] = useState<SessionSelection[]>([]);
+  const [eventDate, setEventDate] = useState('');
+  const [eventName, setEventName] = useState('');
+  const [activeTab, setActiveTab] = useState('planning');
 
-// Menu items organized by meal type using comprehensive menu data
-const getMenuItemsForMeal = (mealId: string) => {
-  const categories = mealCategories[mealId as keyof typeof mealCategories] || [];
-  const items: any[] = [];
-  
-  categories.forEach(category => {
-    if (menuData[category]) {
-      menuData[category].forEach(item => {
-        items.push({
-          ...item,
-          id: item.id,
-          name_en: item.name_en,
-          name_ta: item.name_ta,
-          price: item.price,
-          isVegetarian: item.isVegetarian,
-          image: item.image
-        });
-      });
-    }
-  });
-  
-  return items;
-};
+  // Initialize sessions with default values
+  useEffect(() => {
+    const initialSessions = eventSessions.map(session => ({
+      sessionId: session.id,
+      items: [],
+      headCount: defaultHeadCounts[session.id as keyof typeof defaultHeadCounts] || 25,
+      timing: session.time
+    }));
+    setSelectedSessions(initialSessions);
+  }, []);
 
-const menuItemsByMeal = {
-  breakfast: getMenuItemsForMeal("Morning Breakfast"),
-  lunch: getMenuItemsForMeal("Lunch"),
-  dinner: getMenuItemsForMeal("Dinner"),
-  snacks: getMenuItemsForMeal("Evening Snacks")
-};
-
-const EventPlanner = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedEventType, setSelectedEventType] = useState("");
-  const [guestCount, setGuestCount] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [selectedMeals, setSelectedMeals] = useState<string[]>([]);
-  const [menuSelections, setMenuSelections] = useState<{[mealId: string]: {[itemId: number]: number}}>({});
-  const [language, setLanguage] = useState<'en' | 'ta'>('en');
-
-  const totalSteps = 4 + selectedMeals.length;
-
-  const handleMealToggle = (mealId: string) => {
-    setSelectedMeals(prev => 
-      prev.includes(mealId) 
-        ? prev.filter(id => id !== mealId)
-        : [...prev, mealId]
-    );
-  };
-
-  const addMenuItem = (mealId: string, itemId: number) => {
-    setMenuSelections(prev => ({
-      ...prev,
-      [mealId]: {
-        ...(prev[mealId] || {}),
-        [itemId]: (prev[mealId]?.[itemId] || 0) + 1
+  const addItemToSession = (sessionId: string, itemId: string) => {
+    setSelectedSessions(prev => prev.map(session => {
+      if (session.sessionId === sessionId) {
+        const existingItem = session.items.find(item => item.itemId === itemId);
+        if (existingItem) {
+          return {
+            ...session,
+            items: session.items.map(item => 
+              item.itemId === itemId 
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            )
+          };
+        } else {
+          return {
+            ...session,
+            items: [...session.items, { itemId, quantity: 1 }]
+          };
+        }
       }
+      return session;
     }));
   };
 
-  const removeMenuItem = (mealId: string, itemId: number) => {
-    setMenuSelections(prev => {
-      const newSelections = { ...prev };
-      if (newSelections[mealId]?.[itemId] > 1) {
-        newSelections[mealId][itemId] -= 1;
-      } else if (newSelections[mealId]) {
-        delete newSelections[mealId][itemId];
-        if (Object.keys(newSelections[mealId]).length === 0) {
-          delete newSelections[mealId];
+  const removeItemFromSession = (sessionId: string, itemId: string) => {
+    setSelectedSessions(prev => prev.map(session => {
+      if (session.sessionId === sessionId) {
+        const existingItem = session.items.find(item => item.itemId === itemId);
+        if (existingItem && existingItem.quantity > 1) {
+          return {
+            ...session,
+            items: session.items.map(item => 
+              item.itemId === itemId 
+                ? { ...item, quantity: item.quantity - 1 }
+                : item
+            )
+          };
+        } else {
+          return {
+            ...session,
+            items: session.items.filter(item => item.itemId !== itemId)
+          };
         }
       }
-      return newSelections;
-    });
+      return session;
+    }));
   };
 
-  const getMealTotal = (mealId: string) => {
-    const selections = menuSelections[mealId] || {};
-    return Object.entries(selections).reduce((total, [itemId, quantity]) => {
-      return total + quantity;
-    }, 0);
+  const updateHeadCount = (sessionId: string, count: number) => {
+    setSelectedSessions(prev => prev.map(session => 
+      session.sessionId === sessionId 
+        ? { ...session, headCount: Math.max(1, count) }
+        : session
+    ));
   };
 
-  const getTotalHeadCount = () => {
-    return Object.keys(menuSelections).reduce((total, mealId) => {
-      return total + getMealTotal(mealId);
-    }, 0);
+  const updateTiming = (sessionId: string, timing: string) => {
+    setSelectedSessions(prev => prev.map(session => 
+      session.sessionId === sessionId 
+        ? { ...session, timing }
+        : session
+    ));
   };
 
-  const getTotalItems = () => {
-    return Object.values(menuSelections).reduce((total, mealSelections) => {
-      return total + Object.values(mealSelections).reduce((mealTotal, quantity) => mealTotal + quantity, 0);
-    }, 0);
+  const getSessionItems = (sessionId: string) => {
+    const session = selectedSessions.find(s => s.sessionId === sessionId);
+    return session?.items || [];
   };
 
-  const nextStep = () => {
-    if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
-  const canProceedToNext = () => {
-    switch (currentStep) {
-      case 1: return selectedEventType !== "";
-      case 2: return guestCount !== "" && eventDate !== "";
-      case 3: return selectedMeals.length > 0;
-      default: return true;
+  const getItemDetails = (itemId: string) => {
+    for (const category of Object.values(menuData)) {
+      const item = category.find(i => i.id === itemId);
+      if (item) return item;
     }
+    return null;
   };
 
-  const generatePDF = async () => {
-    try {
-      const pdf = new jsPDF();
-      
-      // Add watermark
-      pdf.setTextColor(200, 200, 200);
-      pdf.setFontSize(60);
-      pdf.text("BKR CATERING", 105, 140, { align: "center", angle: 45 });
-      
-      // Reset text color for content
-      pdf.setTextColor(0, 0, 0);
-      
-      // Add company header with logo placeholder
-      pdf.setFontSize(28);
-      pdf.setTextColor(139, 69, 19); // Brown color for BKR branding
-      pdf.text("BKR CATERING", 105, 25, { align: "center" });
-      
-      pdf.setFontSize(14);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("Anaimalai, Pollachi • 8012686883", 105, 35, { align: "center" });
-      
-      // Add event details box (similar to your PDF format)
-      pdf.setFontSize(16);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text("Event Details", 20, 55);
-      
-      // Draw box around event details
-      pdf.rect(20, 60, 170, 40);
-      
-      pdf.setFontSize(12);
-      pdf.text(`Event Type: ${eventTypes.find(t => t.id === selectedEventType)?.name}`, 25, 75);
-      pdf.text(`Number of Guests: ${guestCount}`, 25, 85);
-      pdf.text(`Event Date: ${eventDate}`, 25, 95);
-      pdf.text(`Selected Meals: ${selectedMeals.map(id => mealTypes.find(m => m.id === id)?.name).join(", ")}`, 25, 105);
-      
-      // Add menu selections by meal
-      let yPosition = 120;
-      selectedMeals.forEach((mealId) => {
-        const meal = mealTypes.find(m => m.id === mealId);
-        const selections = menuSelections[mealId] || {};
+  const generateStructuredMenu = () => {
+    let menu = '';
+    
+    selectedSessions.forEach(session => {
+      if (session.items.length > 0) {
+        const sessionInfo = eventSessions.find(s => s.id === session.sessionId);
+        const sessionName = language === 'en' ? sessionInfo?.name_en : sessionInfo?.name_ta;
+        const time = session.timing;
+        const headCount = session.headCount;
         
-        if (Object.keys(selections).length > 0) {
-          pdf.setFontSize(16);
-          pdf.setTextColor(139, 69, 19); // Brown color
-          pdf.text(`${meal?.icon} ${meal?.name}`, 20, yPosition);
-          yPosition += 10;
-          
-          // Add head count for this meal
-          const mealHeadCount = getMealTotal(mealId);
-          pdf.setFontSize(12);
-          pdf.text(`Head Count: ${mealHeadCount}`, 150, yPosition - 10);
-          
-          pdf.setFontSize(10);
-          pdf.setTextColor(0, 0, 0);
-          let itemCount = 1;
-          Object.entries(selections).forEach(([itemId, quantity]) => {
-            const menuItems = menuItemsByMeal[mealId as keyof typeof menuItemsByMeal] || [];
-            const item = menuItems.find(i => i.id === parseInt(itemId));
-            pdf.text(`${itemCount}. ${item?.name_en} (${item?.name_ta})`, 25, yPosition);
-            yPosition += 7;
-            itemCount++;
-          });
-          
-          yPosition += 10;
-        }
-      });
-      
-      // Add total summary
-      pdf.setFontSize(18);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text("Event Summary", 20, yPosition);
-      yPosition += 15;
-      
-      pdf.setFontSize(12);
-      pdf.text(`Total Menu Items Selected: ${getTotalItems()}`, 20, yPosition);
-      yPosition += 10;
-      pdf.text(`Total Head Count: ${getTotalHeadCount()}`, 20, yPosition);
-      
-      // Add footer
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("Thank you for choosing BKR Catering!", 105, 280, { align: "center" });
-      pdf.text("Generated on: " + new Date().toLocaleDateString(), 105, 285, { align: "center" });
-      
-      // Save the PDF
-      pdf.save(`BKR_Event_${selectedEventType}_${eventDate}.pdf`);
-      
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Error generating PDF. Please try again.");
-    }
+        menu += `${sessionName} @ ${time} – NOS: ${headCount}\n\n`;
+        
+        // Group items by category
+        const categorizedItems: { [key: string]: string[] } = {};
+        
+        session.items.forEach(selectedItem => {
+          const item = getItemDetails(selectedItem.itemId);
+          if (item) {
+            // Find the category by searching through menuData
+            let itemCategory = '';
+            for (const [catName, catItems] of Object.entries(menuData)) {
+              if (catItems.find(catItem => catItem.id === selectedItem.itemId)) {
+                itemCategory = catName;
+                break;
+              }
+            }
+            
+            if (!categorizedItems[itemCategory]) {
+              categorizedItems[itemCategory] = [];
+            }
+            const itemName = language === 'en' ? item.name_en : item.name_ta;
+            categorizedItems[itemCategory].push(itemName);
+          }
+        });
+        
+        // Output categorized items
+        Object.entries(categorizedItems).forEach(([category, items]) => {
+          if (items.length > 0) {
+            menu += `${category}: ${items.join(', ')}\n`;
+          }
+        });
+        
+        menu += '\n';
+      }
+    });
+    
+    return menu;
   };
 
-  const renderStepContent = () => {
-    if (currentStep === 1) {
-      return (
-            <div className="space-y-6 animate-slide-up">
-              <div className="text-center">
-                <h3 className="text-2xl font-semibold text-foreground mb-2">What's the occasion?</h3>
-                <p className="text-muted-foreground">Choose your event type to get personalized recommendations</p>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {eventTypes.map((type) => (
-                  <Card
-                    key={type.id}
-                    className={`p-4 cursor-pointer transition-all duration-300 hover:scale-105 ${
-                      selectedEventType === type.id 
-                        ? 'bg-primary text-primary-foreground shadow-glow' 
-                        : 'bg-background hover:bg-secondary-warm'
-                    }`}
-                    onClick={() => setSelectedEventType(type.id)}
-                  >
-                    <div className="text-center space-y-2">
-                      <div className="text-2xl">{type.icon}</div>
-                      <div className="font-semibold">{type.name}</div>
-                      {type.popular && (
-                        <Badge variant="outline" className="text-xs">Popular</Badge>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-      );
+  const exportMenu = () => {
+    const menu = generateStructuredMenu();
+    const blob = new Blob([menu], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `event-menu-${eventDate || 'planning'}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPosition = 20;
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(language === 'en' ? 'Event Menu Plan' : 'நிகழ்வு மெனு திட்டம்', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // Event details
+    if (eventName || eventDate) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      if (eventName) {
+        doc.text(`${language === 'en' ? 'Event: ' : 'நிகழ்வு: '}${eventName}`, margin, yPosition);
+        yPosition += 10;
+      }
+      if (eventDate) {
+        doc.text(`${language === 'en' ? 'Date: ' : 'தேதி: '}${eventDate}`, margin, yPosition);
+        yPosition += 15;
+      }
     }
 
-    if (currentStep === 2) {
-      return (
-            <div className="space-y-6 animate-slide-up">
-              <div className="text-center">
-                <h3 className="text-2xl font-semibold text-foreground mb-2">Event Details</h3>
-                <p className="text-muted-foreground">Tell us about your guest count and preferred date</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    <Users className="inline w-4 h-4 mr-1" />
-                    Number of Guests
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="e.g., 150"
-                    value={guestCount}
-                    onChange={(e) => setGuestCount(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-transparent"
-                    min="1"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    <Calendar className="inline w-4 h-4 mr-1" />
-                    Event Date
-                  </label>
-                  <input
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:border-transparent"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-secondary-warm rounded-lg p-4">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>Service available in Pollachi and surrounding areas</span>
-                </div>
-              </div>
-            </div>
-      );
-    }
-
-    if (currentStep === 3) {
-      return (
-            <div className="space-y-6 animate-slide-up">
-              <div className="text-center">
-                <h3 className="text-2xl font-semibold text-foreground mb-2">Choose Your Meals</h3>
-                <p className="text-muted-foreground">Select the meal types for your event</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                {mealTypes.map((meal) => (
-                  <Card
-                    key={meal.id}
-                    className={`p-4 cursor-pointer transition-all duration-300 ${
-                      selectedMeals.includes(meal.id)
-                        ? 'bg-primary text-primary-foreground shadow-glow'
-                        : 'bg-background hover:bg-secondary-warm'
-                    }`}
-                    onClick={() => handleMealToggle(meal.id)}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">{meal.name}</h4>
-                    <span className="text-2xl">{meal.icon}</span>
-                      </div>
-                      <p className="text-sm opacity-90">{meal.time}</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              {selectedMeals.length > 0 && (
-                <div className="text-center text-sm text-muted-foreground">
-                  {selectedMeals.length} meal type(s) selected
-                </div>
-              )}
-            </div>
-      );
-    }
-
-    // Menu selection steps for each meal
-    if (currentStep > 3 && currentStep <= 3 + selectedMeals.length) {
-      const mealIndex = currentStep - 4;
-      const mealId = selectedMeals[mealIndex];
-      const meal = mealTypes.find(m => m.id === mealId);
-      const menuItems = menuItemsByMeal[mealId as keyof typeof menuItemsByMeal] || [];
-      const selections = menuSelections[mealId] || {};
-
-      return (
-            <div className="space-y-6 animate-slide-up">
-              <div className="text-center">
-            <h3 className="text-2xl font-semibold text-foreground mb-2">
-              {meal?.icon} {meal?.name} Menu Selection
-            </h3>
-            <p className="text-muted-foreground">
-              Select items for {guestCount} guests • {meal?.time}
-            </p>
-          </div>
-
-          {/* Language Toggle */}
-          <div className="flex justify-center gap-2">
-            <Button
-              variant={language === 'en' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setLanguage('en')}
-            >
-              English
-            </Button>
-            <Button
-              variant={language === 'ta' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setLanguage('ta')}
-            >
-              தமிழ்
-            </Button>
-              </div>
-
-          {/* Menu Items Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {menuItems.map((item) => (
-              <Card key={item.id} className="p-4">
-                <div className="flex items-start gap-4">
-                  <img 
-                    src={item.image} 
-                    alt={language === 'en' ? item.name_en : item.name_ta}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground">
-                      {language === 'en' ? item.name_en : item.name_ta}
-                    </h4>
-                    {language === 'ta' && (
-                      <p className="text-sm text-muted-foreground">{item.name_en}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant={item.isVegetarian ? "default" : "secondary"} className="text-xs">
-                        {item.isVegetarian ? "🟢 Veg" : "🔴 Non-Veg"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selections[item.id] ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => removeMenuItem(mealId, item.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          -
-                        </Button>
-                        <span className="text-sm font-medium min-w-[20px] text-center">
-                          {selections[item.id]}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => addMenuItem(mealId, item.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          +
-                        </Button>
-                      </>
-                    ) : (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => addMenuItem(mealId, item.id)}
-                      >
-                        Add
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-                     {/* Meal Summary */}
-           {Object.keys(selections).length > 0 && (
-             <Card className="bg-gradient-card p-4">
-               <div className="flex items-center justify-between">
-                 <div>
-                   <h4 className="font-semibold text-foreground">Selected Items: {Object.values(selections).reduce((a, b) => a + b, 0)}</h4>
-                   <p className="text-sm text-muted-foreground">
-                     {Object.entries(selections).map(([itemId, quantity]) => {
-                       const item = menuItems.find(i => i.id === parseInt(itemId));
-                       return `${item?.name_en} (${quantity})`;
-                     }).join(", ")}
-                   </p>
-                 </div>
-                 <div className="text-right">
-                   <div className="text-lg font-bold text-primary">Head Count: {getMealTotal(mealId)}</div>
-                   <div className="text-sm text-muted-foreground">For this meal</div>
-                 </div>
-               </div>
-             </Card>
-           )}
-
-           {/* Skip Meal Option */}
-           {Object.keys(selections).length === 0 && (
-             <Card className="bg-muted/50 p-4 text-center">
-               <p className="text-muted-foreground mb-3">
-                 No items selected for this meal. You can skip this meal or select items above.
-               </p>
-               <Button 
-                 variant="outline" 
-                 size="sm"
-                 onClick={() => nextStep()}
-               >
-                 Skip This Meal
-               </Button>
-             </Card>
-           )}
-        </div>
-      );
-    }
-
-    // Final summary step
-    if (currentStep === totalSteps) {
-      return (
-        <div className="space-y-6 animate-slide-up">
-          <div className="text-center">
-            <h3 className="text-2xl font-semibold text-foreground mb-2">Event Summary & Confirmation</h3>
-            <p className="text-muted-foreground">Review your event details and menu selections</p>
-                </div>
-
-                {/* Event Summary */}
-                <Card className="bg-gradient-card p-6">
-            <h4 className="font-semibold text-foreground mb-4">Event Details</h4>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Event Type:</span>
-                      <span className="font-medium">
-                        {eventTypes.find(t => t.id === selectedEventType)?.name} 
-                        {eventTypes.find(t => t.id === selectedEventType)?.icon}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Guests:</span>
-                      <span className="font-medium">{guestCount} people</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Date:</span>
-                      <span className="font-medium">{eventDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Meals:</span>
-                      <span className="font-medium">
-                        {selectedMeals.map(id => mealTypes.find(m => m.id === id)?.name).join(", ")}
-                      </span>
-                    </div>
-            </div>
-          </Card>
-
-          {/* Menu Summary */}
-          <Card className="p-6">
-            <h4 className="font-semibold text-foreground mb-4">Menu Selections</h4>
-            <div className="space-y-4">
-              {selectedMeals.map((mealId) => {
-                const meal = mealTypes.find(m => m.id === mealId);
-                const selections = menuSelections[mealId] || {};
-                const mealTotal = getMealTotal(mealId);
-                
-                if (Object.keys(selections).length === 0) return null;
-                
-                return (
-                  <div key={mealId} className="border-b border-border pb-3 last:border-b-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-foreground">{meal?.icon} {meal?.name}</h5>
-                      <span className="text-sm font-medium text-primary">₹{mealTotal}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {Object.entries(selections).map(([itemId, quantity]) => {
-                        const menuItems = menuItemsByMeal[mealId as keyof typeof menuItemsByMeal] || [];
-                        const item = menuItems.find(i => i.id === parseInt(itemId));
-                        return `${item?.name_en} (${quantity})`;
-                      }).join(", ")}
-                      </div>
-                  </div>
-                );
-              })}
-            </div>
+    // Menu content
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    
+    selectedSessions.forEach(session => {
+      if (session.items.length > 0) {
+        const sessionInfo = eventSessions.find(s => s.id === session.sessionId);
+        const sessionName = language === 'en' ? sessionInfo?.name_en : sessionInfo?.name_ta;
+        const time = session.timing;
+        const headCount = session.headCount;
+        
+        // Check if we need a new page
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        // Session header
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${sessionName} @ ${time} – NOS: ${headCount}`, margin, yPosition);
+        yPosition += 8;
+        
+        // Group items by category
+        const categorizedItems: { [key: string]: string[] } = {};
+        
+        session.items.forEach(selectedItem => {
+          const item = getItemDetails(selectedItem.itemId);
+          if (item) {
+            // Find the category by searching through menuData
+            let itemCategory = '';
+            for (const [catName, catItems] of Object.entries(menuData)) {
+              if (catItems.find(catItem => catItem.id === selectedItem.itemId)) {
+                itemCategory = catName;
+                break;
+              }
+            }
             
-            <div className="border-t border-border pt-4 mt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-lg font-semibold text-foreground">Total Items: {getTotalItems()}</div>
-                  <div className="text-sm text-muted-foreground">Across all meals</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">Total Head Count: {getTotalHeadCount()}</div>
-                  <div className="text-sm text-muted-foreground">For your event</div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      );
+            if (!categorizedItems[itemCategory]) {
+              categorizedItems[itemCategory] = [];
+            }
+            const itemName = language === 'en' ? item.name_en : item.name_ta;
+            categorizedItems[itemCategory].push(itemName);
+          }
+        });
+        
+        // Output categorized items
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        Object.entries(categorizedItems).forEach(([category, items]) => {
+          if (items.length > 0) {
+            if (yPosition > 250) {
+              doc.addPage();
+              yPosition = 20;
+            }
+            doc.text(`${category}: ${items.join(', ')}`, margin + 5, yPosition);
+            yPosition += 6;
+          }
+        });
+        
+        yPosition += 10;
+      }
+    });
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Generated by BKR Catering - ${new Date().toLocaleDateString()}`, pageWidth / 2, 280, { align: 'center' });
+
+    // Save the PDF
+    doc.save(`event-menu-${eventDate || 'planning'}.pdf`);
+  };
+
+  const shareMenu = () => {
+    const menu = generateStructuredMenu();
+    if (navigator.share) {
+      navigator.share({
+        title: language === 'en' ? 'Event Menu Plan' : 'நிகழ்வு மெனு திட்டம்',
+        text: menu,
+      });
+    } else {
+      navigator.clipboard.writeText(menu);
+      alert(language === 'en' ? 'Menu copied to clipboard!' : 'மெனு கிளிப்போர்டுக்கு நகலெடுக்கப்பட்டது!');
     }
   };
 
   return (
-    <section id="events" className="py-20 bg-gradient-warm">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12 animate-slide-up">
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-            Plan Your <span className="gradient-text">Perfect</span> Event
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Create your dream event with our step-by-step planner. Select your menu items 
-            for each meal and get a complete event summary.
-          </p>
-        </div>
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-foreground">
+          {language === 'en' ? 'Event Menu Planner' : 'நிகழ்வு மெனு திட்டமிடுநர்'}
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          {language === 'en' 
+            ? 'Plan your complete event menu with session-based organization'
+            : 'அமர்வு அடிப்படையிலான அமைப்புடன் உங்கள் முழு நிகழ்வு மெனுவைத் திட்டமிடுங்கள்'
+          }
+        </p>
+      </div>
 
-        {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center space-x-2 overflow-x-auto">
-            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
-              <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold
-                  ${currentStep >= step 
-                    ? 'bg-primary text-primary-foreground shadow-glow' 
-                    : 'bg-muted text-muted-foreground'}`}>
-                  {step}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="planning">
+            {language === 'en' ? 'Menu Planning' : 'மெனு திட்டமிடல்'}
+          </TabsTrigger>
+          <TabsTrigger value="overview">
+            {language === 'en' ? 'Menu Overview' : 'மெனு கண்ணோட்டம்'}
+          </TabsTrigger>
+          <TabsTrigger value="export">
+            {language === 'en' ? 'Export & Share' : 'ஏற்றுமதி & பகிர்'}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="planning" className="space-y-6">
+          {/* Event Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                {language === 'en' ? 'Event Details' : 'நிகழ்வு விவரங்கள்'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="eventName">
+                    {language === 'en' ? 'Event Name' : 'நிகழ்வு பெயர்'}
+                  </Label>
+                  <Input
+                    id="eventName"
+                    value={eventName}
+                    onChange={(e) => setEventName(e.target.value)}
+                    placeholder={language === 'en' ? 'Enter event name' : 'நிகழ்வு பெயரை உள்ளிடவும்'}
+                  />
                 </div>
-                {step < totalSteps && (
-                  <div className={`w-8 h-0.5 mx-1 ${currentStep > step ? 'bg-primary' : 'bg-muted'}`}></div>
-                )}
+                <div>
+                  <Label htmlFor="eventDate">
+                    {language === 'en' ? 'Event Date' : 'நிகழ்வு தேதி'}
+                  </Label>
+                  <Input
+                    id="eventDate"
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                  />
+                </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Session-based Menu Selection */}
+          <div className="space-y-6">
+            {eventSessions.map((session) => (
+              <Card key={session.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5" />
+                      <span>{language === 'en' ? session.name_en : session.name_ta}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor={`timing-${session.id}`}>
+                          {language === 'en' ? 'Time:' : 'நேரம்:'}
+                        </Label>
+                        <Input
+                          id={`timing-${session.id}`}
+                          value={selectedSessions.find(s => s.sessionId === session.id)?.timing || session.time}
+                          onChange={(e) => updateTiming(session.id, e.target.value)}
+                          className="w-24"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        <Label htmlFor={`headcount-${session.id}`}>
+                          {language === 'en' ? 'Head Count:' : 'தலை எண்ணிக்கை:'}
+                        </Label>
+                        <Input
+                          id={`headcount-${session.id}`}
+                          type="number"
+                          min="1"
+                          value={selectedSessions.find(s => s.sessionId === session.id)?.headCount || 25}
+                          onChange={(e) => updateHeadCount(session.id, parseInt(e.target.value))}
+                          className="w-20"
+                        />
+                      </div>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {Object.entries(categoryMapping).map(([categoryName, menuCategories]) => {
+                      const availableItems = menuCategories.flatMap(cat => 
+                        menuData[cat as keyof typeof menuData] || []
+                      );
+                      
+                      if (availableItems.length === 0) return null;
+                      
+                      return (
+                        <AccordionItem key={categoryName} value={categoryName}>
+                          <AccordionTrigger className="text-left">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <span className="font-medium">{categoryName}</span>
+                              <Badge variant="secondary">
+                                {availableItems.length} {language === 'en' ? 'items' : 'பொருட்கள்'}
+                              </Badge>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+                              {availableItems.map((item) => {
+                                const isSelected = getSessionItems(session.id).some(
+                                  selected => selected.itemId === item.id
+                                );
+                                const selectedItem = getSessionItems(session.id).find(
+                                  selected => selected.itemId === item.id
+                                );
+                                
+                                return (
+                                  <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                      <Checkbox
+                                        checked={isSelected}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) {
+                                            addItemToSession(session.id, item.id);
+                                          } else {
+                                            removeItemFromSession(session.id, item.id);
+                                          }
+                                        }}
+                                      />
+                                      <div>
+                                        <p className="font-medium text-sm">
+                                          {language === 'en' ? item.name_en : item.name_ta}
+                                        </p>
+                                        {language === 'ta' && (
+                                          <p className="text-xs text-muted-foreground">{item.name_en}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => removeItemFromSession(session.id, item.id)}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <Minus className="w-3 h-3" />
+                                        </Button>
+                                        <span className="text-sm font-medium min-w-[20px] text-center">
+                                          {selectedItem?.quantity || 1}
+                                        </span>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => addItemToSession(session.id, item.id)}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <Plus className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                </CardContent>
+              </Card>
             ))}
           </div>
-          <div className="text-center mt-2 text-sm text-muted-foreground">
-            Step {currentStep} of {totalSteps}
-          </div>
-        </div>
+        </TabsContent>
 
-        {/* Step Content */}
-        <Card className="p-6 md:p-8 shadow-elegant">
-          {renderStepContent()}
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                {language === 'en' ? 'Complete Menu Overview' : 'முழு மெனு கண்ணோட்டம்'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedSessions.map((session) => {
+                const sessionInfo = eventSessions.find(s => s.id === session.sessionId);
+                const sessionName = language === 'en' ? sessionInfo?.name_en : sessionInfo?.name_ta;
+                const items = getSessionItems(session.sessionId);
+                
+                if (items.length === 0) return null;
+                
+                return (
+                  <div key={session.sessionId} className="mb-6 p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xl font-semibold text-foreground">
+                        {sessionName} @ {session.timing} – NOS: {session.headCount}
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {Object.entries(categoryMapping).map(([categoryName, menuCategories]) => {
+                        const categoryItems = items.filter(selectedItem => {
+                          const item = getItemDetails(selectedItem.itemId);
+                          if (!item) return false;
+                          
+                          // Find the category by searching through menuData
+                          for (const [catName, catItems] of Object.entries(menuData)) {
+                            if (catItems.find(catItem => catItem.id === selectedItem.itemId)) {
+                              return menuCategories.includes(catName);
+                            }
+                          }
+                          return false;
+                        });
+                        
+                        if (categoryItems.length === 0) return null;
+                        
+                        return (
+                          <div key={categoryName} className="ml-4">
+                            <span className="font-medium text-foreground">{categoryName}: </span>
+                            <span className="text-muted-foreground">
+                              {categoryItems.map(selectedItem => {
+                                const item = getItemDetails(selectedItem.itemId);
+                                const itemName = language === 'en' ? item?.name_en : item?.name_ta;
+                                return itemName;
+                              }).join(', ')}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {selectedSessions.every(session => session.items.length === 0) && (
+                <div className="text-center py-8 text-muted-foreground">
+                  {language === 'en' 
+                    ? 'No items selected yet. Go to Menu Planning to start building your event menu.'
+                    : 'இன்னும் எந்த பொருட்களும் தேர்ந்தெடுக்கப்படவில்லை. உங்கள் நிகழ்வு மெனுவை உருவாக்கத் தொடங்க மெனு திட்டமிடலுக்குச் செல்லுங்கள்.'
+                  }
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-            >
-              Previous
-            </Button>
-
-            {currentStep < totalSteps ? (
-              <Button
-                variant="hero"
-                onClick={nextStep}
-                disabled={!canProceedToNext()}
-              >
-                Next Step
-              </Button>
-            ) : (
-              <Button
-                variant="glow"
-                onClick={generatePDF}
-                className="group"
-              >
-                <FileText className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                Generate Event PDF
-              </Button>
-            )}
-          </div>
-        </Card>
-      </div>
-    </section>
+        <TabsContent value="export" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="w-5 h-5" />
+                {language === 'en' ? 'Export & Share Menu' : 'மெனுவை ஏற்றுமதி செய்து பகிரவும்'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <Button 
+                  onClick={exportPDF} 
+                  className="w-full"
+                  disabled={selectedSessions.every(session => session.items.length === 0)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Download as PDF' : 'PDF ஆக பதிவிறக்கவும்'}
+                </Button>
+                
+                <Button 
+                  onClick={exportMenu} 
+                  variant="outline"
+                  className="w-full"
+                  disabled={selectedSessions.every(session => session.items.length === 0)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Download as Text File' : 'உரை கோப்பாக பதிவிறக்கவும்'}
+                </Button>
+                
+                <Button 
+                  onClick={shareMenu} 
+                  variant="outline" 
+                  className="w-full"
+                  disabled={selectedSessions.every(session => session.items.length === 0)}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  {language === 'en' ? 'Share Menu' : 'மெனுவை பகிரவும்'}
+                </Button>
+              </div>
+              
+              {selectedSessions.some(session => session.items.length > 0) && (
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">
+                    {language === 'en' ? 'Preview:' : 'முன்னோட்டம்:'}
+                  </h4>
+                  <pre className="text-sm whitespace-pre-wrap text-muted-foreground">
+                    {generateStructuredMenu()}
+                  </pre>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

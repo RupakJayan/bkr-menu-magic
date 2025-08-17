@@ -9,16 +9,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-deep shadow-elegant hover:shadow-glow",
-        hero: "bg-gradient-hero text-primary-foreground hover:scale-105 shadow-glow font-semibold",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary-warm",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-elegant hover:shadow-glow hover:scale-105",
+        hero: "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground hover:scale-105 shadow-glow font-semibold",
+        warm: "bg-gradient-to-r from-secondary to-bg-warm text-secondary-foreground border border-border hover:shadow-card",
+        fresh: "bg-gradient-to-r from-accent to-bg-fresh text-accent-foreground hover:shadow-card",
+        premium: "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground shadow-glow hover:shadow-xl overflow-hidden relative before:absolute before:inset-0 before:bg-primary/20 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700",
+        elegant: "bg-card text-card-foreground border border-border hover:shadow-card hover:scale-105",
         outline: "border-2 border-primary text-primary bg-background hover:bg-primary hover:text-primary-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "text-primary hover:bg-primary/10",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        success: "bg-success text-success-foreground hover:bg-success/90",
-        warning: "bg-warning text-warning-foreground hover:bg-warning/90",
-        elegant: "bg-gradient-card text-foreground border border-border hover:shadow-soft",
-        glow: "bg-primary text-primary-foreground shadow-glow hover:shadow-xl animate-glow",
+        success: "bg-green-600 text-white hover:bg-green-700",
+        warning: "bg-yellow-600 text-white hover:bg-yellow-700",
+        glow: "bg-primary text-primary-foreground shadow-glow hover:shadow-xl animate-pulse",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

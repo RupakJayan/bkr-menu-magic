@@ -1,124 +1,114 @@
+/* Import Chapa-style fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* BKR Catering Design System - All colors, gradients, fonts, etc defined here */
-
 @layer base {
   :root {
-    /* Base colors with warm, food-focused palette */
-    --background: 33 100% 98%;
-    --foreground: 25 20% 15%;
-
+    /* Core Colors - Chapa's Sophisticated Theme */
+    --background: 0 0% 100%;
+    --foreground: 220 15% 15%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 25 20% 15%;
-
+    --card-foreground: 220 15% 15%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 25 20% 15%;
+    --popover-foreground: 220 15% 15%;
 
-    /* Saffron-inspired primary palette */
-    --primary: 32 95% 55%;
+    /* Primary Colors - Chapa's Elegant Dark Theme */
+    --primary: 220 15% 15%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 38 100% 65%;
-    --primary-deep: 28 85% 45%;
+    --primary-accent: 220 15% 25%;
+    --primary-glow: 220 15% 35%;
 
-    /* Warm secondary tones */
-    --secondary: 35 40% 95%;
-    --secondary-foreground: 25 20% 15%;
-    --secondary-warm: 30 60% 92%;
+    /* Supporting Colors - Chapa's Subtle Palette */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 220 15% 25%;
+    
+    --accent: 0 0% 96%;
+    --accent-foreground: 220 15% 25%;
+    
+    --muted: 0 0% 96%;
+    --muted-foreground: 220 15% 45%;
 
-    /* Elegant muted tones */
-    --muted: 30 20% 94%;
-    --muted-foreground: 25 15% 45%;
+    /* UI Elements */
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 220 15% 15%;
 
-    /* Accent colors for highlights */
-    --accent: 45 90% 85%;
-    --accent-foreground: 25 20% 15%;
-    --accent-vibrant: 45 100% 60%;
+    /* Design Tokens */
+    --radius: 0.5rem;
 
-    /* Status colors */
-    --success: 120 50% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 40 100% 55%;
-    --warning-foreground: 25 20% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    /* Chapa's Signature Colors */
+    --chapa-gold: 45 100% 51%;
+    --chapa-cream: 45 30% 96%;
+    --chapa-charcoal: 220 15% 15%;
+    --chapa-light-gray: 0 0% 96%;
+    --chapa-medium-gray: 220 15% 45%;
 
-    /* UI elements */
-    --border: 30 30% 88%;
-    --input: 30 30% 88%;
-    --ring: 32 95% 55%;
+    /* Additional Theme Colors */
+    --bg-warm: 45 30% 96%;
+    --bg-fresh: 160 30% 96%;
 
-    --radius: 0.75rem;
+    /* Shadows - Chapa's Subtle Elegance */
+    --shadow-elegant: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
+    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 20px rgba(45, 212, 191, 0.3);
 
-    /* Gradients for visual appeal */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-warm: linear-gradient(180deg, hsl(var(--secondary-warm)), hsl(var(--accent)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary-deep)), hsl(var(--primary)));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(var(--secondary-warm)));
-
-    /* Elegant shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.2);
-    --shadow-soft: 0 4px 20px -5px hsl(25 20% 15% / 0.1);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
-
-    /* Smooth transitions */
+    /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-    /* Sidebar for admin */
-    --sidebar-background: 25 30% 8%;
-    --sidebar-foreground: 35 20% 85%;
-    --sidebar-primary: 32 95% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 25 25% 12%;
-    --sidebar-accent-foreground: 35 20% 85%;
-    --sidebar-border: 25 20% 15%;
-    --sidebar-ring: 32 95% 55%;
+    --transition-elegant: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
   .dark {
-    --background: 25 20% 8%;
-    --foreground: 35 20% 92%;
+    /* Dark Mode - Chapa's Sophisticated Dark Theme */
+    --background: 220 15% 8%;
+    --foreground: 0 0% 98%;
+    
+    --card: 220 15% 8%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 220 15% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --card: 25 25% 10%;
-    --card-foreground: 35 20% 92%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 220 15% 8%;
+    --primary-accent: 0 0% 90%;
+    --primary-glow: 0 0% 80%;
 
-    --popover: 25 25% 10%;
-    --popover-foreground: 35 20% 92%;
+    --secondary: 220 15% 12%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --accent: 220 15% 12%;
+    --accent-foreground: 0 0% 98%;
+    
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 15% 65%;
 
-    --primary: 32 95% 55%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 38 100% 65%;
-    --primary-deep: 28 85% 45%;
+    --border: 220 15% 12%;
+    --input: 220 15% 12%;
+    --ring: 0 0% 98%;
 
-    --secondary: 25 25% 12%;
-    --secondary-foreground: 35 20% 92%;
-    --secondary-warm: 30 20% 15%;
+    /* Dark mode Chapa colors */
+    --chapa-gold: 45 100% 51%;
+    --chapa-cream: 220 15% 12%;
+    --chapa-charcoal: 0 0% 98%;
+    --chapa-light-gray: 220 15% 12%;
+    --chapa-medium-gray: 220 15% 65%;
 
-    --muted: 25 20% 15%;
-    --muted-foreground: 35 15% 65%;
+    /* Additional Theme Colors - Dark Mode */
+    --bg-warm: 220 15% 12%;
+    --bg-fresh: 220 15% 12%;
 
-    --accent: 25 25% 12%;
-    --accent-foreground: 35 20% 92%;
-    --accent-vibrant: 45 100% 60%;
-
-    --border: 25 20% 20%;
-    --input: 25 20% 20%;
-    --ring: 32 95% 55%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-warm: linear-gradient(180deg, hsl(var(--secondary-warm)), hsl(var(--accent)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary-deep)), hsl(var(--primary)));
-    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--secondary-warm)));
-
-    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
-    --shadow-soft: 0 4px 20px -5px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.2);
+    --shadow-elegant: 0 4px 20px -4px rgba(0, 0, 0, 0.3);
+    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 20px rgba(45, 212, 191, 0.2);
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -127,50 +117,206 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
+    font-weight: 400;
+    color: hsl(var(--foreground));
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
+    font-family: 'Playfair Display', serif;
+    @apply font-medium;
     line-height: 1.2;
+    color: hsl(var(--foreground));
   }
 
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
+  h1 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
+  h2 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
-  .animate-slide-up {
-    animation: slideUp 0.6s ease-out;
+  h3 {
+    font-weight: 500;
+  }
+}
+
+@layer components {
+  /* Chapa Typography Classes */
+  .font-display {
+    font-family: 'Playfair Display', serif;
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+  .font-body {
+    font-family: 'Inter', sans-serif;
   }
 
-  @keyframes glow {
-    from { box-shadow: var(--shadow-elegant); }
-    to { box-shadow: var(--shadow-glow); }
+  /* Chapa Color Classes */
+  .text-chapa-gold {
+    color: hsl(var(--chapa-gold));
   }
 
-  @keyframes slideUp {
-    from { 
-      opacity: 0; 
-      transform: translateY(30px); 
+  .text-chapa-charcoal {
+    color: hsl(var(--chapa-charcoal));
+  }
+
+  .text-chapa-medium-gray {
+    color: hsl(var(--chapa-medium-gray));
+  }
+
+  .bg-chapa-cream {
+    background-color: hsl(var(--chapa-cream));
+  }
+
+  .bg-chapa-light-gray {
+    background-color: hsl(var(--chapa-light-gray));
+  }
+
+  .border-chapa-light-gray {
+    border-color: hsl(var(--chapa-light-gray));
+  }
+
+  /* Animation Classes */
+  .fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .slide-in {
+    animation: slideIn 0.5s ease-out;
+  }
+
+  .elegant-in {
+    animation: elegantIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Shadow Classes */
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .shadow-subtle {
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Transition Classes */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-elegant {
+    transition: var(--transition-elegant);
+  }
+
+  /* Chapa Button Styles */
+  .btn-chapa-primary {
+    @apply bg-chapa-charcoal text-white px-6 py-3 rounded-none font-medium transition-all duration-300;
+  }
+
+  .btn-chapa-primary:hover {
+    background-color: hsl(220 15% 25%);
+  }
+
+  .btn-chapa-secondary {
+    @apply bg-transparent border border-chapa-charcoal text-chapa-charcoal px-6 py-3 rounded-none font-medium transition-all duration-300;
+  }
+
+  .btn-chapa-secondary:hover {
+    @apply bg-chapa-charcoal text-white;
+  }
+
+  /* Chapa Card Styles */
+  .card-chapa {
+    @apply bg-white border border-chapa-light-gray shadow-subtle;
+  }
+
+  /* Chapa Section Styles */
+  .section-chapa {
+    @apply py-16 md:py-24;
+  }
+
+  .container-chapa {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  /* Session Planning Layout Fixes */
+  .session-planning-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .session-planning-item {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .session-planning-input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Responsive breakpoints for session planning */
+  @media (max-width: 640px) {
+    .session-planning-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
-    to { 
-      opacity: 1; 
-      transform: translateY(0); 
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .session-planning-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
     }
   }
 
-  .gradient-text {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  @media (min-width: 1025px) {
+    .session-planning-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translateX(-30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes elegantIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.95) translateY(20px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
   }
 }
