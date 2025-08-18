@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -8,6 +8,8 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { Checkbox } from './ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
   Clock, 
   Users, 
@@ -23,10 +25,22 @@ import {
   Pizza,
   Cake,
   Package,
-  MoreHorizontal
+  MoreHorizontal,
+  Search,
+  Filter,
+  Star,
+  Heart,
+  Award,
+  Leaf,
+  X,
+  ShoppingCart,
+  Bookmark,
+  Share2,
+  Download
 } from 'lucide-react';
-import { DayPlan, SessionPlan, SessionType } from '../types/eventTypes';
+import { DayPlan, SessionPlan, SessionType, MenuSelectionItem } from '../types/eventTypes';
 import { sessionTypes, addCustomSession, removeSession } from '../utils/eventPlanningUtils';
+import { menuData } from '../data/menuData';
 
 interface SessionPlanningProps {
   language: 'en' | 'ta';
@@ -58,6 +72,15 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
     endTime: '10:00',
     headCount: 50
   });
+
+  // Menu selection state
+  const [showMenuSelector, setShowMenuSelector] = useState<string | null>(null);
+  const [menuSearchTerm, setMenuSearchTerm] = useState('');
+  const [selectedMenuCategory, setSelectedMenuCategory] = useState('all');
+  const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
+  const [menuSortBy, setMenuSortBy] = useState<'name' | 'category' | 'popularity'>('name');
+  const [menuViewMode, setMenuViewMode] = useState<'grid' | 'list' | 'accordion'>('accordion');
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   const currentDay = days[currentDayIndex];
   const totalDays = days.length;
@@ -119,7 +142,7 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
         endTime: sessionType.defaultEndTime
       },
       headCount: sessionType.defaultHeadCount,
-      items: [],
+      selectedItems: [],
       notes: ''
     };
 
@@ -150,6 +173,90 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
     return currentDay.sessions.length;
   };
 
+  // Menu selection functions
+  const filteredMenuData = useMemo(() => {
+    let filtered = Object.entries(menuData).filter(([categoryId]) => 
+      selectedMenuCategory === 'all' || categoryId === selectedMenuCategory
+    ).map(([categoryId, items]) => ({
+      categoryId,
+      items: items.filter(item => {
+        const matchesSearch = 
+          (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(menuSearchTerm.toLowerCase()) ||
+          categoryId.toLowerCase().includes(menuSearchTerm.toLowerCase());
+        const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
+        return matchesSearch && matchesVegetarian;
+      })
+    })).filter(({ items }) => items.length > 0);
+
+    // Sort items
+    filtered.forEach(category => {
+      category.items.sort((a, b) => {
+        let comparison = 0;
+        switch (menuSortBy) {
+          case 'name':
+            comparison = (language === 'en' ? a.name_en : a.name_ta)
+              .localeCompare(language === 'en' ? b.name_en : b.name_ta);
+            break;
+          case 'category':
+            comparison = 0; // Same category items are already grouped
+            break;
+          case 'popularity':
+            comparison = (favorites.includes(a.id) ? 1 : 0) - (favorites.includes(b.id) ? 1 : 0);
+            break;
+        }
+        return comparison;
+      });
+    });
+
+    return filtered;
+  }, [selectedMenuCategory, menuSearchTerm, showVegetarianOnly, menuSortBy, favorites, language]);
+
+  const handleAddMenuItem = (sessionId: string, menuItem: any) => {
+    const sessionIndex = currentDay.sessions.findIndex(s => s.id === sessionId);
+    if (sessionIndex !== -1) {
+      const newSession = {
+        ...currentDay.sessions[sessionIndex],
+        selectedItems: [...currentDay.sessions[sessionIndex].selectedItems, menuItem.id]
+      };
+      
+      const newDay = {
+        ...currentDay,
+        sessions: currentDay.sessions.map((s, i) => i === sessionIndex ? newSession : s)
+      };
+      
+      const newDays = [...days];
+      newDays[currentDayIndex] = newDay;
+      updateDays(newDays);
+    }
+  };
+
+  const handleRemoveMenuItem = (sessionId: string, itemId: string) => {
+    const sessionIndex = currentDay.sessions.findIndex(s => s.id === sessionId);
+    if (sessionIndex !== -1) {
+      const newSession = {
+        ...currentDay.sessions[sessionIndex],
+        selectedItems: currentDay.sessions[sessionIndex].selectedItems.filter(id => id !== itemId)
+      };
+      
+      const newDay = {
+        ...currentDay,
+        sessions: currentDay.sessions.map((s, i) => i === sessionIndex ? newSession : s)
+      };
+      
+      const newDays = [...days];
+      newDays[currentDayIndex] = newDay;
+      updateDays(newDays);
+    }
+  };
+
+  const toggleFavorite = (itemId: string) => {
+    setFavorites(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
   const getSessionIcon = (sessionType: string) => {
     switch (sessionType) {
       case 'breakfast': return <Coffee className="w-4 h-4" />;
@@ -159,6 +266,34 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
       case 'packing': return <Package className="w-4 h-4" />;
       default: return <MoreHorizontal className="w-4 h-4" />;
     }
+  };
+
+  const handleExportSessionData = () => {
+    const data = days.map(day => ({
+      day: day.dayNumber,
+      date: day.date,
+      sessions: day.sessions.map(session => ({
+        id: session.id,
+        sessionName: session.sessionName,
+        sessionNameTa: session.sessionNameTa,
+        sessionType: session.sessionType,
+        timeRange: session.timeRange,
+        headCount: session.headCount,
+        selectedItems: session.selectedItems,
+        notes: session.notes
+      }))
+    }));
+
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${language === 'en' ? 'session_planning' : 'அமர்வு_திட்டமிடல்'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -265,7 +400,7 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
             </div>
             <div className="space-y-2">
               <div className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                {currentDay.sessions.filter(s => s.items.length > 0).length}
+                {currentDay.sessions.filter(s => s.selectedItems.length > 0).length}
               </div>
               <div className="text-sm text-purple-700 dark:text-purple-300 font-medium">
                 {language === 'en' ? 'With Menu' : 'மெனு உடன்'}
@@ -279,6 +414,99 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
                 {language === 'en' ? 'Avg. Per Session' : 'ஒரு அமர்வுக்கு சராசரி'}
               </div>
             </div>
+          </div>
+          
+          {/* Session Summary */}
+          <div className="mt-6 pt-6 border-t border-green-200 dark:border-green-700">
+            <h4 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-4 text-center">
+              {language === 'en' ? 'Session Summary' : 'அமர்வு சுருக்கம்'}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {currentDay.sessions.map((session, index) => (
+                <motion.div
+                  key={session.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/80 dark:bg-slate-700/80 rounded-lg p-4 border border-green-200 dark:border-green-600"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {getSessionIcon(session.sessionType)}
+                    <h5 className="font-medium text-sm">
+                      {language === 'en' ? session.sessionName : session.sessionNameTa}
+                    </h5>
+                  </div>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>{language === 'en' ? 'Time:' : 'நேரம்:'}</span>
+                      <span>{formatTime(session.timeRange.startTime)} - {formatTime(session.timeRange.endTime)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{language === 'en' ? 'Guests:' : 'விருந்தினர்கள்:'}</span>
+                      <span>{session.headCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{language === 'en' ? 'Menu Items:' : 'மெனு பொருட்கள்:'}</span>
+                      <span>{session.selectedItems.length}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl p-6 border border-purple-200/50 dark:border-purple-700/50"
+        >
+          <h4 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-4 text-center">
+            {language === 'en' ? 'Quick Actions' : 'விரைவு செயல்கள்'}
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button
+              onClick={() => setShowSessionTypeSelector(true)}
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center gap-2 bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600 border-purple-300 dark:border-purple-600"
+            >
+              <ChefHat className="w-6 h-6 text-purple-600" />
+              <span className="text-xs font-medium">
+                {language === 'en' ? 'Add Session' : 'அமர்வைச் சேர்க்கவும்'}
+              </span>
+            </Button>
+            <Button
+              onClick={() => setShowCustomSessionForm(true)}
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center gap-2 bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600 border-blue-300 dark:border-blue-600"
+            >
+              <Plus className="w-6 h-6 text-blue-600" />
+              <span className="text-xs font-medium">
+                {language === 'en' ? 'Custom Session' : 'தனிப்பயன் அமர்வு'}
+              </span>
+            </Button>
+            <Button
+              onClick={handleExportSessionData}
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center gap-2 bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600 border-green-300 dark:border-green-600"
+            >
+              <Download className="w-6 h-6 text-green-600" />
+              <span className="text-xs font-medium">
+                {language === 'en' ? 'Export Data' : 'தரவை ஏற்றுமதி செய்யவும்'}
+              </span>
+            </Button>
+            <Button
+              onClick={() => window.print()}
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center gap-2 bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600 border-orange-300 dark:border-orange-600"
+            >
+              <Share2 className="w-6 h-6 text-orange-600" />
+              <span className="text-xs font-medium">
+                {language === 'en' ? 'Print' : 'அச்சிடு'}
+              </span>
+            </Button>
           </div>
         </motion.div>
 
@@ -306,6 +534,15 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
               >
                 <Plus className="w-5 h-5 mr-2" />
                 {language === 'en' ? 'Add Custom Session' : 'தனிப்பயன் அமர்வைச் சேர்க்கவும்'}
+              </Button>
+              <Button
+                onClick={handleExportSessionData}
+                variant="outline"
+                size="lg"
+                className="bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600 border-purple-300 dark:border-purple-600"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                {language === 'en' ? 'Export' : 'ஏற்றுமதி'}
               </Button>
             </div>
           </div>
@@ -488,7 +725,7 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
                           </div>
                           <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
                             <span className="font-medium">
-                              {session.items.length} {language === 'en' ? 'menu items' : 'மெனு பொருட்கள்'}
+                              {session.selectedItems.length} {language === 'en' ? 'menu items' : 'மெனு பொருட்கள்'}
                             </span>
                           </div>
                         </div>
@@ -500,9 +737,61 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
                             </p>
                           </div>
                         )}
+                        
+                        {/* Selected Menu Items */}
+                        {session.selectedItems.length > 0 && (
+                          <div className="mt-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Utensils className="w-4 h-4 text-green-600" />
+                              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                                {language === 'en' ? 'Selected Menu Items' : 'தேர்ந்தெடுக்கப்பட்ட மெனு பொருட்கள்'}
+                              </span>
+                              <Badge variant="secondary" className="text-xs">
+                                {session.selectedItems.length}
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {session.selectedItems.slice(0, 5).map((itemId, index) => {
+                                // Find the menu item details
+                                let menuItem: any = null;
+                                for (const category of Object.values(menuData)) {
+                                  const found = category.find((item: any) => item.id === itemId);
+                                  if (found) {
+                                    menuItem = found;
+                                    break;
+                                  }
+                                }
+                                
+                                return menuItem ? (
+                                  <Badge key={itemId} variant="outline" className="text-xs">
+                                    {language === 'en' ? menuItem.name_en : menuItem.name_ta}
+                                  </Badge>
+                                ) : (
+                                  <Badge key={itemId} variant="outline" className="text-xs">
+                                    {itemId}
+                                  </Badge>
+                                );
+                              })}
+                              {session.selectedItems.length > 5 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{session.selectedItems.length - 5} {language === 'en' ? 'more' : 'மேலும்'}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowMenuSelector(session.id)}
+                          className="bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600 border-green-300 dark:border-green-600"
+                        >
+                          <ChefHat className="w-4 h-4 mr-1" />
+                          {language === 'en' ? 'Menu' : 'மெனு'}
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -635,6 +924,302 @@ const SessionPlanning: React.FC<SessionPlanningProps> = ({
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
+
+        {/* Menu Selector Modal */}
+        <AnimatePresence>
+          {showMenuSelector && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-2xl font-bold text-foreground">
+                        {language === 'en' ? 'Select Menu Items' : 'மெனு பொருட்களைத் தேர்ந்தெடுக்கவும்'}
+                      </h3>
+                      <p className="text-muted-foreground mt-1">
+                        {language === 'en' ? 'Choose items for your session' : 'உங்கள் அமர்வுக்கான பொருட்களைத் தேர்ந்தெடுக்கவும்'}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMenuSelector(null)}
+                      className="bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Modal Content */}
+                <div className="p-6 space-y-6">
+                  {/* Search and Filters */}
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          placeholder={language === 'en' ? 'Search menu items...' : 'மெனு பொருட்களைத் தேடுங்கள்...'}
+                          value={menuSearchTerm}
+                          onChange={(e) => setMenuSearchTerm(e.target.value)}
+                          className="pl-10 bg-white/80 dark:bg-slate-700/80"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={selectedMenuCategory} onValueChange={setSelectedMenuCategory}>
+                        <SelectTrigger className="w-40 bg-white/80 dark:bg-slate-700/80">
+                          <SelectValue placeholder={language === 'en' ? 'Category' : 'வகை'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">
+                            {language === 'en' ? 'All Categories' : 'அனைத்து வகைகளும்'}
+                          </SelectItem>
+                          {Object.keys(menuData).map(category => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={menuSortBy} onValueChange={(value: any) => setMenuSortBy(value)}>
+                        <SelectTrigger className="w-32 bg-white/80 dark:bg-slate-700/80">
+                          <SelectValue placeholder={language === 'en' ? 'Sort' : 'வரிசைப்படுத்து'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="name">
+                            {language === 'en' ? 'Name' : 'பெயர்'}
+                          </SelectItem>
+                          <SelectItem value="category">
+                            {language === 'en' ? 'Category' : 'வகை'}
+                          </SelectItem>
+                          <SelectItem value="popularity">
+                            {language === 'en' ? 'Popularity' : 'பிரபலம்'}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="vegetarian"
+                          checked={showVegetarianOnly}
+                          onCheckedChange={(checked) => setShowVegetarianOnly(checked as boolean)}
+                        />
+                        <Label htmlFor="vegetarian" className="text-sm">
+                          {language === 'en' ? 'Veg Only' : 'சைவம் மட்டும்'}
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* View Mode Toggle */}
+                  <div className="flex justify-center">
+                    <Tabs value={menuViewMode} onValueChange={(value: any) => setMenuViewMode(value)} className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="accordion">
+                          {language === 'en' ? 'Accordion' : 'அக்கார்டியன்'}
+                        </TabsTrigger>
+                        <TabsTrigger value="grid">
+                          {language === 'en' ? 'Grid' : 'கட்டம்'}
+                        </TabsTrigger>
+                        <TabsTrigger value="list">
+                          {language === 'en' ? 'List' : 'பட்டியல்'}
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+
+                  {/* Menu Items Display */}
+                  <div className="max-h-96 overflow-y-auto">
+                    {menuViewMode === 'accordion' && (
+                      <div className="space-y-4">
+                        {filteredMenuData.map(({ categoryId, items }) => (
+                          <Card key={categoryId} className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <ChefHat className="w-5 h-5 text-primary" />
+                                {categoryId}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {items.map((item) => (
+                                  <motion.div
+                                    key={item.id}
+                                    whileHover={{ scale: 1.02 }}
+                                    className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-primary/50 transition-colors"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-medium">
+                                          {language === 'en' ? item.name_en : item.name_ta}
+                                        </h4>
+                                        {item.isVegetarian && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            <Leaf className="w-3 h-3 mr-1" />
+                                            {language === 'en' ? 'Veg' : 'சைவம்'}
+                                          </Badge>
+                                        )}
+                                        {favorites.includes(item.id) && (
+                                          <Heart className="w-4 h-4 text-red-500 fill-current" />
+                                        )}
+                                      </div>
+                                      {(item as any).estimatedCost && (
+                                        <p className="text-sm text-muted-foreground">
+                                          ₹{(item as any).estimatedCost}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => toggleFavorite(item.id)}
+                                        className="p-2"
+                                      >
+                                        <Bookmark className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleAddMenuItem(showMenuSelector!, item)}
+                                        className="bg-green-600 hover:bg-green-700"
+                                      >
+                                        <Plus className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+
+                    {menuViewMode === 'grid' && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {filteredMenuData.flatMap(({ items }) => items).map((item) => (
+                          <motion.div
+                            key={item.id}
+                            whileHover={{ scale: 1.05 }}
+                            className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 p-4 hover:border-primary/50 transition-colors"
+                          >
+                            <div className="text-center space-y-3">
+                              <div className="flex items-center justify-center">
+                                <ChefHat className="w-8 h-8 text-primary" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-sm">
+                                  {language === 'en' ? item.name_en : item.name_ta}
+                                </h4>
+                                                                 {(item as any).estimatedCost && (
+                                   <p className="text-xs text-muted-foreground mt-1">
+                                     ₹{(item as any).estimatedCost}
+                                   </p>
+                                 )}
+                              </div>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => toggleFavorite(item.id)}
+                                  className="p-2"
+                                >
+                                  <Bookmark className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAddMenuItem(showMenuSelector!, item)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+
+                    {menuViewMode === 'list' && (
+                      <div className="space-y-2">
+                        {filteredMenuData.flatMap(({ items }) => items).map((item) => (
+                          <motion.div
+                            key={item.id}
+                            whileHover={{ scale: 1.01 }}
+                            className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-primary/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <ChefHat className="w-5 h-5 text-primary" />
+                              <div>
+                                <h4 className="font-medium">
+                                  {language === 'en' ? item.name_en : item.name_ta}
+                                </h4>
+                                                                       {(item as any).estimatedCost && (
+                                         <p className="text-sm text-muted-foreground">
+                                           ₹{(item as any).estimatedCost}
+                                         </p>
+                                       )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {item.isVegetarian && (
+                                <Badge variant="secondary" className="text-xs">
+                                  <Leaf className="w-3 h-3 mr-1" />
+                                  {language === 'en' ? 'Veg' : 'சைவம்'}
+                                </Badge>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleFavorite(item.id)}
+                                className="p-2"
+                              >
+                                <Bookmark className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleAddMenuItem(showMenuSelector!, item)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="bg-slate-50 dark:bg-slate-700/50 p-6 border-t border-slate-200 dark:border-slate-600">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-muted-foreground">
+                      {language === 'en' ? 'Selected items will be added to your session' : 'தேர்ந்தெடுக்கப்பட்ட பொருட்கள் உங்கள் அமர்வில் சேர்க்கப்படும்'}
+                    </div>
+                    <Button
+                      onClick={() => setShowMenuSelector(null)}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      {language === 'en' ? 'Done' : 'முடிந்தது'}
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );

@@ -1,48 +1,174 @@
-# BKR Menu Magic - Enhanced Catering Website
+# BKR Menu Magic - Event Planning Platform
 
-A modern, responsive catering website with comprehensive event planning tools, enhanced menu selection, and an admin dashboard for booking management.
+A comprehensive event planning platform built with React, TypeScript, and modern web technologies. This platform provides a complete solution for event planning, menu selection, session management, and venue selection.
 
-## ✨ Features
+## 🚀 Features
 
-### 🎨 Enhanced Design & Colors
-- **Vibrant Color Scheme**: Beautiful amber, orange, and rose gradients throughout the interface
-- **Modern UI**: Clean, professional design with smooth animations and transitions
-- **Responsive Design**: Optimized for all devices and screen sizes
-- **Dark/Light Theme**: Toggle between themes with system preference detection
+- **Multi-language Support**: English and Tamil (தமிழ்)
+- **Microservices Architecture**: Modular, scalable components
+- **Responsive Design**: Mobile-first approach with modern UI/UX
+- **Theme Support**: Light, dark, and system theme modes
+- **Real-time Updates**: Live data synchronization
+- **Export/Import**: JSON-based data portability
 
-### 🍽️ Enhanced Menu Selection
-- **Comprehensive Menu**: 500+ South Indian dishes organized by categories
-- **Smart Search**: Search by dish name, category, or ingredients
-- **Category Filters**: Browse by meal type (Breakfast, Lunch, Dinner, etc.)
-- **Vegetarian Filter**: Toggle to show only vegetarian options
-- **Interactive Selection**: Expandable categories with easy item selection
-- **Real-time Summary**: Live count of selected items and categories
+## 🏗️ Architecture
 
-### 🎯 Admin Dashboard
-- **Booking Management**: View and manage all event bookings
-- **Editable Details**: Modify client information, venue details, and event dates
-- **Status Tracking**: Track booking status (Pending, Confirmed, Completed, Cancelled)
-- **Advanced Filtering**: Search by name, phone, venue, date, or status
-- **Responsive Interface**: Mobile-friendly admin panel
-- **Bilingual Support**: Available in English and Tamil
+The platform is built using a microservices architecture where each major functionality is implemented as an independent, reusable component:
 
-### 📅 Event Planning Tools
-- **Multi-day Events**: Plan events spanning multiple days
-- **Session Management**: Organize meals by breakfast, lunch, dinner, etc.
-- **Head Count Tracking**: Manage guest numbers for each session
-- **Menu Integration**: Seamlessly integrate with the enhanced menu selection
-- **PDF Generation**: Generate event plans in English and Tamil
+### Core Microservices
 
-### 🌐 Bilingual Support
-- **English & Tamil**: Full interface support for both languages
-- **Dynamic Content**: All text, labels, and messages in both languages
-- **Cultural Adaptation**: Proper Tamil translations for catering terminology
+1. **MenuSelectionMicroservice** - Advanced menu planning with filtering and customization
+2. **SessionPlanningMicroservice** - Comprehensive session planning with timeline management
+3. **IntegratedMenuAndSession** - Unified interface for complete event planning
+
+### Enhanced Components
+
+1. **EnhancedEventPlanner** - Advanced event planning with analytics
+2. **EnhancedMenuSelection** - Intelligent menu planning with dietary preferences
+3. **VenueSelection** - Venue management and selection
+4. **EventPlanningFlow** - Complete event planning workflow
+
+## 🛣️ Available Routes
+
+### Main Pages
+- `/` - Landing page with all components showcase
+- `/admin` - Admin dashboard (English)
+- `/admin/ta` - Admin dashboard (Tamil)
+
+### Event Planning
+- `/event-planning` - Complete event planning flow (English)
+- `/event-planning/ta` - Complete event planning flow (Tamil)
+
+### Microservices
+- `/menu-selection` - Standalone menu selection (English)
+- `/menu-selection/ta` - Standalone menu selection (Tamil)
+- `/session-planning` - Standalone session planning (English)
+- `/session-planning/ta` - Standalone session planning (Tamil)
+- `/integrated-planning` - Integrated menu and session planning (English)
+- `/integrated-planning/ta` - Integrated menu and session planning (Tamil)
+
+### Enhanced Components
+- `/enhanced-event-planner` - Enhanced event planner (English)
+- `/enhanced-event-planner/ta` - Enhanced event planner (Tamil)
+- `/enhanced-menu-selection` - Enhanced menu selection (English)
+- `/enhanced-menu-selection/ta` - Enhanced menu selection (Tamil)
+
+### Venue Management
+- `/venue-selection` - Venue selection (English)
+- `/venue-selection/ta` - Venue selection (Tamil)
+- `/venue-details` - Venue details (English)
+- `/venue-details/ta` - Venue details (Tamil)
+
+### Session Management
+- `/session-planner` - Session planner (English)
+- `/session-planner/ta` - Session planner (Tamil)
+- `/session-planning-standalone` - Standalone session planning (English)
+- `/session-planning-standalone/ta` - Standalone session planning (Tamil)
+
+### Event Components
+- `/event-details` - Event details form (English)
+- `/event-details/ta` - Event details form (Tamil)
+- `/event-review` - Event review and summary (English)
+- `/event-review/ta` - Event review and summary (Tamil)
+
+### Menu Selection
+- `/menu-selection-standalone` - Standalone menu selection (English)
+- `/menu-selection-standalone/ta` - Standalone menu selection (Tamil)
+
+### Simplified Components
+- `/simplified-event-planner` - Simplified event planner (English)
+- `/simplified-event-planner/ta` - Simplified event planner (Tamil)
+
+## 🧩 Component Structure
+
+```
+src/
+├── components/
+│   ├── admin/           # Admin dashboard components
+│   ├── ui/              # Reusable UI components
+│   ├── MenuSelectionMicroservice.tsx
+│   ├── SessionPlanningMicroservice.tsx
+│   ├── IntegratedMenuAndSession.tsx
+│   ├── EnhancedEventPlanner.tsx
+│   ├── EnhancedMenuSelection.tsx
+│   ├── VenueSelection.tsx
+│   ├── VenueDetails.tsx
+│   ├── SessionPlanner.tsx
+│   ├── SessionPlanning.tsx
+│   ├── EventDetails.tsx
+│   ├── EventReview.tsx
+│   ├── MenuSelection.tsx
+│   ├── SimplifiedEventPlanner.tsx
+│   └── EventPlanningFlow.tsx
+├── pages/
+│   ├── Index.tsx        # Landing page
+│   ├── Admin.tsx        # Admin page
+│   └── NotFound.tsx     # 404 page
+├── contexts/
+│   └── ThemeContext.tsx # Theme management
+├── hooks/
+│   └── use-mobile.tsx  # Mobile detection
+├── services/            # API and business logic
+├── types/               # TypeScript type definitions
+└── utils/               # Utility functions
+```
+
+## 🎨 UI Components
+
+The platform uses a comprehensive set of UI components built with:
+
+- **Shadcn/ui** - Modern, accessible component library
+- **Framer Motion** - Smooth animations and transitions
+- **Tailwind CSS** - Utility-first CSS framework
+- **Lucide React** - Beautiful, customizable icons
+
+## 🌐 Language Support
+
+### English (en)
+- Primary interface language
+- Comprehensive feature descriptions
+- Professional terminology
+
+### Tamil (தமிழ்)
+- Native language support
+- Cultural context awareness
+- Localized user experience
+
+## 🎯 Key Features
+
+### Menu Selection
+- Advanced filtering and search
+- Dietary preference management
+- Cost optimization
+- Multiple selection modes
+- Export/import functionality
+
+### Session Planning
+- Timeline management
+- Headcount tracking
+- Service staff allocation
+- Dietary restrictions
+- Cost estimation
+
+### Venue Management
+- Venue search and filtering
+- Capacity planning
+- Location services
+- Booking management
+
+### Event Planning
+- Complete workflow management
+- Progress tracking
+- Data persistence
+- Export capabilities
+- Collaborative features
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
+- Modern web browser
 
 ### Installation
 ```bash
@@ -55,148 +181,117 @@ npm install
 
 # Start development server
 npm run dev
-```
 
-### Building for Production
-```bash
-# Build the project
+# Build for production
 npm run build
-
-# Preview production build
-npm run preview
 ```
 
-## 🛠️ Technology Stack
+### Environment Variables
+Create a `.env` file in the root directory:
+```env
+VITE_API_URL=your_api_url_here
+VITE_APP_NAME=BKR Menu Magic
+```
 
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS with custom design system
-- **UI Components**: Radix UI + shadcn/ui
-- **Animations**: Framer Motion
-- **Routing**: React Router v6
-- **State Management**: React hooks + Context API
-- **Build Tool**: Vite
+## 🔧 Development
 
-## 📱 Admin Access
+### Code Structure
+- **TypeScript** for type safety
+- **ESLint** for code quality
+- **Prettier** for code formatting
+- **Husky** for git hooks
 
-### Admin Dashboard Routes
-- **English**: `/admin`
-- **Tamil**: `/admin/ta`
-
-### Features Available
-- View all bookings with detailed information
-- Edit client details, venue information, and event dates
-- Update booking status
-- Search and filter bookings
-- Manage menu selections for each event
-
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: Vibrant amber and orange gradients
-- **Secondary**: Warm rose and pink tones
-- **Accent**: Blue, green, and purple for highlights
-- **Neutral**: Sophisticated grays and whites
-
-### Typography
-- **Font Family**: Inter (with system fallbacks)
-- **Weights**: Light, Regular, Medium, Semibold, Bold
-- **Scaling**: Responsive typography system
-
-### Components
-- **Cards**: Elevated with shadows and gradients
-- **Buttons**: Multiple variants with hover effects
-- **Forms**: Clean, accessible form controls
-- **Navigation**: Sticky header with smooth animations
-
-## 📊 Menu Categories
-
-### Main Categories
-- **Sweets**: Laddu, Cake, Mysore Pak, Jilabi, Rolls
-- **Starters**: Paneer dishes, Samosa, Momos, BBQ
-- **Main Course**: Rice varieties, Biryani, Gravy dishes
-- **Breads**: Roti, Naan, Parotta, Dosa
-- **Beverages**: Welcome drinks, Hot beverages
-- **Special Items**: Chettinad specialties, Regional dishes
-
-### Dietary Information
-- **Vegetarian Options**: Clearly marked with green indicators
-- **Non-vegetarian Options**: Marked with red indicators
-- **Allergen Information**: Available for each dish
-
-## 🔧 Customization
-
-### Adding New Menu Items
-1. Update `src/data/menuData.ts`
-2. Add new categories and items
-3. Include both English and Tamil names
-4. Set vegetarian status
-
-### Modifying Colors
-1. Update CSS variables in `src/index.css`
-2. Modify Tailwind config in `tailwind.config.ts`
-3. Use the new gradient and shadow utilities
-
-### Adding New Features
-1. Create new components in `src/components/`
-2. Add routes in `src/App.tsx`
-3. Update navigation in `src/components/Navigation.tsx`
+### Available Scripts
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm run lint:fix     # Fix ESLint issues
+npm run type-check   # TypeScript type checking
+```
 
 ## 📱 Responsive Design
 
-### Breakpoints
-- **Mobile**: < 640px
-- **Tablet**: 640px - 1024px
-- **Desktop**: > 1024px
+The platform is designed to work seamlessly across all devices:
 
-### Mobile Features
-- Touch-friendly interface
-- Swipe gestures for navigation
-- Optimized layouts for small screens
-- Mobile-first admin dashboard
+- **Mobile First** - Optimized for mobile devices
+- **Tablet Friendly** - Enhanced tablet experience
+- **Desktop Optimized** - Full-featured desktop interface
+- **Touch Support** - Touch-friendly interactions
 
-## 🌟 Performance Features
+## 🎨 Theming
 
-- **Lazy Loading**: Components load on demand
-- **Optimized Images**: Responsive image handling
-- **Smooth Animations**: 60fps animations with Framer Motion
-- **Efficient Rendering**: React 18 concurrent features
-- **Bundle Optimization**: Vite build optimization
+### Theme Modes
+- **Light Theme** - Clean, professional appearance
+- **Dark Theme** - Easy on the eyes, modern look
+- **System Theme** - Automatically follows OS preference
 
-## 🔒 Security Considerations
+### Customization
+- CSS custom properties for easy theming
+- Consistent color palette
+- Accessible contrast ratios
+- Smooth theme transitions
 
-- **Input Validation**: All form inputs are validated
-- **XSS Protection**: React's built-in XSS protection
-- **Secure Routing**: Protected admin routes
-- **Data Sanitization**: Proper data handling
+## 🔒 Security Features
 
-## 📈 Future Enhancements
+- Input validation and sanitization
+- XSS protection
+- CSRF protection
+- Secure data handling
+- Privacy-focused design
 
-- **User Authentication**: Login system for admin access
-- **Database Integration**: Real-time data persistence
-- **Payment Integration**: Online payment processing
-- **Analytics Dashboard**: Booking analytics and reports
-- **Mobile App**: Native mobile application
-- **API Development**: RESTful API for external integrations
+## 📊 Performance
+
+- **Code Splitting** - Lazy loading of components
+- **Image Optimization** - WebP support and lazy loading
+- **Bundle Optimization** - Tree shaking and minification
+- **Caching Strategies** - Efficient data caching
+- **Progressive Enhancement** - Core functionality without JavaScript
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
+
+### Development Guidelines
+- Follow TypeScript best practices
+- Use meaningful component names
+- Add proper documentation
+- Ensure accessibility compliance
+- Test across different devices
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 Support
+## 🆘 Support
 
 For support and questions:
 - **Phone**: +91 8012686883
-- **Email**: [Contact through website]
-- **Website**: [Your website URL]
+- **Email**: support@bkr.com
+- **Documentation**: [Component Improvements](COMPONENT_IMPROVEMENTS.md)
+- **Microservices**: [Microservices README](MICROSERVICES_README.md)
+
+## 🔮 Roadmap
+
+### Upcoming Features
+- [ ] Real-time collaboration
+- [ ] Advanced analytics dashboard
+- [ ] Mobile app development
+- [ ] AI-powered recommendations
+- [ ] Integration with external services
+
+### Planned Improvements
+- [ ] Performance optimization
+- [ ] Enhanced accessibility
+- [ ] Additional language support
+- [ ] Advanced customization options
+- [ ] Enterprise features
 
 ---
 
-**Built with ❤️ for BKR Catering Excellence**
+**Built with ❤️ by the BKR Team**

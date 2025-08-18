@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
   ChefHat, 
   Star, 
@@ -20,10 +22,16 @@ import {
   Leaf,
   Utensils,
   CheckCircle,
-  X
+  X,
+  Flame,
+  Zap,
+  Info,
+  Bookmark,
+  BookmarkCheck
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { menuData } from '../data/menuData';
+import { useToast } from '@/hooks/use-toast';
 
 interface MenuSelectionProps {
   language: 'en' | 'ta';
@@ -35,6 +43,9 @@ interface MenuSelectionProps {
   sessionTime?: string;
 }
 
+type SortOption = 'name' | 'category' | 'vegetarian' | 'popularity';
+type FilterOption = 'all' | 'vegetarian' | 'non-vegetarian' | 'spicy' | 'mild';
+
 const MenuSelection: React.FC<MenuSelectionProps> = ({
   language,
   selectedItems,
@@ -45,11 +56,18 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
   sessionTime
 }) => {
   const { resolvedTheme } = useTheme();
+  const { toast } = useToast();
   const isDark = resolvedTheme === 'dark';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [filterBy, setFilterBy] = useState<FilterOption>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'compact'>('grid');
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
 
   const categories = [
     { id: 'all', name: language === 'en' ? 'All Categories' : 'அனைத்து வகைகளும்', icon: ChefHat },
@@ -59,11 +77,27 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
     { id: 'beverages', name: language === 'en' ? 'Beverages' : 'பானங்கள்', icon: Clock }
   ];
 
+  const dietaryOptions = [
+    { id: 'gluten-free', name: language === 'en' ? 'Gluten Free' : 'குளுடன் இல்லாதது', icon: Leaf },
+    { id: 'dairy-free', name: language === 'en' ? 'Dairy Free' : 'பால் பொருட்கள் இல்லாதது', icon: Leaf },
+    { id: 'nut-free', name: language === 'en' ? 'Nut Free' : 'கொட்டைகள் இல்லாதது', icon: Leaf },
+    { id: 'spicy', name: language === 'en' ? 'Spicy' : 'காரமானது', icon: Flame },
+    { id: 'mild', name: language === 'en' ? 'Mild' : 'மெதுவானது', icon: Zap }
+  ];
+
   const handleItemToggle = (itemId: string) => {
     if (selectedItems.includes(itemId)) {
       onItemsChange(selectedItems.filter(id => id !== itemId));
+      toast({
+        title: language === 'en' ? 'Item Removed' : 'பொருள் நீக்கப்பட்டது',
+        description: language === 'en' ? 'Item has been removed from selection' : 'பொருள் தேர்வில் இருந்து நீக்கப்பட்டது',
+      });
     } else {
       onItemsChange([...selectedItems, itemId]);
+      toast({
+        title: language === 'en' ? 'Item Added' : 'பொருள் சேர்க்கப்பட்டது',
+        description: language === 'en' ? 'Item has been added to selection' : 'பொருள் தேர்வில் சேர்க்கப்பட்டது',
+      });
     }
   };
 
@@ -77,6 +111,22 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
       prev.includes(categoryId) 
         ? prev.filter(id => id !== categoryId)
         : [...prev, categoryId]
+    );
+  };
+
+  const toggleFavorite = (itemId: string) => {
+    setFavorites(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const toggleDietaryPreference = (preference: string) => {
+    setDietaryPreferences(prev => 
+      prev.includes(preference) 
+        ? prev.filter(p => p !== preference)
+        : [...prev, preference]
     );
   };
 
@@ -96,8 +146,16 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
     return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
   };
 
+  const getSpiceLevel = (itemName: string) => {
+    const spicyKeywords = ['chilli', 'spicy', 'hot', 'pepper', 'curry', 'masala'];
+    const isSpicy = spicyKeywords.some(keyword => 
+      itemName.toLowerCase().includes(keyword)
+    );
+    return isSpicy ? 'spicy' : 'mild';
+  };
+
   const filteredMenu = useMemo(() => {
-    return Object.entries(menuData).filter(([categoryId]) => 
+    let filtered = Object.entries(menuData).filter(([categoryId]) => 
       selectedCategory === 'all' || categoryId === selectedCategory
     ).map(([categoryId, items]) => ({
       categoryId,
@@ -106,10 +164,39 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
           (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(searchTerm.toLowerCase()) ||
           categoryId.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
-        return matchesSearch && matchesVegetarian;
+        const matchesDietary = dietaryPreferences.length === 0 || dietaryPreferences.some(pref => {
+          if (pref === 'vegetarian') return item.isVegetarian;
+          if (pref === 'spicy') return getSpiceLevel(item.name_en) === 'spicy';
+          if (pref === 'mild') return getSpiceLevel(item.name_en) === 'mild';
+          return true;
+        });
+        return matchesSearch && matchesVegetarian && matchesDietary;
       })
     })).filter(({ items }) => items.length > 0);
-  }, [searchTerm, selectedCategory, showVegetarianOnly, language]);
+
+    // Sort items based on selected sort option
+    filtered = filtered.map(({ categoryId, items }) => ({
+      categoryId,
+      items: items.sort((a, b) => {
+        switch (sortBy) {
+          case 'name':
+            return (language === 'en' ? a.name_en : a.name_ta).localeCompare(
+              language === 'en' ? b.name_en : b.name_ta
+            );
+          case 'category':
+            return a.category.localeCompare(b.category);
+          case 'vegetarian':
+            return (b.isVegetarian ? 1 : 0) - (a.isVegetarian ? 1 : 0);
+          case 'popularity':
+            return favorites.includes(b.id) ? 1 : -1;
+          default:
+            return 0;
+        }
+      })
+    }));
+
+    return filtered;
+  }, [searchTerm, selectedCategory, showVegetarianOnly, dietaryPreferences, sortBy, favorites, language]);
 
   const selectedItemsDetails = useMemo(() => {
     return selectedItems.map(id => {
@@ -124,6 +211,8 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
   }, [selectedItems]);
 
   const totalItems = selectedItems.length;
+  const totalCalories = selectedItemsDetails.reduce((total, item) => total + (item?.calories || 0), 0);
+  const vegetarianCount = selectedItemsDetails.filter(item => item?.isVegetarian).length;
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-8`}>
@@ -212,7 +301,7 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <Label className={`block text-sm font-medium mb-2 ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
@@ -257,7 +346,75 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                     {language === 'en' ? 'Vegetarian Only' : 'சைவம் மட்டும்'}
                   </Label>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    className="flex items-center gap-2"
+                  >
+                    <Filter className="w-4 h-4" />
+                    {language === 'en' ? 'Advanced' : 'மேம்பட்டது'}
+                  </Button>
+                </div>
               </div>
+
+              {/* Advanced Filters */}
+              <AnimatePresence>
+                {showAdvancedFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className={`text-sm font-medium mb-2 ${
+                          isDark ? 'text-gray-200' : 'text-gray-700'
+                        }`}>
+                          {language === 'en' ? 'Sort By' : 'வரிசைப்படுத்து'}
+                        </Label>
+                        <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="name">{language === 'en' ? 'Name' : 'பெயர்'}</SelectItem>
+                            <SelectItem value="category">{language === 'en' ? 'Category' : 'வகை'}</SelectItem>
+                            <SelectItem value="vegetarian">{language === 'en' ? 'Vegetarian' : 'சைவம்'}</SelectItem>
+                            <SelectItem value="popularity">{language === 'en' ? 'Popularity' : 'பிரபலம்'}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className={`text-sm font-medium mb-2 ${
+                          isDark ? 'text-gray-200' : 'text-gray-700'
+                        }`}>
+                          {language === 'en' ? 'Dietary Preferences' : 'உணவு விருப்பங்கள்'}
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {dietaryOptions.map((option) => (
+                            <Button
+                              key={option.id}
+                              variant={dietaryPreferences.includes(option.id) ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => toggleDietaryPreference(option.id)}
+                              className="text-xs"
+                            >
+                              <option.icon className="w-3 h-3 mr-1" />
+                              {option.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
         </motion.div>
@@ -295,6 +452,22 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                       {category.name}
                     </Button>
                   ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list' | 'compact')}>
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="grid" className="text-xs">
+                        {language === 'en' ? 'Grid' : 'கட்டம்'}
+                      </TabsTrigger>
+                      <TabsTrigger value="list" className="text-xs">
+                        {language === 'en' ? 'List' : 'பட்டியல்'}
+                      </TabsTrigger>
+                      <TabsTrigger value="compact" className="text-xs">
+                        {language === 'en' ? 'Compact' : 'சுருக்கம்'}
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
               </div>
             </CardContent>
@@ -351,9 +524,15 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                       </div>
                       
                       {expandedCategories.includes(categoryId) && (
-                        <div className="space-y-2 ml-4">
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-2 ml-4"
+                        >
                           {items.map(item => (
-                            <div
+                            <motion.div
                               key={item.id}
                               className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
                                 selectedItems.includes(item.id)
@@ -365,6 +544,8 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                                       : 'hover:bg-gray-50'
                               }`}
                               onClick={() => handleItemToggle(item.id)}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
                               <div className="flex items-center gap-3">
                                 <Checkbox
@@ -382,18 +563,47 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                                   }`}>
                                     {language === 'en' ? item.name_ta : item.name_en}
                                   </div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    {item.isVegetarian && (
+                                      <Badge variant="outline" className="text-xs">
+                                        <Leaf className="w-3 h-3 mr-1" />
+                                        {language === 'en' ? 'Veg' : 'சைவ'}
+                                      </Badge>
+                                    )}
+                                    <Badge variant="outline" className="text-xs">
+                                      {getSpiceLevel(item.name_en) === 'spicy' ? (
+                                        <Flame className="w-3 h-3 mr-1" />
+                                      ) : (
+                                        <Zap className="w-3 h-3 mr-1" />
+                                      )}
+                                      {language === 'en' 
+                                        ? (getSpiceLevel(item.name_en) === 'spicy' ? 'Spicy' : 'Mild')
+                                        : (getSpiceLevel(item.name_en) === 'spicy' ? 'காரமானது' : 'மெதுவானது')
+                                      }
+                                    </Badge>
+                                  </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                {item.isVegetarian ? (
-                                  <Leaf className="w-4 h-4 text-green-500" />
-                                ) : (
-                                  <Utensils className="w-4 h-4 text-red-500" />
-                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavorite(item.id);
+                                  }}
+                                  className="p-1 h-6 w-6"
+                                >
+                                  {favorites.includes(item.id) ? (
+                                    <BookmarkCheck className="w-4 h-4 text-yellow-500" />
+                                  ) : (
+                                    <Bookmark className="w-4 h-4" />
+                                  )}
+                                </Button>
                               </div>
-                            </div>
+                            </motion.div>
                           ))}
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                   ))}
@@ -463,11 +673,14 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                             </span>
                           </div>
                           {items.map(item => (
-                            <div
+                            <motion.div
                               key={item.id}
                               className={`flex items-center justify-between p-3 rounded-lg ${
                                 isDark ? 'bg-gray-700/50' : 'bg-gray-50'
                               }`}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 20 }}
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`w-2 h-2 rounded-full ${
@@ -494,7 +707,7 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                               >
                                 <X className="w-4 h-4" />
                               </Button>
-                            </div>
+                            </motion.div>
                           ))}
                         </div>
                       ))}
@@ -516,7 +729,7 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
           >
             <Card className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-lg`}>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                   <div>
                     <div className={`text-2xl font-bold text-purple-600`}>
                       {totalItems}
@@ -529,7 +742,7 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                   </div>
                   <div>
                     <div className={`text-2xl font-bold text-green-600`}>
-                      {selectedItemsDetails.filter(item => item.isVegetarian).length}
+                      {vegetarianCount}
                     </div>
                     <div className={`text-sm ${
                       isDark ? 'text-gray-300' : 'text-gray-600'
@@ -548,6 +761,16 @@ const MenuSelection: React.FC<MenuSelectionProps> = ({
                       isDark ? 'text-gray-300' : 'text-gray-600'
                     }`}>
                       {language === 'en' ? 'Categories' : 'வகைகள்'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={`text-2xl font-bold text-orange-600`}>
+                      {favorites.length}
+                    </div>
+                    <div className={`text-sm ${
+                      isDark ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      {language === 'en' ? 'Favorites' : 'பிடித்தவை'}
                     </div>
                   </div>
                 </div>

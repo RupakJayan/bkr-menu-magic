@@ -8,6 +8,11 @@ export interface EventPlanningData {
   endDate: string;
   numberOfDays: number;
   sessionsPerDay: SessionType[];
+  // Enhanced fields
+  eventType?: 'wedding' | 'corporate' | 'birthday' | 'anniversary' | 'other';
+  specialRequirements?: string;
+  budget?: number;
+  paymentTerms?: string;
 }
 
 export interface SessionType {
@@ -19,6 +24,11 @@ export interface SessionType {
   defaultEndTime: string;
   defaultHeadCount: number;
   isSelected?: boolean;
+  // Enhanced fields
+  customTiming?: boolean;
+  specialInstructions?: string;
+  dietaryRestrictions?: string[];
+  serviceStaff?: number;
 }
 
 export interface TimeRange {
@@ -33,6 +43,13 @@ export interface SessionMenuSelection {
   timeWindow: TimeRange;
   headCount: number;
   selectedItems: MenuSelectionItem[];
+  // Enhanced fields
+  customTiming?: boolean;
+  specialInstructions?: string;
+  dietaryRestrictions?: string[];
+  serviceStaff?: number;
+  estimatedCost?: number;
+  notes?: string;
 }
 
 export interface MenuSelectionItem {
@@ -41,6 +58,17 @@ export interface MenuSelectionItem {
   name_ta: string;
   category: string;
   isVegetarian: boolean;
+  // Enhanced fields
+  estimatedCost?: number;
+  preparationTime?: number;
+  spiceLevel?: 'mild' | 'medium' | 'hot';
+  allergens?: string[];
+  nutritionalInfo?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  };
 }
 
 // Legacy Types (for backward compatibility)
@@ -121,10 +149,28 @@ export interface MenuItem {
 }
 
 export interface MenuCategory {
-  name: string;
+  id: string;
+  name_en: string;
   name_ta: string;
-  items: MenuItem[];
   icon: string;
+  description?: string;
+  items: MenuSelectionItem[];
+}
+
+export interface DietaryRestriction {
+  id: string;
+  name_en: string;
+  name_ta: string;
+  description?: string;
+  icon: string;
+}
+
+export interface ServiceStaff {
+  id: string;
+  role: string;
+  role_ta: string;
+  hourlyRate: number;
+  description?: string;
 }
 
 export interface CuisineType {
@@ -139,4 +185,37 @@ export interface PDFExportOptions {
   includeImages: boolean;
   includePricing: boolean;
   format: 'A4' | 'Letter';
+}
+
+// New types for enhanced features
+export interface BillingItem {
+  sessionId: string;
+  sessionName: string;
+  headCount: number;
+  items: {
+    itemId: string;
+    itemName: string;
+    quantity: number;
+    unitCost: number;
+    totalCost: number;
+  }[];
+  serviceStaffCost: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+}
+
+export interface EventBilling {
+  eventId: string;
+  clientName: string;
+  eventDate: string;
+  totalSessions: number;
+  totalHeadCount: number;
+  billingItems: BillingItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  grandTotal: number;
+  paymentTerms: string;
+  dueDate: string;
 }

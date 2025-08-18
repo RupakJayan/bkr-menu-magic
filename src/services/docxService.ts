@@ -144,6 +144,24 @@ export class DOCXService {
               spacing: { after: 200 }
             }),
 
+            // Billing Summary
+            new Paragraph({
+              text: language === 'en' ? 'Billing Summary' : 'பில்லிங் சுருக்கம்',
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 400, after: 200 }
+            }),
+
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: language === 'en' ? 'Estimated Total Cost: ' : 'மதிப்பிடப்பட்ட மொத்த செலவு: ',
+                  bold: true
+                }),
+                new TextRun(`₹${(eventPlan.totalSessions * 1000).toLocaleString()}`)
+              ],
+              spacing: { after: 200 }
+            }),
+
             // Menu Details by Day
             ...this.generateDaySections(eventPlan, language)
           ]

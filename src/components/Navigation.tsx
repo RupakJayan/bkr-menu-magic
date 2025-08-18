@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
-import { Menu, X, Sun, Moon, Globe, Monitor, Settings } from 'lucide-react';
+import { Menu, X, Sun, Moon, Globe, Monitor, Settings, ChevronDown, ChefHat, Users, MapPin, Target, Calendar } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Link } from 'react-router-dom';
 
@@ -12,9 +12,38 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ language, onLanguageChange }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    // Close dropdowns when pressing Escape key
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, []);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleDropdown = (dropdown: string) => {
+    setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
+  };
 
   const getThemeIcon = () => {
     if (theme === 'system') {
@@ -39,6 +68,48 @@ const Navigation: React.FC<NavigationProps> = ({ language, onLanguageChange }) =
     { name: language === 'en' ? 'MENUS' : 'மெனுக்கள்', href: '#menus' },
     { name: language === 'en' ? 'ABOUT US' : 'எங்களைப் பற்றி', href: '#about' },
     { name: language === 'en' ? 'CONTACT' : 'தொடர்பு', href: '#contact' }
+  ];
+
+  const microservicesDropdown = [
+    {
+      name: language === 'en' ? 'Menu Selection' : 'மெனு தேர்வு',
+      href: `/menu-selection${language === 'ta' ? '/ta' : ''}`,
+      icon: <ChefHat className="w-4 h-4" />,
+      description: language === 'en' ? 'Advanced menu planning' : 'மேம்பட்ட மெனு திட்டமிடல்'
+    },
+    {
+      name: language === 'en' ? 'Session Planning' : 'அமர்வு திட்டமிடல்',
+      href: `/session-planning${language === 'ta' ? '/ta' : ''}`,
+      icon: <Users className="w-4 h-4" />,
+      description: language === 'en' ? 'Session management' : 'அமர்வு நிர்வாகம்'
+    },
+    {
+      name: language === 'en' ? 'Integrated Planning' : 'ஒருங்கிணைந்த திட்டமிடல்',
+      href: `/integrated-planning${language === 'ta' ? '/ta' : ''}`,
+      icon: <Target className="w-4 h-4" />,
+      description: language === 'en' ? 'Complete event planning' : 'முழுமையான நிகழ்வு திட்டமிடல்'
+    }
+  ];
+
+  const componentsDropdown = [
+    {
+      name: language === 'en' ? 'Enhanced Event Planner' : 'மேம்பட்ட நிகழ்வு திட்டமிடல்',
+      href: `/enhanced-event-planner${language === 'ta' ? '/ta' : ''}`,
+      icon: <Calendar className="w-4 h-4" />,
+      description: language === 'en' ? 'Advanced planning tools' : 'மேம்பட்ட திட்டமிடல் கருவிகள்'
+    },
+    {
+      name: language === 'en' ? 'Venue Selection' : 'இட தேர்வு',
+      href: `/venue-selection${language === 'ta' ? '/ta' : ''}`,
+      icon: <MapPin className="w-4 h-4" />,
+      description: language === 'en' ? 'Venue management' : 'இட நிர்வாகம்'
+    },
+    {
+      name: language === 'en' ? 'Event Planning Flow' : 'நிகழ்வு திட்டமிடல் ஓட்டம்',
+      href: `/event-planning${language === 'ta' ? '/ta' : ''}`,
+      icon: <Target className="w-4 h-4" />,
+      description: language === 'en' ? 'Complete workflow' : 'முழுமையான பணி ஓட்டம்'
+    }
   ];
 
   const enhancedNavItems = [
@@ -84,7 +155,7 @@ const Navigation: React.FC<NavigationProps> = ({ language, onLanguageChange }) =
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
+          <div ref={dropdownRef} className="hidden lg:flex items-center space-x-8">
             {enhancedNavItems.map((item, index) => (
               item.isExternal ? (
                 <motion.div
@@ -141,6 +212,162 @@ const Navigation: React.FC<NavigationProps> = ({ language, onLanguageChange }) =
                 </motion.a>
               )
             ))}
+
+            {/* Microservices Dropdown */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <button
+                onClick={() => toggleDropdown('microservices')}
+                className={`flex items-center gap-2 font-body font-medium text-sm tracking-wide transition-all duration-300 relative group ${
+                  isDark 
+                    ? 'text-white hover:text-chapa-gold' 
+                    : 'text-chapa-charcoal hover:text-chapa-gold'
+                }`}
+              >
+                {language === 'en' ? 'MICROSERVICES' : 'மைக்ரோசர்விஸ்கள்'}
+                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${
+                  activeDropdown === 'microservices' ? 'rotate-180' : ''
+                }`} />
+                <motion.div
+                  className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 ${
+                    isDark ? 'bg-chapa-gold' : 'bg-chapa-gold'
+                  }`}
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                />
+              </button>
+
+              <AnimatePresence>
+                {activeDropdown === 'microservices' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className={`absolute top-full left-0 mt-2 w-80 rounded-lg shadow-xl border ${
+                      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <div className="p-4 space-y-3">
+                      {microservicesDropdown.map((item, index) => (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:bg-opacity-10 ${
+                              isDark 
+                                ? 'hover:bg-white text-white hover:text-chapa-gold' 
+                                : 'hover:bg-gray-100 text-gray-700 hover:text-chapa-gold'
+                            }`}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <div className={`p-2 rounded-lg ${
+                              isDark ? 'bg-gray-700' : 'bg-gray-100'
+                            }`}>
+                              {item.icon}
+                            </div>
+                            <div>
+                              <div className="font-medium text-sm">{item.name}</div>
+                              <div className={`text-xs ${
+                                isDark ? 'text-gray-400' : 'text-gray-500'
+                              }`}>
+                                {item.description}
+                              </div>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Components Dropdown */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <button
+                onClick={() => toggleDropdown('components')}
+                className={`flex items-center gap-2 font-body font-medium text-sm tracking-wide transition-all duration-300 relative group ${
+                  isDark 
+                    ? 'text-white hover:text-chapa-gold' 
+                    : 'text-chapa-charcoal hover:text-chapa-gold'
+                }`}
+              >
+                {language === 'en' ? 'COMPONENTS' : 'கூறுகள்'}
+                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${
+                  activeDropdown === 'components' ? 'rotate-180' : ''
+                }`} />
+                <motion.div
+                  className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 ${
+                    isDark ? 'bg-chapa-gold' : 'bg-chapa-gold'
+                  }`}
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                />
+              </button>
+
+              <AnimatePresence>
+                {activeDropdown === 'components' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className={`absolute top-full left-0 mt-2 w-80 rounded-lg shadow-xl border ${
+                      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <div className="p-4 space-y-3">
+                      {componentsDropdown.map((item, index) => (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:bg-opacity-10 ${
+                              isDark 
+                                ? 'hover:bg-white text-white hover:text-chapa-gold' 
+                                : 'hover:bg-gray-100 text-gray-700 hover:text-chapa-gold'
+                            }`}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <div className={`p-2 rounded-lg ${
+                              isDark ? 'bg-gray-700' : 'bg-gray-100'
+                            }`}>
+                              {item.icon}
+                            </div>
+                            <div>
+                              <div className="font-medium text-sm">{item.name}</div>
+                              <div className={`text-xs ${
+                                isDark ? 'text-gray-400' : 'text-gray-500'
+                              }`}>
+                                {item.description}
+                              </div>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </div>
 
           {/* Enhanced Contact Info & CTA */}
@@ -339,6 +566,80 @@ const Navigation: React.FC<NavigationProps> = ({ language, onLanguageChange }) =
                     <Settings className="w-4 h-4" />
                     {language === 'en' ? 'Admin Dashboard' : 'நிர்வாக டாஷ்போர்டு'}
                   </a>
+                </motion.div>
+
+                {/* Microservices in Mobile Menu */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                  className="pt-2"
+                >
+                  <div className={`text-xs font-body font-medium tracking-wide mb-3 ${
+                    isDark ? 'text-white/60' : 'text-chapa-medium-gray'
+                  }`}>
+                    {language === 'en' ? 'MICROSERVICES' : 'மைக்ரோசர்விஸ்கள்'}
+                  </div>
+                  <div className="space-y-2">
+                    {microservicesDropdown.map((item, index) => (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
+                      >
+                        <Link
+                          to={item.href}
+                          className={`flex items-center gap-3 py-2 pl-4 text-sm transition-all duration-300 ${
+                            isDark 
+                              ? 'text-white/80 hover:text-chapa-gold' 
+                              : 'text-chapa-charcoal/80 hover:text-chapa-gold'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {item.icon}
+                          {item.name}
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Components in Mobile Menu */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.7 }}
+                  className="pt-2"
+                >
+                  <div className={`text-xs font-body font-medium tracking-wide mb-3 ${
+                    isDark ? 'text-white/60' : 'text-chapa-medium-gray'
+                  }`}>
+                    {language === 'en' ? 'COMPONENTS' : 'கூறுகள்'}
+                  </div>
+                  <div className="space-y-2">
+                    {componentsDropdown.map((item, index) => (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
+                      >
+                        <Link
+                          to={item.href}
+                          className={`flex items-center gap-3 py-2 pl-4 text-sm transition-all duration-300 ${
+                            isDark 
+                              ? 'text-white/80 hover:text-chapa-gold' 
+                              : 'text-chapa-charcoal/80 hover:text-chapa-gold'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {item.icon}
+                          {item.name}
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
                 </motion.div>
                 
                 {/* Mobile Contact & Actions */}

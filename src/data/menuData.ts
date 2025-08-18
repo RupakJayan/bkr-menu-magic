@@ -1,12 +1,12 @@
 // Comprehensive South Indian Menu Data (Event Planning - No Pricing)
 export const menuData = {
   "Sweets (Laddu)": [
-    { id: "swl1", name_en: "Ghee Laddu", name_ta: "நெய் லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400" },
-    { id: "swl2", name_en: "Palm Sugar Coconut Poo Laddu", name_ta: "பனங்கற்கண்டு தேங்காய் பூ லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400" },
-    { id: "swl3", name_en: "Rose Laddu", name_ta: "ரோஸ் லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400" },
-    { id: "swl4", name_en: "Pista Laddu", name_ta: "பிஸ்தா லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400" },
-    { id: "swl5", name_en: "Mothi Laddu", name_ta: "மோத்தி லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400" },
-    { id: "swl6", name_en: "Mini Tirumala Laddu", name_ta: "மினி திருமலை லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400" }
+    { id: "swl1", name_en: "Ghee Laddu", name_ta: "நெய் லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400", estimatedCost: 25 },
+    { id: "swl2", name_en: "Palm Sugar Coconut Poo Laddu", name_ta: "பனங்கற்கண்டு தேங்காய் பூ லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400", estimatedCost: 30 },
+    { id: "swl3", name_en: "Rose Laddu", name_ta: "ரோஸ் லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400", estimatedCost: 28 },
+    { id: "swl4", name_en: "Pista Laddu", name_ta: "பிஸ்தா லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400", estimatedCost: 35 },
+    { id: "swl5", name_en: "Mothi Laddu", name_ta: "மோத்தி லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400", estimatedCost: 22 },
+    { id: "swl6", name_en: "Mini Tirumala Laddu", name_ta: "மினி திருமலை லட்டு", isVegetarian: true, image: "https://images.unsplash.com/photo-1616474240719-0ed52b4a8e21?w=400", estimatedCost: 20 }
   ],
   "Sweets (Cake and Katli)": [
     { id: "swc1", name_en: "Palm Sugar Kaju Katli", name_ta: "பனங்கற்கண்டு காஜு கத்லி", isVegetarian: true, image: "https://images.unsplash.com/photo-1593635031405-1a2f90a93a6c?w=400" },

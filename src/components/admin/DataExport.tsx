@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Label } from '../ui/label';
-import { Download, FileText, BarChart3, Calendar } from 'lucide-react';
+import { Download, FileText, BarChart3, Calendar, Loader2 } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 interface DataExportProps {
   language: 'en' | 'ta';
@@ -14,15 +15,247 @@ const DataExport: React.FC<DataExportProps> = ({ language, isDark }) => {
   const [exportType, setExportType] = useState('events');
   const [dateRange, setDateRange] = useState('all');
   const [format, setFormat] = useState('csv');
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
-  const handleExport = () => {
-    // TODO: Implement actual export functionality
-    console.log('Exporting:', { exportType, dateRange, format });
+  // Mock data for export (in real app, this would come from API)
+  const getExportData = () => {
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thisYear = new Date(now.getFullYear(), 0, 1);
+
+    let startDate: Date;
+    switch (dateRange) {
+      case 'this-month':
+        startDate = thisMonth;
+        break;
+      case 'last-month':
+        startDate = lastMonth;
+        break;
+      case 'this-year':
+        startDate = thisYear;
+        break;
+      default:
+        startDate = new Date(2020, 0, 1); // All time
+    }
+
+    // Generate sample data based on export type
+    switch (exportType) {
+      case 'events':
+        return generateEventsData(startDate, now);
+      case 'revenue':
+        return generateRevenueData(startDate, now);
+      case 'clients':
+        return generateClientsData(startDate, now);
+      default:
+        return [];
+    }
+  };
+
+  const generateEventsData = (startDate: Date, endDate: Date) => {
+    const events = [];
+    const eventTypes = ['Wedding', 'Corporate', 'Birthday', 'Anniversary', 'Conference'];
+    const statuses = ['Completed', 'Upcoming', 'Cancelled', 'In Progress'];
     
-    // Simulate export process
-    setTimeout(() => {
-      alert(language === 'en' ? 'Export completed!' : 'ஏற்றுமதி முடிந்தது!');
-    }, 1000);
+    for (let i = 0; i <20; i++) {
+      const eventDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()));
+      events.push({
+        id: `EVT${String(i + 1).padStart(3, '0')}`,
+        name: `${eventTypes[Math.floor(Math.random() * eventTypes.length)]} Event ${i + 1}`,
+        date: eventDate.toISOString().split('T')[0],
+        type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        guests: Math.floor(Math.random() * 200) + 50,
+        revenue: Math.floor(Math.random() * 50000) + 10000,
+        client: `Client ${i + 1}`,
+        venue: `Venue ${i + 1}`
+      });
+    }
+    return events;
+  };
+
+  const generateRevenueData = (startDate: Date, endDate: Date) => {
+    const revenue = [];
+    const months = [];
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      months.push(new Date(currentDate));
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    
+    months.forEach((month, index) => {
+      revenue.push({
+        month: month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        events: Math.floor(Math.random() * 15) + 5,
+        revenue: Math.floor(Math.random() * 200000) + 50000,
+        expenses: Math.floor(Math.random() * 100000) + 20000,
+        profit: Math.floor(Math.random() * 100000) + 30000,
+        avgTicketValue: Math.floor(Math.random() * 5000) + 2000
+      });
+    });
+    return revenue;
+  };
+
+  const generateClientsData = (startDate: Date, endDate: Date) => {
+    const clients = [];
+    const clientTypes = ['Individual', 'Corporate', 'Government', 'Non-Profit'];
+    
+    for (let i = 0; i < 25; i++) {
+      clients.push({
+        id: `CLT${String(i + 1).padStart(3, '0')}`,
+        name: `Client ${i + 1}`,
+        type: clientTypes[Math.floor(Math.random() * clientTypes.length)],
+        email: `client${i + 1}@example.com`,
+        phone: `+1-555-${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+        totalEvents: Math.floor(Math.random() * 10) + 1,
+        totalSpent: Math.floor(Math.random() * 100000) + 10000,
+        lastEvent: new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())).toISOString().split('T')[0],
+        status: Math.random() > 0.2 ? 'Active' : 'Inactive'
+      });
+    }
+    return clients;
+  };
+
+  const exportToCSV = (data: any[], filename: string) => {
+    if (data.length === 0) return;
+    
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Escape commas and quotes in CSV
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}.csv`;
+    link.click();
+  };
+
+  const exportToExcel = (data: any[], filename: string) => {
+    if (data.length === 0) return;
+    
+    // For Excel, we'll create a CSV with .xlsx extension (simplified approach)
+    // In production, you'd use a library like xlsx or exceljs
+    exportToCSV(data, filename.replace('.xlsx', ''));
+  };
+
+  const exportToPDF = (data: any[], filename: string) => {
+    if (data.length === 0) return;
+    
+    // For PDF, we'll create a simple HTML table and use browser print
+    // In production, you'd use a library like jsPDF or puppeteer
+    const table = document.createElement('table');
+    table.style.borderCollapse = 'collapse';
+    table.style.width = '100%';
+    
+    // Create header row
+    const headers = Object.keys(data[0]);
+    const headerRow = document.createElement('tr');
+    headers.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header;
+      th.style.border = '1px solid black';
+      th.style.padding = '8px';
+      th.style.backgroundColor = '#f0f0f0';
+      headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+    
+    // Create data rows
+    data.forEach(row => {
+      const dataRow = document.createElement('tr');
+      headers.forEach(header => {
+        const td = document.createElement('td');
+        td.textContent = row[header];
+        td.style.border = '1px solid black';
+        td.style.padding = '8px';
+        dataRow.appendChild(td);
+      });
+      table.appendChild(dataRow);
+    });
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${filename}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              table { border-collapse: collapse; width: 100%; }
+              th, td { border: 1px solid black; padding: 8px; text-align: left; }
+              th { background-color: #f0f0f0; }
+            </style>
+          </head>
+          <body>
+            <h1>${filename}</h1>
+            ${table.outerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    
+    try {
+      const data = getExportData();
+      
+      if (data.length === 0) {
+        toast({
+          title: language === 'en' ? 'No Data Available' : 'தரவு இல்லை',
+          description: language === 'en' ? 'No data found for the selected criteria' : 'தேர்ந்தெடுக்கப்பட்ட அளவுகோல்களுக்கு தரவு எதுவும் கிடைக்கவில்லை',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const filename = `${exportType}_${dateRange}_${new Date().toISOString().split('T')[0]}`;
+      
+      switch (format) {
+        case 'csv':
+          exportToCSV(data, filename);
+          break;
+        case 'excel':
+          exportToExcel(data, filename);
+          break;
+        case 'pdf':
+          exportToPDF(data, filename);
+          break;
+      }
+
+      toast({
+        title: language === 'en' ? 'Export Successful' : 'ஏற்றுமதி வெற்றிகரமாக',
+        description: language === 'en' 
+          ? `${data.length} records exported to ${format.toUpperCase()}`
+          : `${data.length} பதிவுகள் ${format.toUpperCase()} க்கு ஏற்றுமதி செய்யப்பட்டன`,
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: language === 'en' ? 'Export Failed' : 'ஏற்றுமதி தோல்வி',
+        description: language === 'en' ? 'An error occurred during export' : 'ஏற்றுமதி செய்யும் போது பிழை ஏற்பட்டது',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const exportOptions = [
@@ -131,9 +364,14 @@ const DataExport: React.FC<DataExportProps> = ({ language, isDark }) => {
               onClick={handleExport}
               className="btn-chapa-primary px-8 py-3"
               size="lg"
+              disabled={isExporting}
             >
-              <Download className="w-5 h-5 mr-2" />
-              {language === 'en' ? 'Export Data' : 'தரவை ஏற்றுமதி செய்'}
+              {isExporting ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-5 h-5 mr-2" />
+              )}
+              {isExporting ? 'Exporting...' : language === 'en' ? 'Export Data' : 'தரவை ஏற்றுமதி செய்'}
             </Button>
           </div>
 

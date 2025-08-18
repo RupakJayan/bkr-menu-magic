@@ -53,8 +53,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ language, isDark }) => 
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Mock users data
@@ -202,8 +204,21 @@ const UserManagement: React.FC<UserManagementProps> = ({ language, isDark }) => 
   };
 
   const handleEditUser = (user: User) => {
-    console.log('Edit user:', user);
-    // TODO: Implement user editing
+    setEditingUser({ ...user });
+    setShowEditUser(true);
+  };
+
+  const handleSaveUser = () => {
+    if (editingUser) {
+      setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
+      setShowEditUser(false);
+      setEditingUser(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditUser(false);
+    setEditingUser(null);
   };
 
   const handleDeleteUser = (user: User) => {
@@ -665,6 +680,142 @@ const UserManagement: React.FC<UserManagementProps> = ({ language, isDark }) => 
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={showEditUser} onOpenChange={setShowEditUser}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+              {language === 'en' ? 'Edit User' : 'பயனரைத் திருத்து'}
+            </DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editName" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Full Name' : 'முழு பெயர்'}
+                  </Label>
+                  <Input 
+                    id="editName" 
+                    value={editingUser.name} 
+                    onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editEmail" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Email' : 'மின்னஞ்சல்'}
+                  </Label>
+                  <Input 
+                    id="editEmail" 
+                    type="email" 
+                    value={editingUser.email} 
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editPhone" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Phone' : 'தொலைபேசி'}
+                  </Label>
+                  <Input 
+                    id="editPhone" 
+                    value={editingUser.phone} 
+                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editRole" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Role' : 'பங்கு'}
+                  </Label>
+                  <Select value={editingUser.role} onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">{language === 'en' ? 'Administrator' : 'நிர்வாகி'}</SelectItem>
+                      <SelectItem value="manager">{language === 'en' ? 'Manager' : 'மேலாளர்'}</SelectItem>
+                      <SelectItem value="chef">{language === 'en' ? 'Chef' : 'சமையல்காரர்'}</SelectItem>
+                      <SelectItem value="staff">{language === 'en' ? 'Staff' : 'ஊழியர்'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editDepartment" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Department' : 'துறை'}
+                  </Label>
+                  <Input 
+                    id="editDepartment" 
+                    value={editingUser.department} 
+                    onChange={(e) => setEditingUser({ ...editingUser, department: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editStatus" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Status' : 'நிலை'}
+                  </Label>
+                  <Select value={editingUser.status} onValueChange={(value) => setEditingUser({ ...editingUser, status: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">{language === 'en' ? 'Active' : 'செயலில்'}</SelectItem>
+                      <SelectItem value="inactive">{language === 'en' ? 'Inactive' : 'செயலற்ற'}</SelectItem>
+                      <SelectItem value="pending">{language === 'en' ? 'Pending' : 'நிலுவையில்'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editJoinDate" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Join Date' : 'சேர்ந்த தேதி'}
+                  </Label>
+                  <Input 
+                    id="editJoinDate" 
+                    type="date" 
+                    value={editingUser.joinDate} 
+                    onChange={(e) => setEditingUser({ ...editingUser, joinDate: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editRating" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Performance Rating' : 'செயல்திறன் மதிப்பீடு'}
+                  </Label>
+                  <Select value={editingUser.rating.toString()} onValueChange={(value) => setEditingUser({ ...editingUser, rating: parseFloat(value) })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1.0">1.0</SelectItem>
+                      <SelectItem value="2.0">2.0</SelectItem>
+                      <SelectItem value="3.0">3.0</SelectItem>
+                      <SelectItem value="4.0">4.0</SelectItem>
+                      <SelectItem value="5.0">5.0</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={handleCancelEdit} className="btn-chapa-secondary">
+                  {language === 'en' ? 'Cancel' : 'ரத்து'}
+                </Button>
+                <Button onClick={handleSaveUser} className="btn-chapa-primary">
+                  {language === 'en' ? 'Save Changes' : 'மாற்றங்களை சேமி'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -179,6 +179,55 @@ export class PDFService {
         yPosition += 10;
       }
     });
+
+    // Add billing summary if available
+    if (yPosition > 200) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    // Billing Summary Section
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${language === 'en' ? 'Billing Summary' : 'பில்லிங் சுருக்கம்'}`, 20, yPosition);
+    yPosition += 15;
+    
+    // Add billing table header
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${language === 'en' ? 'Session' : 'அமர்வு'}`, 20, yPosition);
+    doc.text(`${language === 'en' ? 'Headcount' : 'தலை எண்ணிக்கை'}`, 80, yPosition);
+    doc.text(`${language === 'en' ? 'Items Cost' : 'பொருட்கள் செலவு'}`, 130, yPosition);
+    doc.text(`${language === 'en' ? 'Total' : 'மொத்தம்'}`, 170, yPosition);
+    yPosition += 10;
+    
+    // Add billing data
+    let totalCost = 0;
+    eventPlan.days.forEach(day => {
+      day.sessions.forEach(session => {
+        const itemCost = session.selectedItems.length * 50 * session.headCount; // Estimated cost
+        totalCost += itemCost;
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(session.sessionName, 20, yPosition);
+        doc.text(session.headCount.toString(), 80, yPosition);
+        doc.text(`₹${itemCost.toLocaleString()}`, 130, yPosition);
+        doc.text(`₹${itemCost.toLocaleString()}`, 170, yPosition);
+        yPosition += 8;
+      });
+    });
+    
+    // Add total
+    yPosition += 5;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(20, yPosition, 190, yPosition);
+    yPosition += 10;
+    
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${language === 'en' ? 'Total Cost' : 'மொத்த செலவு'}: ₹${totalCost.toLocaleString()}`, 130, yPosition);
   }
 
   private static addFooter(doc: jsPDF, language: 'en' | 'ta'): void {

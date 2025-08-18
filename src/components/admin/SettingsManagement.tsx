@@ -25,6 +25,8 @@ import {
 interface SettingsManagementProps {
   language: 'en' | 'ta';
   isDark: boolean;
+  onSave?: (settings: any) => void;
+  onCancel?: () => void;
 }
 
 interface SystemSettings {
@@ -57,7 +59,12 @@ interface SystemSettings {
   };
 }
 
-const SettingsManagement: React.FC<SettingsManagementProps> = ({ language, isDark }) => {
+const SettingsManagement: React.FC<SettingsManagementProps> = ({ 
+  language, 
+  isDark, 
+  onSave, 
+  onCancel 
+}) => {
   const [settings, setSettings] = useState<SystemSettings>({
     businessName: 'Chapa Catering Services',
     businessEmail: 'info@chapacatering.com',
@@ -115,19 +122,80 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({ language, isDar
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real application, you would save to your backend here
+      // await settingsService.saveSettings(settings);
+      
       setHasChanges(false);
-      // TODO: Implement actual save functionality
-      console.log('Settings saved:', settings);
+      
+      // Call the parent onSave callback if provided
+      if (onSave) {
+        onSave(settings);
+      } else {
+        // Default success handling
+        console.log('Settings saved successfully:', settings);
+      }
+      
     } catch (error) {
       console.error('Error saving settings:', error);
+      // You could show an error toast here
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleReset = () => {
-    // TODO: Implement reset to default settings
-    console.log('Settings reset to default');
+    // Reset to default settings
+    const defaultSettings = {
+      business: {
+        name: 'BKR Menu Magic',
+        email: 'info@bkrmenu.com',
+        phone: '+91-98765-43210',
+        address: 'Chennai, Tamil Nadu, India',
+        website: 'https://bkrmenu.com'
+      },
+      preferences: {
+        currency: 'INR',
+        timezone: 'Asia/Kolkata',
+        language: 'en',
+        dateFormat: 'DD/MM/YYYY',
+        timeFormat: '12h'
+      },
+      notifications: {
+        email: true,
+        sms: false,
+        push: true,
+        eventReminders: true,
+        paymentNotifications: true,
+        marketingEmails: false
+      },
+      security: {
+        twoFactorAuth: false,
+        sessionTimeout: 30,
+        passwordPolicy: 'strong',
+        loginAttempts: 5,
+        autoLockout: true
+      },
+      appearance: {
+        theme: 'light',
+        primaryColor: '#1f2937',
+        fontSize: 'medium',
+        compactMode: false,
+        showAnimations: true
+      },
+      integrations: {
+        paymentGateway: 'stripe',
+        emailService: 'sendgrid',
+        smsService: 'twilio',
+        analytics: 'google',
+        backupService: 'aws'
+      }
+    };
+    
+    setSettings(defaultSettings);
+    setHasChanges(false);
+    
+    console.log('Settings reset to default values');
   };
 
   return (

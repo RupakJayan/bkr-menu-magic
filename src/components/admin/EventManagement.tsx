@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Filter, Search, Calendar, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Filter, Search, Calendar, Plus, Edit, Trash2, Eye, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 
 interface EventManagementProps {
   language: 'en' | 'ta';
@@ -22,6 +25,10 @@ interface Event {
   guests: number;
   revenue: string;
   client: string;
+  description?: string;
+  venue?: string;
+  contactPhone?: string;
+  contactEmail?: string;
 }
 
 const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) => {
@@ -31,6 +38,10 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   // Mock data for demonstration
   useEffect(() => {
@@ -44,7 +55,11 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
         status: 'completed',
         guests: 150,
         revenue: '₹45,000',
-        client: 'Raj & Priya'
+        client: 'Raj & Priya',
+        description: language === 'en' ? 'Beautiful wedding reception with traditional and modern elements' : 'பாரம்பரிய மற்றும் நவீன கூறுகளுடன் அழகான திருமண வரவேற்பு',
+        venue: language === 'en' ? 'Grand Palace Hotel' : 'கிராண்ட் பாலஸ் ஹோட்டல்',
+        contactPhone: '+91-98765-43210',
+        contactEmail: 'raj.priya@email.com'
       },
       {
         id: 2,
@@ -55,7 +70,11 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
         status: 'confirmed',
         guests: 25,
         revenue: '₹12,000',
-        client: 'TechCorp Inc.'
+        client: 'TechCorp Inc.',
+        description: language === 'en' ? 'Business lunch meeting for quarterly review' : 'காலாண்டு மதிப்பாய்வுக்கான வணிக மதிய உணவு கூட்டம்',
+        venue: language === 'en' ? 'TechCorp Conference Room' : 'டெக்கோர்ப் மாநாட்டு அறை',
+        contactPhone: '+91-98765-43211',
+        contactEmail: 'events@techcorp.com'
       },
       {
         id: 3,
@@ -66,7 +85,11 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
         status: 'upcoming',
         guests: 40,
         revenue: '₹8,500',
-        client: 'Arun Family'
+        client: 'Arun Family',
+        description: language === 'en' ? 'Sweet 16 birthday celebration with friends and family' : 'நண்பர்கள் மற்றும் குடும்பத்துடன் இனிப்பான 16 வது பிறந்தநாள் கொண்டாட்டம்',
+        venue: language === 'en' ? 'Arun Residence' : 'அருண் வீடு',
+        contactPhone: '+91-98765-43212',
+        contactEmail: 'arun.family@email.com'
       },
       {
         id: 4,
@@ -77,7 +100,11 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
         status: 'draft',
         guests: 30,
         revenue: '₹15,000',
-        client: 'Kumar & Family'
+        client: 'Kumar & Family',
+        description: language === 'en' ? '25th wedding anniversary celebration' : '25 வது திருமண நாள் கொண்டாட்டம்',
+        venue: language === 'en' ? 'Royal Garden Restaurant' : 'ராயல் கார்டன் உணவகம்',
+        contactPhone: '+91-98765-43213',
+        contactEmail: 'kumar.family@email.com'
       }
     ];
     setEvents(mockEvents);
@@ -140,13 +167,27 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
   };
 
   const handleViewEvent = (event: Event) => {
-    console.log('View event:', event);
-    // TODO: Implement event view modal
+    setSelectedEvent(event);
+    setIsViewModalOpen(true);
   };
 
   const handleEditEvent = (event: Event) => {
-    console.log('Edit event:', event);
-    // TODO: Implement event edit modal
+    setEditingEvent({ ...event });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEvent = () => {
+    if (editingEvent) {
+      setEvents(events.map(e => e.id === editingEvent.id ? editingEvent : e));
+      setFilteredEvents(filteredEvents.map(e => e.id === editingEvent.id ? editingEvent : e));
+      setIsEditModalOpen(false);
+      setEditingEvent(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditModalOpen(false);
+    setEditingEvent(null);
   };
 
   const handleDeleteEvent = (event: Event) => {
@@ -378,6 +419,321 @@ const EventManagement: React.FC<EventManagementProps> = ({ language, isDark }) =
           </div>
         )}
       </CardContent>
+
+      {/* Event View Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className={`text-xl font-display font-semibold ${
+              isDark ? 'text-white' : 'text-chapa-charcoal'
+            }`}>
+              {selectedEvent?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Date & Time' : 'தேதி & நேரம்'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.date} {selectedEvent?.time}
+              </p>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Type' : 'வகை'}
+              </Label>
+              <Badge variant="outline" className="text-xs">
+                {getTypeLabel(selectedEvent?.type || '')}
+              </Badge>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Status' : 'நிலை'}
+              </Label>
+              <Badge className={`text-xs ${getStatusColor(selectedEvent?.status || '')}`}>
+                {getStatusLabel(selectedEvent?.status || '')}
+              </Badge>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Guests' : 'விருந்தினர்கள்'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.guests}
+              </p>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Revenue' : 'வருவாய்'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.revenue}
+              </p>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Client' : 'வாடகையாளர்'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.client}
+              </p>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Description' : 'விவரம்'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white/80' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.description || 'No description available.'}
+              </p>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Venue' : 'இருப்பு'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.venue || 'No venue available.'}
+              </p>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Contact' : 'தொடர்பு'}
+              </Label>
+              <p className={`text-lg ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {selectedEvent?.contactPhone && selectedEvent?.contactEmail ? (
+                  <>
+                    Phone: {selectedEvent.contactPhone}
+                    <br />
+                    Email: {selectedEvent.contactEmail}
+                  </>
+                ) : (
+                  'No contact information available.'
+                )}
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className={`text-xl font-display font-semibold ${
+              isDark ? 'text-white' : 'text-chapa-charcoal'
+            }`}>
+              {editingEvent?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Name' : 'பெயர்'}
+              </Label>
+              <Input
+                value={editingEvent?.name || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, name: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Date' : 'தேதி'}
+              </Label>
+              <Input
+                type="date"
+                value={editingEvent?.date || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, date: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Time' : 'நேரம்'}
+              </Label>
+              <Input
+                type="time"
+                value={editingEvent?.time || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, time: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Type' : 'வகை'}
+              </Label>
+              <Select
+                value={editingEvent?.type || ''}
+                onValueChange={(value) => setEditingEvent({ ...editingEvent!, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'en' ? 'Select type' : 'வகையைத் தேர்ந்தெடு'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="wedding">{language === 'en' ? 'Wedding' : 'திருமணம்'}</SelectItem>
+                  <SelectItem value="corporate">{language === 'en' ? 'Corporate' : 'நிறுவன'}</SelectItem>
+                  <SelectItem value="birthday">{language === 'en' ? 'Birthday' : 'பிறந்தநாள்'}</SelectItem>
+                  <SelectItem value="anniversary">{language === 'en' ? 'Anniversary' : 'திருமண நாள்'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Status' : 'நிலை'}
+              </Label>
+              <Select
+                value={editingEvent?.status || ''}
+                onValueChange={(value) => setEditingEvent({ ...editingEvent!, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'en' ? 'Select status' : 'நிலையைத் தேர்ந்தெடு'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="completed">{language === 'en' ? 'Completed' : 'முடிந்தது'}</SelectItem>
+                  <SelectItem value="confirmed">{language === 'en' ? 'Confirmed' : 'உறுதிப்படுத்தப்பட்டது'}</SelectItem>
+                  <SelectItem value="upcoming">{language === 'en' ? 'Upcoming' : 'வரவிருக்கிறது'}</SelectItem>
+                  <SelectItem value="draft">{language === 'en' ? 'Draft' : 'வரைவு'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Guests' : 'விருந்தினர்கள்'}
+              </Label>
+              <Input
+                type="number"
+                value={editingEvent?.guests || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, guests: parseInt(e.target.value) || 0 })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Revenue' : 'வருவாய்'}
+              </Label>
+              <Input
+                value={editingEvent?.revenue || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, revenue: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Client' : 'வாடகையாளர்'}
+              </Label>
+              <Input
+                value={editingEvent?.client || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, client: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Description' : 'விவரம்'}
+              </Label>
+              <Textarea
+                value={editingEvent?.description || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, description: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Venue' : 'இருப்பு'}
+              </Label>
+              <Input
+                value={editingEvent?.venue || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, venue: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Contact Phone' : 'தொடர்பு தொலைபேசி'}
+              </Label>
+              <Input
+                value={editingEvent?.contactPhone || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, contactPhone: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+            <div>
+              <Label className={`text-sm font-medium ${
+                isDark ? 'text-white' : 'text-chapa-charcoal'
+              }`}>
+                {language === 'en' ? 'Contact Email' : 'தொடர்பு மின்னஞ்சல்'}
+              </Label>
+              <Input
+                value={editingEvent?.contactEmail || ''}
+                onChange={(e) => setEditingEvent({ ...editingEvent!, contactEmail: e.target.value })}
+                className={`${isDark ? 'bg-chapa-dark-gray text-white' : ''}`}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" onClick={handleCancelEdit} className="btn-chapa-secondary">
+              {language === 'en' ? 'Cancel' : 'ரத்து'}
+            </Button>
+            <Button onClick={handleSaveEvent} className="btn-chapa-primary">
+              {language === 'en' ? 'Save Changes' : 'மாற்றங்களை சேமி'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

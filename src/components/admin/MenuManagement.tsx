@@ -56,8 +56,10 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ language, isDark }) => 
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddItem, setShowAddItem] = useState(false);
+  const [showEditItem, setShowEditItem] = useState(false);
   const [showItemDetails, setShowItemDetails] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Mock menu data
@@ -221,8 +223,21 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ language, isDark }) => 
   };
 
   const handleEditItem = (item: MenuItem) => {
-    console.log('Edit item:', item);
-    // TODO: Implement item editing
+    setEditingItem({ ...item });
+    setShowEditItem(true);
+  };
+
+  const handleSaveItem = () => {
+    if (editingItem) {
+      setMenuItems(menuItems.map(i => i.id === editingItem.id ? editingItem : i));
+      setShowEditItem(false);
+      setEditingItem(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditItem(false);
+    setEditingItem(null);
   };
 
   const handleDeleteItem = (item: MenuItem) => {
@@ -713,6 +728,167 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ language, isDark }) => 
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Item Modal */}
+      <Dialog open={showEditItem} onOpenChange={setShowEditItem}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+              {language === 'en' ? 'Edit Menu Item' : 'மெனு பொருளைத் திருத்து'}
+            </DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editName" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Name (English)' : 'பெயர் (ஆங்கிலம்)'}
+                  </Label>
+                  <Input 
+                    id="editName" 
+                    value={editingItem.nameEn} 
+                    onChange={(e) => setEditingItem({ ...editingItem, nameEn: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editNameTamil" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Name (Tamil)' : 'பெயர் (தமிழ்)'}
+                  </Label>
+                  <Input 
+                    id="editNameTamil" 
+                    value={editingItem.nameTa} 
+                    onChange={(e) => setEditingItem({ ...editingItem, nameTa: e.target.value })}
+                    className="mt-1" 
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editCategory" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Category' : 'வகை'}
+                  </Label>
+                  <Select value={editingItem.category} onValueChange={(value) => setEditingItem({ ...editingItem, category: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="appetizer">{language === 'en' ? 'Appetizer' : 'துவக்க உணவு'}</SelectItem>
+                      <SelectItem value="main-course">{language === 'en' ? 'Main Course' : 'முதன்மை உணவு'}</SelectItem>
+                      <SelectItem value="dessert">{language === 'en' ? 'Dessert' : 'இனிப்பு'}</SelectItem>
+                      <SelectItem value="beverage">{language === 'en' ? 'Beverage' : 'பானம்'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="editPrice" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Price' : 'விலை'}
+                  </Label>
+                  <Input 
+                    id="editPrice" 
+                    type="number" 
+                    value={editingItem.price} 
+                    onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) || 0 })}
+                    className="mt-1" 
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editPrepTime" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Preparation Time (mins)' : 'தயாரிப்பு நேரம் (நிமிடங்கள்)'}
+                  </Label>
+                  <Input 
+                    id="editPrepTime" 
+                    type="number" 
+                    value={editingItem.prepTime} 
+                    onChange={(e) => setEditingItem({ ...editingItem, prepTime: parseInt(e.target.value) || 0 })}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editStatus" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Status' : 'நிலை'}
+                  </Label>
+                  <Select value={editingItem.status} onValueChange={(value) => setEditingItem({ ...editingItem, status: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">{language === 'en' ? 'Active' : 'செயலில்'}</SelectItem>
+                      <SelectItem value="inactive">{language === 'en' ? 'Inactive' : 'செயலற்ற'}</SelectItem>
+                      <SelectItem value="draft">{language === 'en' ? 'Draft' : 'வரைவு'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editDietary" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Dietary Preference' : 'உணவு விருப்பம்'}
+                  </Label>
+                  <Select value={editingItem.dietary} onValueChange={(value) => setEditingItem({ ...editingItem, dietary: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vegetarian">{language === 'en' ? 'Vegetarian' : 'சைவம்'}</SelectItem>
+                      <SelectItem value="non-vegetarian">{language === 'en' ? 'Non-Vegetarian' : 'சைவம் அல்லாதது'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="editSpiceLevel" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                    {language === 'en' ? 'Spice Level' : 'மசாலா நிலை'}
+                  </Label>
+                  <Select value={editingItem.spiceLevel} onValueChange={(value) => setEditingItem({ ...editingItem, spiceLevel: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mild">{language === 'en' ? 'Mild' : 'மென்மையான'}</SelectItem>
+                      <SelectItem value="medium">{language === 'en' ? 'Medium' : 'நடுத்தர'}</SelectItem>
+                      <SelectItem value="spicy">{language === 'en' ? 'Spicy' : 'காரமான'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="editDescription" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                  {language === 'en' ? 'Description (English)' : 'விளக்கம் (ஆங்கிலம்)'}
+                </Label>
+                <Textarea 
+                  id="editDescription" 
+                  value={editingItem.descriptionEn || ''} 
+                  onChange={(e) => setEditingItem({ ...editingItem, descriptionEn: e.target.value })}
+                  className="mt-1" 
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editDescriptionTamil" className={isDark ? 'text-white' : 'text-chapa-charcoal'}>
+                  {language === 'en' ? 'Description (Tamil)' : 'விளக்கம் (தமிழ்)'}
+                </Label>
+                <Textarea 
+                  id="editDescriptionTamil" 
+                  value={editingItem.descriptionTa || ''} 
+                  onChange={(e) => setEditingItem({ ...editingItem, descriptionTa: e.target.value })}
+                  className="mt-1" 
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={handleCancelEdit} className="btn-chapa-secondary">
+                  {language === 'en' ? 'Cancel' : 'ரத்து'}
+                </Button>
+                <Button onClick={handleSaveItem} className="btn-chapa-primary">
+                  {language === 'en' ? 'Save Changes' : 'மாற்றங்களை சேமி'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
