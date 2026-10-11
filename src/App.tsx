@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { OpeningLoader } from "@/components/OpeningLoader";
 import Home from "./pages/Home";
@@ -35,7 +35,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter
+        <HashRouter
           future={{
             v7_startTransition: true,
             v7_relativeSplatPath: true,
@@ -47,7 +47,7 @@ const App = () => {
             <Route path="/admin" element={<AdminAccess />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
         {showOpening && <OpeningLoader onComplete={dismissOpening} />}
       </TooltipProvider>
     </ThemeProvider>
