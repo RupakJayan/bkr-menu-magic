@@ -111,6 +111,29 @@ export const saveEventMenu = (menu: EventMenu): SavedEvent[] => {
   return getSavedEvents();
 };
 
+export const exportMenuJSON = (menu: EventMenu): void => {
+  const safeName = menu.clientDetails.name.trim().replace(/[<>:"/\\|?*]/g, "_") || "Event";
+  const filename = `BKR_Menu_${safeName}_${menu.startDate}.json`;
+  const blob = new Blob([JSON.stringify(menu, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+export const importMenuJSON = async (file: File): Promise<EventMenu> => {
+  const text = await file.text();
+  const data = JSON.parse(text) as EventMenu;
+  if (!data.id || !data.clientDetails || !data.days) {
+    throw new Error("The selected file is not a valid BKR menu JSON file.");
+  }
+  saveEventMenu(data);
+  window.localStorage.setItem("currentMenu", JSON.stringify(data));
+  return data;
+};
+
 export const updateEventStatus = (id: string, status: EventStatus): SavedEvent[] => {
   const events = getSavedEvents();
   if (!events.some((event) => event.id === id)) {

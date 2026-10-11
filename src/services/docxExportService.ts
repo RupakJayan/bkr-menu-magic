@@ -413,7 +413,7 @@ export const generateEventMenuDOCX = async (
       ? formatDate(menu.startDate)
       : `${formatDate(menu.startDate)} & ${formatDate(menu.endDate)}`],
     [localized(language, "TAMIL DATE & DAY", "தமிழ் தேதி மற்றும் கிழமை"),
-      getTamilSolarDate(menu.startDate) || menu.tamilDate || ""],
+      getTamilSolarDate(menu.startDate, language) || menu.tamilDate || ""],
     [localized(language, "PHONE NO", "தொலைபேசி எண்"), menu.clientDetails.phone],
   ];
   const children = [

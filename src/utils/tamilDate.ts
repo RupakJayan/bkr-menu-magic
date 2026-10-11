@@ -1,6 +1,6 @@
 import { isValidISODate } from "@/utils/istDate";
 
-const TAMIL_MONTHS = [
+const TAMIL_MONTHS_TA = [
   "சித்திரை",
   "வைகாசி",
   "ஆனி",
@@ -13,6 +13,41 @@ const TAMIL_MONTHS = [
   "தை",
   "மாசி",
   "பங்குனி",
+] as const;
+
+const TAMIL_MONTHS_EN = [
+  "Chithirai",
+  "Vaikasi",
+  "Aani",
+  "Aadi",
+  "Aavani",
+  "Purattasi",
+  "Aippasi",
+  "Karthigai",
+  "Margazhi",
+  "Thai",
+  "Maasi",
+  "Panguni",
+] as const;
+
+const WEEKDAYS_TA = [
+  "ஞாயிற்றுக்கிழமை",
+  "திங்கட்கிழமை",
+  "செவ்வாய்க்கிழமை",
+  "புதன்கிழமை",
+  "வியாழக்கிழமை",
+  "வெள்ளிக்கிழமை",
+  "சனிக்கிழமை",
+] as const;
+
+const WEEKDAYS_EN = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ] as const;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -89,7 +124,10 @@ function sunriseInIndia(year: number, month: number, day: number): number {
  * Converts a Gregorian date to its Tamil solar date using sunrise in Anaimalai.
  * Tamil solar days change at sunrise, not at midnight.
  */
-export function getTamilSolarDate(isoDate: string): string {
+export function getTamilSolarDate(
+  isoDate: string,
+  lang: "ta" | "en" = "ta",
+): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
   if (!match || !isValidISODate(isoDate)) return "";
 
@@ -114,16 +152,11 @@ export function getTamilSolarDate(isoDate: string): string {
     if (previousMonth !== solarMonth) break;
     dayOfMonth += 1;
   }
-  const weekdays = [
-    "ஞாயிற்றுக்கிழமை",
-    "திங்கட்கிழமை",
-    "செவ்வாய்க்கிழமை",
-    "புதன்கிழமை",
-    "வியாழக்கிழமை",
-    "வெள்ளிக்கிழமை",
-    "சனிக்கிழமை",
-  ];
-  const weekday = weekdays[new Date(dateAtNoon).getUTCDay()];
+  const dayOfWeek = new Date(dateAtNoon).getUTCDay();
 
-  return `${dayOfMonth} - ${TAMIL_MONTHS[solarMonth]}, ${weekday}`;
+  if (lang === "en") {
+    return `${dayOfMonth} - ${TAMIL_MONTHS_EN[solarMonth]}, ${WEEKDAYS_EN[dayOfWeek]}`;
+  }
+
+  return `${dayOfMonth} - ${TAMIL_MONTHS_TA[solarMonth]}, ${WEEKDAYS_TA[dayOfWeek]}`;
 }

@@ -1,16 +1,18 @@
-import { useState, type ReactNode } from "react";
+import { useState, useRef, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowDownToLine, CalendarDays, Download, FileJson, LogOut, Menu as MenuIcon, Plus, Search, Trash2, Users } from "lucide-react";
+import { ArrowDownToLine, CalendarDays, Download, FileJson, LogOut, Menu as MenuIcon, Plus, Search, Trash2, Upload, Users } from "lucide-react";
 import type { EventMenu } from "@/types/menu";
 import {
   buildCatalogKey,
   deleteContact,
   deleteSavedEvent,
+  exportMenuJSON,
   getBusinessSettings,
   getContacts,
   getManagedMenuCatalog,
   getMenuAdminState,
   getSavedEvents,
+  importMenuJSON,
   saveBusinessSettings,
   saveContact,
   saveEventMenu,
@@ -28,6 +30,17 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
 import { generateEventMenuDOCX } from "@/services/docxExportService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
+import {
+  getStoredGoogleToken,
+  getStoredGoogleUser,
+  isGoogleAuthenticated,
+  requestGoogleLogin,
+  logoutGoogle,
+} from "@/services/googleAuthService";
+import {
+  loadMenusFromGoogleDrive,
+  saveMenuToGoogleDrive,
+} from "@/services/googleDriveService";
 
 type Tab = "overview" | "events" | "calendar" | "contacts" | "menu" | "analytics" | "settings";
 const TABS: { id: Tab; label: string }[] = [
@@ -109,6 +122,81 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [contactDraft, setContactDraft] = useState({ name: "", email: "", phone: "", role: "Staff" as LocalContact["role"] });
   const [newDish, setNewDish] = useState({ category: "", name_en: "", name_ta: "", estimatedCost: "0" });
   const [notice, setNotice] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const imported = await importMenuJSON(file);
+      setEvents(getSavedEvents());
+      setNotice(`Imported menu for "${imported.clientDetails.name || "Client"}" successfully.`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Could not import menu file.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const [googleUser, setGoogleUser] = useState(getStoredGoogleUser);
+  const [googleSyncing, setGoogleSyncing] = useState(false);
+
+  const syncWithGoogleDrive = async (tokenOverride?: string) => {
+    const token = tokenOverride || getStoredGoogleToken();
+    if (!token) {
+      handleGoogleConnect();
+      return;
+    }
+
+    try {
+      setGoogleSyncing(true);
+      const driveMenus = await loadMenusFromGoogleDrive(token);
+      driveMenus.forEach((menu) => {
+        saveEventMenu(menu);
+      });
+
+      const currentEvents = getSavedEvents();
+      for (const event of currentEvents) {
+        await saveMenuToGoogleDrive(event.menu, token);
+      }
+
+      setEvents(getSavedEvents());
+      setNotice(`Google Drive synced successfully (${currentEvents.length} events up to date in "BKR Catering Events").`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Sync with Google Drive failed.");
+    } finally {
+      setGoogleSyncing(false);
+    }
+  };
+
+  const handleGoogleConnect = async () => {
+    try {
+      setGoogleSyncing(true);
+      const token = await requestGoogleLogin();
+      setGoogleUser(getStoredGoogleUser());
+      await syncWithGoogleDrive(token);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not connect to Google Drive.");
+    } finally {
+      setGoogleSyncing(false);
+    }
+  };
+
+  const handleSaveToDrive = async (event: SavedEvent) => {
+    const token = getStoredGoogleToken();
+    if (!token) {
+      await handleGoogleConnect();
+      return;
+    }
+
+    try {
+      setNotice("Uploading menu to Google Drive...");
+      await saveMenuToGoogleDrive(event.menu, token);
+      setNotice(`Menu for ${event.menu.clientDetails.name || "Client"} saved to Google Drive folder "BKR Catering Events".`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not save to Google Drive.");
+    }
+  };
 
   const managedCatalog = getManagedMenuCatalog();
   const filteredEvents = events.filter(({ menu }) =>
@@ -252,6 +340,32 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <ThemeToggle />
+            <Button
+              variant="outline"
+              onClick={() => syncWithGoogleDrive()}
+              disabled={googleSyncing}
+              title={googleUser?.email ? `Connected as ${googleUser.email}` : "Sync menus with Google Drive folder"}
+              className="border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+            >
+              <svg className="mr-2 h-4 w-4 inline" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              {googleSyncing ? "Syncing Drive…" : googleUser ? "Sync Drive" : "Connect Drive"}
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileImport}
+              accept=".json"
+              className="hidden"
+              aria-label="Upload menu JSON"
+            />
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} title="Import menu from .json backup file">
+              <Upload className="mr-2 h-4 w-4" />Import menu
+            </Button>
             <Button variant="outline" onClick={() => startBooking()}>Create event</Button>
             <Button variant="outline" onClick={exportBackup}><FileJson className="mr-2 h-4 w-4" />Backup</Button>
             <Button onClick={exportEvents}><ArrowDownToLine className="mr-2 h-4 w-4" />Export events</Button>
@@ -303,6 +417,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 onOpen={startBooking}
                 onDelete={(id) => { setEvents(deleteSavedEvent(id)); setNotice("Event deleted."); }}
                 onExport={exportEventDocument}
+                onSaveToDrive={handleSaveToDrive}
               />
             </Card>
           </>
@@ -319,6 +434,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               onOpen={startBooking}
               onDelete={(id) => { setEvents(deleteSavedEvent(id)); setNotice("Event deleted."); }}
               onExport={exportEventDocument}
+              onSaveToDrive={handleSaveToDrive}
             />
           </Card>
         )}
@@ -500,6 +616,7 @@ function EventTable({
   onOpen,
   onDelete,
   onExport,
+  onSaveToDrive,
 }: {
   events: SavedEvent[];
   query: string;
@@ -508,6 +625,7 @@ function EventTable({
   onOpen: (event: SavedEvent) => void;
   onDelete: (id: string) => void;
   onExport: (event: SavedEvent, language: "en" | "ta") => void;
+  onSaveToDrive?: (event: SavedEvent) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -527,7 +645,7 @@ function EventTable({
                   <td className="p-3">{event.menu.days.reduce((sum, day) => sum + day.sessions.length, 0)}</td>
                   <td className="p-3">{formatMoney(eventAmount(event.menu))}</td>
                   <td className="p-3"><select aria-label={`Status for ${event.menu.clientDetails.name}`} className={`rounded-full px-2 py-1 text-xs font-semibold ${statusStyles[event.status]}`} value={event.status} onChange={(e) => onStatusChange(event.id, e.target.value as EventStatus)}>{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></td>
-                  <td className="p-3"><div className="flex flex-wrap gap-1"><Button variant="outline" size="sm" onClick={() => onOpen(event)}>Edit</Button><Button variant="ghost" size="sm" onClick={() => void onExport(event, "en")}>EN Word</Button><Button variant="ghost" size="sm" onClick={() => void onExport(event, "ta")}>தமிழ் Word</Button><Button variant="ghost" size="icon" aria-label={`Delete ${event.menu.clientDetails.name} event`} onClick={() => onDelete(event.id)}><Trash2 className="h-4 w-4 text-rose-600" /></Button></div></td>
+                  <td className="p-3"><div className="flex flex-wrap gap-1"><Button variant="outline" size="sm" onClick={() => onOpen(event)}>Edit</Button><Button variant="ghost" size="sm" onClick={() => void onExport(event, "en")}>EN Word</Button><Button variant="ghost" size="sm" onClick={() => void onExport(event, "ta")}>தமிழ் Word</Button><Button variant="ghost" size="sm" onClick={() => exportMenuJSON(event.menu)} title="Download JSON file">JSON</Button>{onSaveToDrive && (<Button variant="ghost" size="sm" onClick={() => onSaveToDrive(event)} title="Save to Google Drive">Drive</Button>)}<Button variant="ghost" size="icon" aria-label={`Delete ${event.menu.clientDetails.name} event`} onClick={() => onDelete(event.id)}><Trash2 className="h-4 w-4 text-rose-600" /></Button></div></td>
                 </tr>
               ))}
             </tbody>

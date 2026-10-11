@@ -8,6 +8,8 @@ import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, MapPin, Phone
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
+import { saveEventMenu } from '@/services/localAdminService';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReviewStepProps {
   menu: EventMenu;
@@ -17,9 +19,26 @@ interface ReviewStepProps {
 }
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNext, onPrevious }) => {
+  const { toast } = useToast();
   const [editingSession, setEditingSession] = useState<{ dayIndex: number; sessionIndex: number } | null>(null);
   const [customCosts, setCustomCosts] = useState<Record<string, number>>({});
   const menuData = getManagedMenuCatalog();
+
+  const handleManualSave = () => {
+    try {
+      saveEventMenu(menu);
+      toast({
+        title: "Menu Saved to Dashboard",
+        description: "Event has been saved in your dashboard records.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not save menu",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const removeDish = (dayIndex: number, sessionIndex: number, dishKey: string) => {
     const updatedDays = [...menu.days];
@@ -341,13 +360,21 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
 
       {/* Navigation */}
       <div className="bg-white rounded-xl shadow-lg p-5 border border-pink-200">
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             variant="outline"
             onClick={onPrevious}
-            className="flex-1 h-12 text-base font-semibold rounded-lg border-2 border-pink-300 hover:bg-pink-50"
+            className="sm:w-36 h-12 text-base font-semibold rounded-lg border-2 border-pink-300 hover:bg-pink-50"
           >
-            Previous
+            ← Previous
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleManualSave}
+            className="flex-1 h-12 text-base font-semibold rounded-lg border-2 border-pink-500 text-pink-700 hover:bg-pink-50 flex items-center justify-center gap-2"
+          >
+            <Save className="h-5 w-5 text-pink-600" />
+            Save to Dashboard
           </Button>
           <Button
             onClick={onNext}

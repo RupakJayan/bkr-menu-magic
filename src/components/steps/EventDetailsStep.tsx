@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getTamilSolarDate } from '@/utils/tamilDate';
 import { differenceInCalendarDays } from '@/utils/istDate';
 import { CalendarDays, Clock3, MapPin, NotebookPen, UserRound } from 'lucide-react';
+import { VenueLocationPicker } from '@/components/venue/VenueLocationPicker';
 
 interface EventDetailsStepProps {
   menu: EventMenu;
@@ -23,7 +24,9 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
   const [googleMapsUrl, setGoogleMapsUrl] = useState(menu.venueDetails.googleMapsUrl || '');
   const [startDate, setStartDate] = useState(menu.startDate);
   const [endDate, setEndDate] = useState(menu.endDate);
-  const tamilDate = getTamilSolarDate(startDate);
+  const tamilDateTa = getTamilSolarDate(startDate, "ta");
+  const tamilDateEn = getTamilSolarDate(startDate, "en");
+  const displayTamilDate = tamilDateTa ? `${tamilDateTa} (${tamilDateEn})` : "";
 
   const calculateDays = () => {
     if (!startDate || !endDate) return 0;
@@ -45,7 +48,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
         address: venueAddress,
         googleMapsUrl: googleMapsUrl || undefined,
       },
-      tamilDate: tamilDate || undefined,
+      tamilDate: tamilDateTa || undefined,
       transportCharge: Math.max(0, transportCharge),
       startDate,
       endDate,
@@ -115,39 +118,14 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
               <p className="text-sm text-gray-500">Add the location and optional map link.</p>
             </div>
           </div>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="venueName" className="text-base font-semibold text-gray-700">Venue Name *</Label>
-              <Input
-                id="venueName"
-                value={venueName}
-                onChange={(e) => setVenueName(e.target.value)}
-                placeholder="Enter venue name"
-                className="h-12 text-base rounded-lg border-2 border-red-200 focus:border-red-600 focus:ring-red-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="venueAddress" className="text-base font-semibold text-gray-700">Venue Address *</Label>
-              <Textarea
-                id="venueAddress"
-                value={venueAddress}
-                onChange={(e) => setVenueAddress(e.target.value)}
-                placeholder="Enter complete venue address"
-                rows={3}
-                className="text-base rounded-lg border-2 border-red-200 focus:border-red-600 focus:ring-red-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="googleMapsUrl" className="text-base font-semibold text-gray-700">Google Maps URL (Optional)</Label>
-              <Input
-                id="googleMapsUrl"
-                value={googleMapsUrl}
-                onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                placeholder="https://maps.google.com/..."
-                className="h-12 text-base rounded-lg border-2 border-red-200 focus:border-red-600 focus:ring-red-600"
-              />
-            </div>
-          </div>
+          <VenueLocationPicker
+            venueName={venueName}
+            venueAddress={venueAddress}
+            googleMapsUrl={googleMapsUrl}
+            onVenueNameChange={setVenueName}
+            onVenueAddressChange={setVenueAddress}
+            onGoogleMapsUrlChange={setGoogleMapsUrl}
+          />
         </section>
 
         {/* Event Dates */}
@@ -178,7 +156,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
               </Label>
               <Input
                 id="tamilDate"
-                value={tamilDate}
+                value={displayTamilDate}
                 readOnly
                 aria-describedby="tamilDateHelp"
                 placeholder="Choose an English event date"

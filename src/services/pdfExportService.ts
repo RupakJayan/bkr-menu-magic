@@ -294,7 +294,7 @@ export const generateEventMenuPDF = async (
       ["பெயர்", menu.clientDetails.name],
       ["இடம்", menu.venueDetails.name],
       ["தேதி", dates],
-      ["தமிழ் தேதி மற்றும் கிழமை", getTamilSolarDate(menu.startDate) || menu.tamilDate || ""],
+      ["தமிழ் தேதி மற்றும் கிழமை", getTamilSolarDate(menu.startDate, "ta") || menu.tamilDate || ""],
       ["தொலைபேசி எண்", menu.clientDetails.phone],
       ["முகவரி", menu.venueDetails.address],
     ]
@@ -302,7 +302,7 @@ export const generateEventMenuPDF = async (
       ["NAME", menu.clientDetails.name],
       ["VENUE", menu.venueDetails.name],
       ["DATE", dates],
-      ["TAMIL DATE & DAY", getTamilSolarDate(menu.startDate) || menu.tamilDate || ""],
+      ["TAMIL DATE & DAY", getTamilSolarDate(menu.startDate, "en") || menu.tamilDate || ""],
       ["PHONE NO", menu.clientDetails.phone],
       ["ADDRESS", menu.venueDetails.address],
     ];

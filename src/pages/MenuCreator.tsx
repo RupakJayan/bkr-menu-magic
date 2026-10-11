@@ -6,9 +6,9 @@ import { EventPlanningFlow } from '@/components/EventPlanningFlow';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { BrandLogo } from '@/components/BrandLogo';
-import { ArrowLeft, FileText, Save } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveEventMenu } from '@/services/localAdminService';
+import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
 import './planner.css';
 
@@ -28,9 +28,22 @@ const MenuCreator: React.FC = () => {
     }
   }, [isAdmin, navigate]);
 
+  const [autoSaved, setAutoSaved] = useState(false);
+
   useEffect(() => {
     if (!isAdmin) return;
     localStorage.setItem('currentMenu', JSON.stringify(menu));
+    // Auto-sync into saved events list if client name, venue, or sessions exist
+    if (
+      menu.clientDetails.name.trim() ||
+      menu.venueDetails.name.trim() ||
+      menu.days.length > 0
+    ) {
+      saveEventMenu(menu);
+      setAutoSaved(true);
+      const timer = setTimeout(() => setAutoSaved(false), 2500);
+      return () => clearTimeout(timer);
+    }
   }, [isAdmin, menu]);
 
   const handleMenuChange = (updatedMenu: EventMenu) => {
@@ -65,6 +78,21 @@ const MenuCreator: React.FC = () => {
           </button>
           <div className="planner-topbar-actions">
             <ThemeToggle showLabel />
+            {autoSaved && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full animate-fade-in">
+                <Check className="h-3 w-3" /> Auto-saved
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportMenuJSON(menu)}
+              aria-label="Download menu backup file"
+              title="Download menu backup file (.json)"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              <span className="hidden md:inline">Backup</span>
+            </Button>
             <Button variant="ghost" onClick={() => navigate('/')} aria-label="Back to home">
               <ArrowLeft className="h-4 w-4" />
               <span>Home</span>
