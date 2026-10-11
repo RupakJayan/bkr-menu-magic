@@ -1,0 +1,192 @@
+/* ============================================================================
+   Theme Pack 164 - WEDDING SUITE  (v1.9.0)
+   Engraved-invitation calm: cream canvas, sage accent, Cormorant display type,
+   squared plates, pill buttons, arched imagery. All component styling must read
+   from var(--tp-*); --tp-h is the single re-brand dial (0-360).
+   ========================================================================== */
+
+@keyframes tp-pop { 0% { transform: scale(.88); opacity: 0 } 62% { transform: scale(1.05) } 100% { transform: scale(1); opacity: 1 } }
+@keyframes tp-up { from { transform: translateY(var(--tp-reveal-dist, 16px)); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes tp-down { from { transform: translateY(-16px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes tp-sheet { from { transform: translateY(102%) } to { transform: translateY(0) } }
+@keyframes tp-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes tp-wipe { from { clip-path: inset(0 100% 0 0) } to { clip-path: inset(0 0 0 0) } }
+@keyframes tp-curtain { from { clip-path: inset(100% 0 0 0); transform: translateY(var(--tp-reveal-dist, 16px)) } to { clip-path: inset(0 0 0 0); transform: translateY(0) } }
+@keyframes tp-rise { from { clip-path: inset(0 0 100% 0); transform: translateY(var(--tp-reveal-dist, 16px)) } to { clip-path: inset(0 0 0 0); transform: translateY(0) } }
+@keyframes tp-blur-in { from { opacity: 0; filter: blur(16px); transform: scale(1.05) translateY(var(--tp-reveal-dist, 16px)) } to { opacity: 1; filter: blur(0); transform: scale(1) translateY(0) } }
+@keyframes tp-tape { from { opacity: 0; transform: rotate(-9deg) translateY(var(--tp-reveal-dist, 16px)) scale(.95) } to { opacity: 1; transform: rotate(var(--tp-img-tilt, 0deg)) translateY(0) scale(1) } }
+@keyframes tp-zoom { from { transform: scale(1.16) } to { transform: scale(1) } }
+@keyframes tp-bar { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+@keyframes tp-shake { 10%, 90% { transform: translateX(-2px) } 30%, 70% { transform: translateX(3px) } 50% { transform: translateX(-4px) } }
+@keyframes tp-pulse { 0%, 100% { opacity: 1 } 50% { opacity: .42 } }
+@keyframes tp-breathe { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.045) } }
+@keyframes tp-shimmer { from { background-position: -160% 0 } to { background-position: 260% 0 } }
+@keyframes tp-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-9px) } }
+@keyframes tp-spin { to { transform: rotate(360deg) } }
+@keyframes tp-blink { 50% { opacity: 0 } }
+@keyframes tp-tilt { 0%, 100% { transform: rotate(-2.5deg) } 50% { transform: rotate(2.5deg) } }
+@keyframes tp-drift { 0% { transform: translate3d(0, 0, 0) scale(1) } 50% { transform: translate3d(4%, -3%, 0) scale(1.12) } 100% { transform: translate3d(0, 0, 0) scale(1) } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Theme tokens. Declared on the SAME element that carries data-theme.
+   -------------------------------------------------------------------------- */
+[data-theme="wedding-suite"] {
+  color-scheme: light;
+  --tp-h: 130;
+  --tp-fx: none;
+  --tp-fx-op: 0;
+  --tp-fx-blend: normal;
+  --tp-3d: none;
+  --tp-3d-anim: none;
+  --tp-3d-web: none;
+
+  --tp-dur-slow: 900ms;
+  --tp-stagger: 120ms;
+  --tp-reveal: tp-fade;
+  --tp-reveal-dist: 20px;
+
+  --tp-img-r: 999px 999px 4px 4px;
+  --tp-img-frame: 1px solid #dfe0d2;
+  --tp-img-sh: none;
+  --tp-img-filter: saturate(.85) brightness(1.04);
+  --tp-img-overlay-op: 0.05;
+  --tp-img-blend: soft-light;
+  --tp-img-tilt: 0deg;
+  --tp-img-ar: 3 / 4;
+
+  --tp-bg: #f7f6f0;
+  --tp-canvas: #f7f6f0;
+  --tp-surf: #fffefa;
+  --tp-surf-2: #e9eee6;
+  --tp-ink: #27352d;
+  --tp-mute: #5f6d63;
+  --tp-acc: #315b43;
+  --tp-acc-2: #a9b99a;
+  --tp-acc-ink: #fffefa;
+  --tp-line: #d9e0d7;
+  --tp-grad: linear-gradient(135deg, #426d52, #315b43);
+
+  --tp-r: 2px;
+  --tp-r-sm: 0px;
+  --tp-r-lg: 4px;
+  --tp-r-btn: 999px;
+
+  --tp-sh: 0 16px 40px rgba(46, 50, 38, .08);
+  --tp-sh-sm: 0 3px 10px rgba(46, 50, 38, .06);
+  --tp-bw: 1px;
+  --tp-tex: none;
+  --tp-blur: none;
+
+  --tp-font-display: 'Cormorant Garamond', Georgia, serif;
+  --tp-font-body: 'Hanken Grotesk', system-ui, sans-serif;
+  --tp-font-mono: 'JetBrains Mono', monospace;
+  --tp-w-display: 500;
+  --tp-track-display: 0.02em;
+  --tp-case-display: none;
+  --tp-hero: 84px;
+
+  --tp-dur: 200ms;
+  --tp-ease: cubic-bezier(.22, 1, .36, 1);
+  --tp-press: 0.99;
+}
+
+/* Evening variant of the same theme: identical token contract, dusk palette.
+   Keeps the invitation calm, only the paper changes. */
+.dark {
+  color-scheme: dark;
+  --tp-bg: #191e1a;
+  --tp-canvas: #191e1a;
+  --tp-surf: #222923;
+  --tp-surf-2: #2c362e;
+  --tp-ink: #f1f3ed;
+  --tp-mute: #b6c0b6;
+  --tp-acc: #9cbea0;
+  --tp-acc-2: #c0c89f;
+  --tp-acc-ink: #1b261e;
+  --tp-line: #3b493e;
+  --tp-grad: linear-gradient(135deg, #9cbea0, #7ea587);
+  --tp-img-frame: 1px solid #3b493e;
+  --tp-img-filter: saturate(.82) brightness(.92);
+  --tp-img-overlay-op: 0.08;
+  --tp-sh: 0 16px 40px rgba(0, 0, 0, .38);
+  --tp-sh-sm: 0 3px 10px rgba(0, 0, 0, .28);
+}
+
+/* ---------------------------------------------------------------------------
+   Theme scaffolding
+   -------------------------------------------------------------------------- */
+.tp-web-stage { position: relative; isolation: isolate; overflow: hidden; animation: var(--tp-3d-web, none); transform-origin: 50% 50%; }
+.tp-screen { position: relative; isolation: isolate; overflow: hidden; }
+.tp-stage { transform: var(--tp-3d); animation: var(--tp-3d-anim); transform-style: preserve-3d; }
+.tp-fx { position: absolute; inset: -40%; z-index: -1; pointer-events: none; background: var(--tp-fx); opacity: var(--tp-fx-op); mix-blend-mode: var(--tp-fx-blend); }
+
+/* Imagery recipe - every photo goes through this, no exceptions. */
+.tp-img {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--tp-img-ar);
+  border-radius: var(--tp-img-r);
+  border: var(--tp-img-frame);
+  box-shadow: var(--tp-img-sh);
+  filter: var(--tp-img-filter);
+  transform: rotate(var(--tp-img-tilt));
+}
+.tp-img > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tp-img > .tp-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--tp-grad);
+  opacity: var(--tp-img-overlay-op);
+  mix-blend-mode: var(--tp-img-blend);
+  pointer-events: none;
+}
+/* Free-form crop (keeps the treatment, drops the 3/4 frame) */
+.tp-img--ratio-auto { aspect-ratio: auto; }
+
+.tp-plate {
+  background: var(--tp-surf);
+  border: var(--tp-bw) solid var(--tp-line);
+  border-radius: var(--tp-r);
+}
+
+.tp-pressable {
+  transition: transform var(--tp-dur) var(--tp-ease), background-color var(--tp-dur) var(--tp-ease), color var(--tp-dur) var(--tp-ease), border-color var(--tp-dur) var(--tp-ease), box-shadow var(--tp-dur) var(--tp-ease);
+}
+.tp-pressable:active { transform: scale(var(--tp-press)); }
+
+.tp-display {
+  font-family: var(--tp-font-display);
+  font-weight: var(--tp-w-display);
+  letter-spacing: var(--tp-track-display);
+  text-transform: var(--tp-case-display);
+}
+.tp-body { font-family: var(--tp-font-body); }
+.tp-mono { font-family: var(--tp-font-mono); }
+.tp-eyebrow {
+  font-family: var(--tp-font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tp-mute);
+}
+/* ---------------------------------------------------------------------------
+   Token proposal: the pack ships no error colour, so destructive UI is given
+   one here rather than hard-coding a red in a component.
+   -------------------------------------------------------------------------- */
+[data-theme="wedding-suite"] {
+  --tp-danger: #9d3b32;
+  --tp-danger-ink: #fffdf8;
+}
+.dark {
+  --tp-danger: #e08b80;
+  --tp-danger-ink: #281c1a;
+}

@@ -1,0 +1,183 @@
+import React, { useState } from 'react';
+import { EventMenu } from '@/types/menu';
+import { Button } from '@/components/ui/button';
+import { Download, CheckCircle } from 'lucide-react';
+import { generateEventMenuPDF } from '@/services/pdfExportService';
+import { generateEventMenuDOCX } from '@/services/docxExportService';
+import { saveEventMenu } from '@/services/localAdminService';
+
+type DocumentType = 'pdf-en' | 'pdf-ta' | 'docx-en' | 'docx-ta';
+
+interface DocumentGenerationStepProps {
+  menu: EventMenu;
+  onPrevious: () => void;
+}
+
+export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ menu, onPrevious }) => {
+  const [generating, setGenerating] = useState<DocumentType | null>(null);
+  const [generated, setGenerated] = useState<DocumentType[]>([]);
+
+  const handleGenerate = async (type: DocumentType) => {
+    setGenerating(type);
+    
+    try {
+      saveEventMenu(menu);
+      if (type === 'pdf-en') {
+        await generateEventMenuPDF(menu, 'en');
+      } else if (type === 'pdf-ta') {
+        await generateEventMenuPDF(menu, 'ta');
+      } else if (type === 'docx-en') {
+        await generateEventMenuDOCX(menu, 'en');
+      } else if (type === 'docx-ta') {
+        await generateEventMenuDOCX(menu, 'ta');
+      }
+      
+      setGenerated([...generated, type]);
+    } catch (error) {
+      console.error('Error generating document:', error);
+      alert(`Failed to generate document. ${error instanceof Error ? error.message : 'Please try again.'}`);
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const documents = [
+    { id: 'pdf-en', label: 'English PDF Menu', labelTa: 'ஆங்கில PDF', icon: '📄', gradient: 'from-pink-500 to-rose-500' },
+    { id: 'pdf-ta', label: 'Tamil PDF Menu', labelTa: 'தமிழ் PDF', icon: '📋', gradient: 'from-rose-500 to-pink-600' },
+    { id: 'docx-en', label: 'English Word Document', labelTa: 'ஆங்கில Word', icon: '📝', gradient: 'from-pink-400 to-rose-400' },
+    { id: 'docx-ta', label: 'Tamil Word Document', labelTa: 'தமிழ் Word', icon: '📃', gradient: 'from-rose-400 to-pink-500' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-pink-600 via-rose-500 to-pink-500 p-6 text-white">
+          <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
+            <span className="text-4xl">📥</span>
+            Generate Documents | ஆவணங்களை உருவாக்கவும்
+          </h2>
+          <p className="text-pink-100 text-lg">Download your event menu in multiple formats</p>
+        </div>
+      </div>
+
+      {/* Document Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {documents.map((doc) => {
+          const isGenerated = generated.includes(doc.id);
+          const isGenerating = generating === doc.id;
+
+          return (
+            <div key={doc.id} className="bg-white rounded-xl shadow-lg border-2 border-pink-200 overflow-hidden hover:border-pink-400 transition-all">
+              <div className={`bg-gradient-to-r ${doc.gradient} p-5 text-white`}>
+                <div className="flex items-center gap-3">
+                  <div className="text-5xl">{doc.icon}</div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold">{doc.label}</h3>
+                    <p className="text-base opacity-90">{doc.labelTa}</p>
+                  </div>
+                  {isGenerated && (
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-5">
+                <Button
+                  onClick={() => handleGenerate(doc.id)}
+                  disabled={isGenerating}
+                  className={`w-full h-12 text-base font-semibold rounded-lg shadow-md transition-all ${
+                    isGenerated 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' 
+                      : `bg-gradient-to-r ${doc.gradient} hover:opacity-90`
+                  }`}
+                >
+                  <Download className="h-5 w-5 mr-2" />
+                  {isGenerating ? 'Generating...' : isGenerated ? 'Download Again' : 'Generate & Download'}
+                </Button>
+                
+                {isGenerated && (
+                  <div className="mt-3 p-3 bg-green-50 rounded-lg border-2 border-green-200">
+                    <p className="text-green-700 font-semibold flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4" />
+                      Successfully generated!
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Features Info */}
+      <div className="bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-5 text-white">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <span className="text-2xl">✨</span>
+            Document Features
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-start gap-3 p-3 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg">
+              <span className="text-2xl">🎨</span>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Professional Design</p>
+                <p className="text-xs text-gray-600">BKR branded header with logo</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg">
+              <span className="text-2xl">📋</span>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Complete Details</p>
+                <p className="text-xs text-gray-600">Client, venue & event information</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg">
+              <span className="text-2xl">🗓️</span>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Day-wise Sessions</p>
+                <p className="text-xs text-gray-600">Organized by day and time slots</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg">
+              <span className="text-2xl">🌐</span>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Bilingual Support</p>
+                <p className="text-xs text-gray-600">Tamil Word documents use the Latha font</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg">
+              <span className="text-2xl">🍽️</span>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Menu Items</p>
+                <p className="text-xs text-gray-600">All selected dishes with names</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg">
+              <span className="text-2xl">📍</span>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">Location Details</p>
+                <p className="text-xs text-gray-600">Address & Google Maps link</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="bg-white rounded-xl shadow-lg p-5 border border-pink-200">
+        <Button 
+          variant="outline" 
+          onClick={onPrevious} 
+          className="w-full h-12 text-base font-semibold rounded-lg border-2 border-pink-300 hover:bg-pink-50"
+        >
+          ← Back to Review
+        </Button>
+      </div>
+    </div>
+  );
+};

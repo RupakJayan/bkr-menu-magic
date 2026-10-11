@@ -1,322 +1,110 @@
-/* Import Chapa-style fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import './styles/theme.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Core Colors - Chapa's Sophisticated Theme */
-    --background: 0 0% 100%;
-    --foreground: 220 15% 15%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
-
-    /* Primary Colors - Chapa's Elegant Dark Theme */
-    --primary: 220 15% 15%;
-    --primary-foreground: 0 0% 100%;
-    --primary-accent: 220 15% 25%;
-    --primary-glow: 220 15% 35%;
-
-    /* Supporting Colors - Chapa's Subtle Palette */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 220 15% 25%;
-    
-    --accent: 0 0% 96%;
-    --accent-foreground: 220 15% 25%;
-    
-    --muted: 0 0% 96%;
-    --muted-foreground: 220 15% 45%;
-
-    /* UI Elements */
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 220 15% 15%;
-
-    /* Design Tokens */
-    --radius: 0.5rem;
-
-    /* Chapa's Signature Colors */
-    --chapa-gold: 45 100% 51%;
-    --chapa-cream: 45 30% 96%;
-    --chapa-charcoal: 220 15% 15%;
-    --chapa-light-gray: 0 0% 96%;
-    --chapa-medium-gray: 220 15% 45%;
-
-    /* Additional Theme Colors */
-    --bg-warm: 45 30% 96%;
-    --bg-fresh: 160 30% 96%;
-
-    /* Shadows - Chapa's Subtle Elegance */
-    --shadow-elegant: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
-    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-glow: 0 0 20px rgba(45, 212, 191, 0.3);
-
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-elegant: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  .dark {
-    /* Dark Mode - Chapa's Sophisticated Dark Theme */
-    --background: 220 15% 8%;
-    --foreground: 0 0% 98%;
-    
-    --card: 220 15% 8%;
-    --card-foreground: 0 0% 98%;
-    
-    --popover: 220 15% 8%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-    --primary-foreground: 220 15% 8%;
-    --primary-accent: 0 0% 90%;
-    --primary-glow: 0 0% 80%;
-
-    --secondary: 220 15% 12%;
-    --secondary-foreground: 0 0% 98%;
-    
-    --accent: 220 15% 12%;
-    --accent-foreground: 0 0% 98%;
-    
-    --muted: 220 15% 12%;
-    --muted-foreground: 220 15% 65%;
-
-    --border: 220 15% 12%;
-    --input: 220 15% 12%;
-    --ring: 0 0% 98%;
-
-    /* Dark mode Chapa colors */
-    --chapa-gold: 45 100% 51%;
-    --chapa-cream: 220 15% 12%;
-    --chapa-charcoal: 0 0% 98%;
-    --chapa-light-gray: 220 15% 12%;
-    --chapa-medium-gray: 220 15% 65%;
-
-    /* Additional Theme Colors - Dark Mode */
-    --bg-warm: 220 15% 12%;
-    --bg-fresh: 220 15% 12%;
-
-    --shadow-elegant: 0 4px 20px -4px rgba(0, 0, 0, 0.3);
-    --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-glow: 0 0 20px rgba(45, 212, 191, 0.2);
-  }
-
-  * {
-    @apply border-border;
+  html {
+    background-color: var(--tp-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
+    background-color: var(--tp-bg);
+    color: var(--tp-ink);
+    font-family: var(--tp-font-body);
+    font-size: 1rem;
+    line-height: 1.55;
     font-weight: 400;
-    color: hsl(var(--foreground));
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
-    @apply font-medium;
-    line-height: 1.2;
-    color: hsl(var(--foreground));
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--tp-font-display);
+    font-weight: var(--tp-w-display);
+    letter-spacing: var(--tp-track-display);
+    line-height: 1.12;
+    color: var(--tp-ink);
   }
 
-  h1 {
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  /* Numerals and dates read as engraved figures, not headings */
+  table,
+  input,
+  textarea,
+  select,
+  button {
+    font-family: var(--tp-font-body);
   }
 
-  h2 {
-    font-weight: 600;
-    letter-spacing: -0.01em;
+  table {
+    border-collapse: collapse;
   }
 
-  h3 {
-    font-weight: 500;
-  }
-}
-
-@layer components {
-  /* Chapa Typography Classes */
-  .font-display {
-    font-family: 'Playfair Display', serif;
+  :focus-visible {
+    outline: 2px solid var(--tp-acc);
+    outline-offset: 2px;
   }
 
-  .font-body {
-    font-family: 'Inter', sans-serif;
+  ::selection {
+    background-color: var(--tp-acc);
+    color: var(--tp-acc-ink);
   }
 
-  /* Chapa Color Classes */
-  .text-chapa-gold {
-    color: hsl(var(--chapa-gold));
-  }
-
-  .text-chapa-charcoal {
-    color: hsl(var(--chapa-charcoal));
-  }
-
-  .text-chapa-medium-gray {
-    color: hsl(var(--chapa-medium-gray));
-  }
-
-  .bg-chapa-cream {
-    background-color: hsl(var(--chapa-cream));
-  }
-
-  .bg-chapa-light-gray {
-    background-color: hsl(var(--chapa-light-gray));
-  }
-
-  .border-chapa-light-gray {
-    border-color: hsl(var(--chapa-light-gray));
-  }
-
-  /* Animation Classes */
-  .fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-
-  .slide-in {
-    animation: slideIn 0.5s ease-out;
-  }
-
-  .elegant-in {
-    animation: elegantIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  /* Shadow Classes */
-  .shadow-elegant {
-    box-shadow: var(--shadow-elegant);
-  }
-
-  .shadow-subtle {
-    box-shadow: var(--shadow-subtle);
-  }
-
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-
-  /* Transition Classes */
-  .transition-smooth {
-    transition: var(--transition-smooth);
-  }
-
-  .transition-elegant {
-    transition: var(--transition-elegant);
-  }
-
-  /* Chapa Button Styles */
-  .btn-chapa-primary {
-    @apply bg-chapa-charcoal text-white px-6 py-3 rounded-none font-medium transition-all duration-300;
-  }
-
-  .btn-chapa-primary:hover {
-    background-color: hsl(220 15% 25%);
-  }
-
-  .btn-chapa-secondary {
-    @apply bg-transparent border border-chapa-charcoal text-chapa-charcoal px-6 py-3 rounded-none font-medium transition-all duration-300;
-  }
-
-  .btn-chapa-secondary:hover {
-    @apply bg-chapa-charcoal text-white;
-  }
-
-  /* Chapa Card Styles */
-  .card-chapa {
-    @apply bg-white border border-chapa-light-gray shadow-subtle;
-  }
-
-  /* Chapa Section Styles */
-  .section-chapa {
-    @apply py-16 md:py-24;
-  }
-
-  .container-chapa {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tp-line) transparent;
   }
 }
 
 @layer utilities {
-  /* Session Planning Layout Fixes */
-  .session-planning-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    align-items: start;
-  }
-
-  .session-planning-item {
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .session-planning-input {
+  /* Page shell */
+  .tp-container {
     width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
   }
 
-  /* Responsive breakpoints for session planning */
-  @media (max-width: 640px) {
-    .session-planning-grid {
-      grid-template-columns: 1fr;
-      gap: 1rem;
+  @media (min-width: 768px) {
+    .tp-container {
+      padding-inline: 2rem;
     }
   }
 
-  @media (min-width: 641px) and (max-width: 1024px) {
-    .session-planning-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.25rem;
-    }
+  .tp-rule {
+    height: var(--tp-bw);
+    background-color: var(--tp-line);
   }
 
-  @media (min-width: 1025px) {
-    .session-planning-grid {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.5rem;
-    }
+  /* Keeps text legible over photography without a solid plate */
+  .tp-scrim-bottom {
+    background-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--tp-canvas) 100%
+    );
   }
-}
 
-@keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
+  .tp-scrim-top {
+    background-image: linear-gradient(
+      180deg,
+      var(--tp-canvas) 0%,
+      transparent 100%
+    );
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
 
-@keyframes slideIn {
-  from { 
-    opacity: 0; 
-    transform: translateX(-30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
-}
-
-@keyframes elegantIn {
-  0% { 
-    opacity: 0; 
-    transform: scale(0.95) translateY(20px); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: scale(1) translateY(0); 
+  /* Engraved numerals for counts and totals */
+  .tp-figure {
+    font-family: var(--tp-font-display);
+    font-variant-numeric: lining-nums tabular-nums;
+    font-weight: 500;
+    letter-spacing: 0;
   }
 }
