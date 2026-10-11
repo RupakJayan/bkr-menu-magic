@@ -104,7 +104,7 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
 
   return (
     <div className="planner-step-panel bg-white rounded-xl shadow-xl border-2 border-pink-300 overflow-hidden">
-      <div className="planner-step-banner bg-gradient-to-r from-pink-600 to-rose-600 p-8 text-white">
+      <div className="planner-step-banner p-8 text-white">
         <h2 className="text-3xl font-bold flex items-center gap-3">
           <Clock3 className="h-7 w-7" aria-hidden="true" />
           Session Planning | அமர்வு திட்டமிடல்
@@ -115,12 +115,12 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
       <div className="planner-step-body p-8 space-y-6 bg-gradient-to-b from-white to-pink-50">
         {days.map((day, dayIndex) => (
           <section key={dayIndex} className="planner-day-card border-2 border-pink-300 rounded-xl overflow-hidden shadow-lg">
-            <div className="planner-day-heading bg-gradient-to-r from-orange-500 to-pink-500 p-6 text-white">
+            <div className="planner-day-heading p-6">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <CalendarDays className="h-5 w-5" aria-hidden="true" />
                 Day {day.dayNumber} - {formatISTDate(day.date, 'en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </h3>
-              <p className="mt-1 text-sm text-white/80">
+              <p className="mt-1 text-sm">
                 {day.sessions.length} {day.sessions.length === 1 ? 'session' : 'sessions'} planned
               </p>
             </div>

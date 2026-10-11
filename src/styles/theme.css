@@ -317,6 +317,14 @@ body,
   border-color: #41617d;
 }
 
+.dark .admin-dashboard .border-emerald-300 {
+  border-color: #3b7a58;
+}
+
+.dark .admin-dashboard .hover\:bg-emerald-50:hover {
+  background-color: #1f382a;
+}
+
 .dark .admin-dashboard .bg-amber-100,
 .dark .admin-dashboard .bg-blue-100,
 .dark .admin-dashboard .bg-emerald-100,
@@ -361,3 +369,27 @@ body,
 .not-found-page a {
   color: var(--tp-acc);
 }
+
+/* ============================================================================
+   Text selection styling: ensures highlighted words are sharp & readable
+   ========================================================================== */
+::selection {
+  background-color: #762934 !important;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: #762934 !important;
+  color: #ffffff !important;
+}
+
+.dark ::selection {
+  background-color: #d8b36d !important;
+  color: #191719 !important;
+}
+
+.dark ::-moz-selection {
+  background-color: #d8b36d !important;
+  color: #191719 !important;
+}
+

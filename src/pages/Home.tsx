@@ -261,7 +261,6 @@ const Home: React.FC = () => {
         <div className="home-footer-brand">
           <BrandLogo />
           <p>Good food brings people together.</p>
-          <p>Owner: Raghavendrar PB</p>
         </div>
         <div className="home-footer-contact">
           <a href={kitchenMapUrl} target="_blank" rel="noopener noreferrer">

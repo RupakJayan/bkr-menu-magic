@@ -54,7 +54,7 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
     <div className="space-y-6">
       {/* Header */}
       <div className="planner-step-panel bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-pink-600 via-rose-500 to-pink-500 p-6 text-white">
+        <div className="planner-step-banner p-6 text-white">
           <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
             <Download className="h-7 w-7" aria-hidden="true" />
             Generate Documents | ஆவணங்களை உருவாக்கவும்

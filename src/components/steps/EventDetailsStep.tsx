@@ -63,7 +63,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
 
   return (
     <div className="planner-step-panel bg-white rounded-xl shadow-xl border-2 border-red-200 overflow-hidden">
-      <div className="planner-step-banner bg-gradient-to-r from-red-600 to-orange-600 p-8 text-white">
+      <div className="planner-step-banner p-8 text-white">
         <h2 className="text-3xl font-bold flex items-center gap-3">
           <NotebookPen className="h-7 w-7" aria-hidden="true" />
           Event Details | நிகழ்வு விவரங்கள்

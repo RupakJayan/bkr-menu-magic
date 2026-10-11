@@ -103,7 +103,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
   return (
     <div className="space-y-4">
       {/* Session Header - Modern POS Style */}
-      <div className="menu-session-heading planner-step-banner bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-2xl shadow-xl text-white p-6">
+      <div className="menu-session-heading planner-step-banner rounded-2xl shadow-xl text-white p-6">
         <div className="flex justify-between items-center">
           <div>
             <div className="flex items-center gap-3 mb-2">

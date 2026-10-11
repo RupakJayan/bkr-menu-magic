@@ -116,7 +116,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="planner-step-banner bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 rounded-xl shadow-lg text-white overflow-hidden">
+      <div className="planner-step-banner rounded-xl shadow-lg text-white overflow-hidden">
         <div className="p-6 relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
@@ -131,7 +131,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
 
       {/* Client & Venue Details */}
       <section className="planner-summary-card bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-5 text-white">
+        <div className="planner-card-header p-5">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <ClipboardList className="h-5 w-5" aria-hidden="true" />
             Event Information
@@ -188,7 +188,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
       {/* Day-wise Session Details with Editing */}
       {menu.days.map((day, dayIndex) => (
         <section key={day.dayNumber} className="planner-summary-card bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-pink-400 to-rose-400 p-5 text-white">
+          <div className="planner-card-header p-5">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <CalendarDays className="h-5 w-5" aria-hidden="true" />
               Day {day.dayNumber} - {formatISTDate(day.date, 'en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}
