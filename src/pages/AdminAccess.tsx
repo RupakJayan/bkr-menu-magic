@@ -132,7 +132,11 @@ export default function AdminAccess() {
             </svg>
             Sign in with Google Account
           </Button>
-          {!isGoogleConfigured() && (
+          {isGoogleConfigured() ? (
+            <p className="text-[11px] text-mute text-center">
+              Authorized: bkrcaters@gmail.com, rupakjayan22@gmail.com, rupak.jayanb@gmail.com
+            </p>
+          ) : (
             <p className="text-[11px] text-mute text-center">
               Google Cloud integration ready. (Requires VITE_GOOGLE_CLIENT_ID)
             </p>

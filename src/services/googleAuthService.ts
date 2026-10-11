@@ -8,6 +8,20 @@ export interface GoogleUser {
   picture?: string;
 }
 
+export const ALLOWED_ADMIN_EMAILS = [
+  "bkrcaters@gmail.com",
+  "rupakjayan22@gmail.com",
+  "rupak.jayanb@gmail.com",
+] as const;
+
+export const isEmailAllowed = (email?: string): boolean => {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  return ALLOWED_ADMIN_EMAILS.some(
+    (allowed) => allowed.toLowerCase() === normalized,
+  );
+};
+
 const TOKEN_KEY = "bkr-google-access-token";
 const USER_KEY = "bkr-google-user";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
@@ -100,6 +114,21 @@ export const requestGoogleLogin = async (): Promise<string> => {
             );
             if (userResponse.ok) {
               const profile = await userResponse.json();
+
+              if (!isEmailAllowed(profile.email)) {
+                if (window.google?.accounts?.oauth2) {
+                  window.google.accounts.oauth2.revoke(token, () => {});
+                }
+                sessionStorage.removeItem(TOKEN_KEY);
+                sessionStorage.removeItem(USER_KEY);
+                reject(
+                  new Error(
+                    `Access denied: ${profile.email || "This account"} is not an authorized administrator for BKR Catering.`,
+                  ),
+                );
+                return;
+              }
+
               const user: GoogleUser = {
                 email: profile.email,
                 name: profile.name,
