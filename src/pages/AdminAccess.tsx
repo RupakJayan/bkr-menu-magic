@@ -77,7 +77,7 @@ export default function AdminAccess() {
         <p className="mt-2 text-sm text-mute">
           {configured
             ? "Enter the password set for this browser to manage events and menus."
-            : "Create a password to protect the admin screens on this browser. Normal menu planning stays open to everyone."}
+            : "Create a password to protect the event planner and management tools on this browser."}
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>

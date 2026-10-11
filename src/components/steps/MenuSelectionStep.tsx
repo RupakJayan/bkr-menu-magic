@@ -4,7 +4,7 @@ import { buildDishKey, getManagedMenuCatalog, normalizeDishKeys } from "@/servic
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Leaf, Utensils } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface MenuSelectionStepProps {
@@ -103,11 +103,11 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
   return (
     <div className="space-y-4">
       {/* Session Header - Modern POS Style */}
-      <div className="menu-session-heading bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-2xl shadow-xl text-white p-6">
+      <div className="menu-session-heading planner-step-banner bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-2xl shadow-xl text-white p-6">
         <div className="flex justify-between items-center">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-4xl">🍽️</span>
+              <Utensils className="h-7 w-7" aria-hidden="true" />
               <div>
                 <h2 className="text-3xl font-bold">
                   Day {currentDay.dayNumber} - {currentSession.name}
@@ -206,8 +206,12 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                             </div>
                           )}
                           {item.isVegetarian && (
-                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1.5 rounded-full shadow-lg">
-                              <span className="text-sm">🌱</span>
+                            <div
+                              className="planner-vegetarian-mark absolute top-2 right-2 bg-green-500 text-white p-1.5 rounded-full shadow-lg"
+                              aria-label="Vegetarian"
+                              title="Vegetarian"
+                            >
+                              <Leaf className="h-4 w-4" aria-hidden="true" />
                             </div>
                           )}
                         </div>
@@ -248,7 +252,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
           >
             {currentDayIndex === menu.days.length - 1 &&
             currentSessionIndex === currentDay.sessions.length - 1
-              ? "✓ Continue to Review"
+              ? "Continue to Review"
               : "Next Session"}
             <ChevronRight className="h-5 w-5 ml-2" />
           </Button>

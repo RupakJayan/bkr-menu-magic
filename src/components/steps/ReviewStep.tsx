@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { EventMenu } from '@/types/menu';
 import { buildDishKey, findDishByKey, getManagedMenuCatalog, normalizeDishKeys } from '@/services/menuCatalogService';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Phone, User, Calendar, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
+import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
@@ -27,7 +26,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
     updatedDays[dayIndex].sessions[sessionIndex].selectedDishes =
       normalizeDishKeys(updatedDays[dayIndex].sessions[sessionIndex].selectedDishes)
         .filter(id => id !== dishKey);
-    
+
     onMenuChange({
       ...menu,
       days: updatedDays,
@@ -71,7 +70,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
   const calculateSessionTotal = (dayIndex: number, sessionIndex: number) => {
     const session = menu.days[dayIndex].sessions[sessionIndex];
     let total = 0;
-    
+
     session.selectedDishes.forEach(dishKey => {
       const dish = findDishByKey(dishKey);
       if (dish) {
@@ -79,7 +78,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
         total += cost * session.headCount;
       }
     });
-    
+
     return total;
   };
 
@@ -98,12 +97,12 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 rounded-xl shadow-lg text-white overflow-hidden">
+      <div className="planner-step-banner bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 rounded-xl shadow-lg text-white overflow-hidden">
         <div className="p-6 relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
             <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
-              <span className="text-4xl">✅</span>
+              <BadgeCheck className="h-7 w-7" aria-hidden="true" />
               Review & Summary | மதிப்பாய்வு
             </h2>
             <p className="text-pink-100 text-lg">Review all details and edit if needed</p>
@@ -112,10 +111,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
       </div>
 
       {/* Client & Venue Details */}
-      <div className="bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
+      <section className="planner-summary-card bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
         <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-5 text-white">
           <h3 className="text-xl font-bold flex items-center gap-2">
-            <span className="text-2xl">📋</span>
+            <ClipboardList className="h-5 w-5" aria-hidden="true" />
             Event Information
           </h3>
         </div>
@@ -165,14 +164,14 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Day-wise Session Details with Editing */}
       {menu.days.map((day, dayIndex) => (
-        <div key={day.dayNumber} className="bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
+        <section key={day.dayNumber} className="planner-summary-card bg-white rounded-xl shadow-lg border border-pink-200 overflow-hidden">
           <div className="bg-gradient-to-r from-pink-400 to-rose-400 p-5 text-white">
             <h3 className="text-xl font-bold flex items-center gap-2">
-              <span className="text-2xl">📅</span>
+              <CalendarDays className="h-5 w-5" aria-hidden="true" />
               Day {day.dayNumber} - {formatISTDate(day.date, 'en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}
             </h3>
           </div>
@@ -190,7 +189,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <span className="text-2xl">🍽️</span>
+                        <Utensils className="h-5 w-5" aria-hidden="true" />
                         {session.name}
                       </h4>
                       <p className="text-base text-gray-600 mt-1">
@@ -301,7 +300,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                                         <p className="text-xs text-gray-600">{item.name_ta}</p>
                                         <p className="text-xs text-green-600 mt-1">₹{item.estimatedCost || 0}</p>
                                         {isAlreadySelected && (
-                                          <p className="text-xs text-green-600 mt-1">✓ Already added</p>
+                                          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                            <Check className="h-3 w-3" aria-hidden="true" />
+                                            Already added
+                                          </p>
                                         )}
                                       </button>
                                     );
@@ -320,7 +322,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
               );
             })}
           </div>
-        </div>
+        </section>
       ))}
 
       {/* Grand Total */}
@@ -340,15 +342,15 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
       {/* Navigation */}
       <div className="bg-white rounded-xl shadow-lg p-5 border border-pink-200">
         <div className="flex gap-4">
-          <Button 
-            variant="outline" 
-            onClick={onPrevious} 
+          <Button
+            variant="outline"
+            onClick={onPrevious}
             className="flex-1 h-12 text-base font-semibold rounded-lg border-2 border-pink-300 hover:bg-pink-50"
           >
             Previous
           </Button>
-          <Button 
-            onClick={onNext} 
+          <Button
+            onClick={onNext}
             className="flex-1 h-12 text-base font-semibold rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
           >
             Continue to Generate Documents →

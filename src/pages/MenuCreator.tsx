@@ -8,11 +8,13 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { ArrowLeft, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveEventMenu } from '@/services/localAdminService';
+import { hasAdminSession } from '@/services/adminAccessService';
 import './planner.css';
 
 const MenuCreator: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isAdmin = hasAdminSession();
   const [menu, setMenu] = useState<EventMenu>(() => {
     const saved = localStorage.getItem('currentMenu');
     return saved ? JSON.parse(saved) : createEmptyMenu();
@@ -20,8 +22,15 @@ const MenuCreator: React.FC = () => {
 
   // Auto-save to localStorage
   useEffect(() => {
+    if (!isAdmin) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAdmin, navigate]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
     localStorage.setItem('currentMenu', JSON.stringify(menu));
-  }, [menu]);
+  }, [isAdmin, menu]);
 
   const handleMenuChange = (updatedMenu: EventMenu) => {
     setMenu(updatedMenu);
@@ -43,6 +52,8 @@ const MenuCreator: React.FC = () => {
     }
   };
 
+  if (!isAdmin) return null;
+
   return (
     <div className="planner-page min-h-screen">
       <nav className="planner-topbar sticky top-0 z-50">
@@ -57,9 +68,9 @@ const MenuCreator: React.FC = () => {
               <ArrowLeft className="h-4 w-4" />
               <span>Home</span>
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/admin')} aria-label="Open local admin">
+            <Button variant="ghost" onClick={() => navigate('/admin')} aria-label="Open admin dashboard">
               <FileText className="h-4 w-4" />
-              <span>Admin</span>
+              <span>Dashboard</span>
             </Button>
             <Button className="planner-save-button" onClick={handleSave} aria-label="Save event draft">
               <Save className="h-4 w-4" />
@@ -69,9 +80,12 @@ const MenuCreator: React.FC = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="planner-main">
-        {/* Main Content */}
+        <section className="planner-welcome">
+          <p className="planner-welcome-kicker">BKR CATERING <span>·</span> EVENT STUDIO</p>
+          <h1>Plan a gathering worth remembering.</h1>
+          <p>Bring the details, sessions and menu together, then share a polished copy in English or Tamil.</p>
+        </section>
         <EventPlanningFlow menu={menu} onMenuChange={handleMenuChange} />
       </main>
     </div>

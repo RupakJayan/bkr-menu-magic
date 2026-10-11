@@ -1,0 +1,315 @@
+2390bbc Add microservices architecture and enhance event planning components
+a68e9e6 Add comprehensive admin dashboard components and update existing components
+25ea44b Add comprehensive event planning features and UI improvements - Enhanced event planner with multi-step flow - New venue and menu selection components - Admin dashboard functionality - Improved UI components and styling - Added event planning utilities and services
+55e59f7 Added files
+8dbdb4c feat: Implement BKR Catering System
+7a53552 Use tech stack vite_react_shadcn_ts_20250728_minor
+=== HEAD src tree ===
+src/App.css
+src/App.tsx
+src/assets/hero-catering.jpg
+src/components/AdminDashboard.tsx
+src/components/ContactSection.tsx
+src/components/EnhancedEventPlanner.tsx
+src/components/EnhancedMenuSelection.tsx
+src/components/EventDetails.tsx
+src/components/EventPlanner.tsx
+src/components/EventPlanningFlow.tsx
+src/components/EventReview.tsx
+src/components/Footer.tsx
+src/components/Hero.tsx
+src/components/IntegratedMenuAndSession.tsx
+src/components/MenuSelection.tsx
+src/components/MenuSelectionMicroservice.tsx
+src/components/Navigation.tsx
+src/components/ServicesSection.tsx
+src/components/SessionPlanner.tsx
+src/components/SessionPlanning.tsx
+src/components/SessionPlanningMicroservice.tsx
+src/components/SimplifiedEventPlanner.tsx
+src/components/StepIndicator.tsx
+src/components/TestimonialsSection.tsx
+src/components/VenueDetails.tsx
+src/components/VenueSelection.tsx
+src/components/admin/AnalyticsOverview.tsx
+src/components/admin/DashboardHeader.tsx
+src/components/admin/DataExport.tsx
+src/components/admin/EventCalendar.tsx
+src/components/admin/EventForm.tsx
+src/components/admin/EventManagement.tsx
+src/components/admin/IMPLEMENTATION_STATUS.md
+src/components/admin/MenuManagement.tsx
+src/components/admin/QuickActions.tsx
+src/components/admin/README.md
+src/components/admin/RecentEvents.tsx
+src/components/admin/SettingsManagement.tsx
+src/components/admin/StatsOverview.tsx
+src/components/admin/UserManagement.tsx
+src/components/ui/accordion.tsx
+src/components/ui/alert-dialog.tsx
+src/components/ui/alert.tsx
+src/components/ui/aspect-ratio.tsx
+src/components/ui/avatar.tsx
+src/components/ui/badge.tsx
+src/components/ui/breadcrumb.tsx
+src/components/ui/button.tsx
+src/components/ui/calendar.tsx
+src/components/ui/card.tsx
+src/components/ui/carousel.tsx
+src/components/ui/chart.tsx
+src/components/ui/checkbox.tsx
+src/components/ui/collapsible.tsx
+src/components/ui/command.tsx
+src/components/ui/context-menu.tsx
+src/components/ui/dialog.tsx
+src/components/ui/drawer.tsx
+src/components/ui/dropdown-menu.tsx
+src/components/ui/form.tsx
+src/components/ui/hover-card.tsx
+src/components/ui/input-otp.tsx
+src/components/ui/input.tsx
+src/components/ui/label.tsx
+src/components/ui/menubar.tsx
+src/components/ui/navigation-menu.tsx
+src/components/ui/pagination.tsx
+src/components/ui/popover.tsx
+src/components/ui/progress.tsx
+src/components/ui/radio-group.tsx
+src/components/ui/resizable.tsx
+src/components/ui/scroll-area.tsx
+src/components/ui/select.tsx
+src/components/ui/separator.tsx
+src/components/ui/sheet.tsx
+src/components/ui/sidebar.tsx
+src/components/ui/skeleton.tsx
+src/components/ui/slider.tsx
+src/components/ui/sonner.tsx
+src/components/ui/switch.tsx
+src/components/ui/table.tsx
+src/components/ui/tabs.tsx
+src/components/ui/textarea.tsx
+src/components/ui/toast.tsx
+src/components/ui/toaster.tsx
+src/components/ui/toggle-group.tsx
+src/components/ui/toggle.tsx
+src/components/ui/tooltip.tsx
+src/components/ui/use-toast.ts
+src/contexts/ThemeContext.tsx
+src/data/eventMenuData.ts
+src/data/eventPlanningData.ts
+src/data/menuData.ts
+src/hooks/use-mobile.tsx
+src/hooks/use-toast.ts
+src/index.css
+src/lib/utils.ts
+src/main.tsx
+src/pages/Admin.tsx
+src/pages/Index.tsx
+src/pages/NotFound.tsx
+src/services/databaseService.ts
+src/services/docxService.ts
+src/services/eventService.ts
+src/services/menuService.ts
+src/services/pdfService.ts
+src/types/eventTypes.ts
+src/utils/eventPlanningUtils.ts
+src/vite-env.d.ts
+=== FEATURE GREP IN HEAD COMPONENTS ===
+HEAD:src/components/EnhancedMenuSelection.tsx:32:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/EnhancedMenuSelection.tsx:86:      (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(searchTerm.toLowerCase())
+HEAD:src/components/EnhancedMenuSelection.tsx:141:                    value={searchTerm}
+HEAD:src/components/EnhancedMenuSelection.tsx:142:                    onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/EventPlanner.tsx:10:import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+HEAD:src/components/EventPlanner.tsx:407:                  <Accordion type="single" collapsible className="w-full">
+HEAD:src/components/EventPlanner.tsx:416:                        <AccordionItem key={categoryName} value={categoryName}>
+HEAD:src/components/EventPlanner.tsx:417:                          <AccordionTrigger className="text-left">
+HEAD:src/components/EventPlanner.tsx:424:                          </AccordionTrigger>
+HEAD:src/components/EventPlanner.tsx:425:                          <AccordionContent>
+HEAD:src/components/EventPlanner.tsx:484:                          </AccordionContent>
+HEAD:src/components/EventPlanner.tsx:485:                        </AccordionItem>
+HEAD:src/components/EventPlanner.tsx:488:                  </Accordion>
+HEAD:src/components/MenuSelection.tsx:1:import React, { useState, useMemo } from 'react';
+HEAD:src/components/MenuSelection.tsx:61:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/MenuSelection.tsx:63:  const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
+HEAD:src/components/MenuSelection.tsx:157:  const filteredMenu = useMemo(() => {
+HEAD:src/components/MenuSelection.tsx:164:          (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/MenuSelection.tsx:165:          categoryId.toLowerCase().includes(searchTerm.toLowerCase());
+HEAD:src/components/MenuSelection.tsx:166:        const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
+HEAD:src/components/MenuSelection.tsx:199:  }, [searchTerm, selectedCategory, showVegetarianOnly, dietaryPreferences, sortBy, favorites, language]);
+HEAD:src/components/MenuSelection.tsx:201:  const selectedItemsDetails = useMemo(() => {
+HEAD:src/components/MenuSelection.tsx:339:                    checked={showVegetarianOnly}
+HEAD:src/components/MenuSelection.tsx:340:                    onCheckedChange={(checked) => setShowVegetarianOnly(checked as boolean)}
+HEAD:src/components/MenuSelection.tsx:437:                    value={searchTerm}
+HEAD:src/components/MenuSelection.tsx:438:                    onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/MenuSelectionMicroservice.tsx:1:import React, { useState, useEffect, useMemo } from 'react';
+HEAD:src/components/MenuSelectionMicroservice.tsx:10:import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+HEAD:src/components/MenuSelectionMicroservice.tsx:61:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/MenuSelectionMicroservice.tsx:64:  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'accordion'>('accordion');
+HEAD:src/components/MenuSelectionMicroservice.tsx:66:  const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
+HEAD:src/components/MenuSelectionMicroservice.tsx:86:  const filteredMenu = useMemo(() => {
+HEAD:src/components/MenuSelectionMicroservice.tsx:98:          (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/MenuSelectionMicroservice.tsx:99:          categoryId.toLowerCase().includes(searchTerm.toLowerCase());
+HEAD:src/components/MenuSelectionMicroservice.tsx:100:        const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
+HEAD:src/components/MenuSelectionMicroservice.tsx:131:  }, [selectedCategory, selectedMealType, searchTerm, showVegetarianOnly, priceRange, sortBy, sortOrder, favorites, language]);
+HEAD:src/components/MenuSelectionMicroservice.tsx:290:                      value={searchTerm}
+HEAD:src/components/MenuSelectionMicroservice.tsx:291:                      onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/MenuSelectionMicroservice.tsx:430:                          checked={showVegetarianOnly}
+HEAD:src/components/MenuSelectionMicroservice.tsx:431:                          onCheckedChange={(checked) => setShowVegetarianOnly(checked as boolean)}
+HEAD:src/components/MenuSelectionMicroservice.tsx:608:                <TabsTrigger value="accordion">{language === 'en' ? 'Accordion' : 'அக்கார்டியன்'}</TabsTrigger>
+HEAD:src/components/MenuSelectionMicroservice.tsx:630:          {viewMode === 'accordion' && (
+HEAD:src/components/MenuSelectionMicroservice.tsx:631:            <Accordion type="multiple" className="w-full">
+HEAD:src/components/MenuSelectionMicroservice.tsx:633:                <AccordionItem key={categoryId} value={categoryId}>
+HEAD:src/components/MenuSelectionMicroservice.tsx:634:                  <AccordionTrigger className={`${isDark ? 'text-gray-200 hover:text-gray-100' : 'text-gray-700 hover:text-gray-900'}`}>
+HEAD:src/components/MenuSelectionMicroservice.tsx:641:                  </AccordionTrigger>
+HEAD:src/components/MenuSelectionMicroservice.tsx:642:                  <AccordionContent>
+HEAD:src/components/MenuSelectionMicroservice.tsx:739:                  </AccordionContent>
+HEAD:src/components/MenuSelectionMicroservice.tsx:740:                </AccordionItem>
+HEAD:src/components/MenuSelectionMicroservice.tsx:742:            </Accordion>
+HEAD:src/components/MenuSelectionMicroservice.tsx:972:                setSearchTerm('');
+HEAD:src/components/MenuSelectionMicroservice.tsx:975:                setShowVegetarianOnly(false);
+HEAD:src/components/SessionPlanner.tsx:9:import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+HEAD:src/components/SessionPlanner.tsx:64:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/SessionPlanner.tsx:66:  const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
+HEAD:src/components/SessionPlanner.tsx:281:          (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/SessionPlanner.tsx:282:          categoryId.toLowerCase().includes(searchTerm.toLowerCase());
+HEAD:src/components/SessionPlanner.tsx:283:        const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
+HEAD:src/components/SessionPlanner.tsx:772:                        value={searchTerm}
+HEAD:src/components/SessionPlanner.tsx:773:                        onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/SessionPlanner.tsx:807:                            checked={showVegetarianOnly}
+HEAD:src/components/SessionPlanner.tsx:808:                            onCheckedChange={(checked) => setShowVegetarianOnly(checked as boolean)}
+HEAD:src/components/SessionPlanner.tsx:929:                  <Accordion type="multiple" className="w-full">
+HEAD:src/components/SessionPlanner.tsx:931:                      <AccordionItem key={categoryId} value={categoryId}>
+HEAD:src/components/SessionPlanner.tsx:932:                        <AccordionTrigger className={`${isDark ? 'text-gray-200 hover:text-gray-100' : 'text-gray-700 hover:text-gray-900'}`}>
+HEAD:src/components/SessionPlanner.tsx:939:                        </AccordionTrigger>
+HEAD:src/components/SessionPlanner.tsx:940:                        <AccordionContent>
+HEAD:src/components/SessionPlanner.tsx:1001:                        </AccordionContent>
+HEAD:src/components/SessionPlanner.tsx:1002:                      </AccordionItem>
+HEAD:src/components/SessionPlanner.tsx:1004:                  </Accordion>
+HEAD:src/components/SessionPlanning.tsx:1:import React, { useState, useMemo } from 'react';
+HEAD:src/components/SessionPlanning.tsx:78:  const [menuSearchTerm, setMenuSearchTerm] = useState('');
+HEAD:src/components/SessionPlanning.tsx:80:  const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
+HEAD:src/components/SessionPlanning.tsx:82:  const [menuViewMode, setMenuViewMode] = useState<'grid' | 'list' | 'accordion'>('accordion');
+HEAD:src/components/SessionPlanning.tsx:177:  const filteredMenuData = useMemo(() => {
+HEAD:src/components/SessionPlanning.tsx:184:          (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(menuSearchTerm.toLowerCase()) ||
+HEAD:src/components/SessionPlanning.tsx:185:          categoryId.toLowerCase().includes(menuSearchTerm.toLowerCase());
+HEAD:src/components/SessionPlanning.tsx:186:        const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
+HEAD:src/components/SessionPlanning.tsx:212:  }, [selectedMenuCategory, menuSearchTerm, showVegetarianOnly, menuSortBy, favorites, language]);
+HEAD:src/components/SessionPlanning.tsx:974:                          value={menuSearchTerm}
+HEAD:src/components/SessionPlanning.tsx:975:                          onChange={(e) => setMenuSearchTerm(e.target.value)}
+HEAD:src/components/SessionPlanning.tsx:1015:                          checked={showVegetarianOnly}
+HEAD:src/components/SessionPlanning.tsx:1016:                          onCheckedChange={(checked) => setShowVegetarianOnly(checked as boolean)}
+HEAD:src/components/SessionPlanning.tsx:1029:                        <TabsTrigger value="accordion">
+HEAD:src/components/SessionPlanning.tsx:1030:                          {language === 'en' ? 'Accordion' : 'அக்கார்டியன்'}
+HEAD:src/components/SessionPlanning.tsx:1044:                    {menuViewMode === 'accordion' && (
+HEAD:src/components/SessionPlanningMicroservice.tsx:1:import React, { useState, useEffect, useMemo } from 'react';
+HEAD:src/components/SessionPlanningMicroservice.tsx:88:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/SessionPlanningMicroservice.tsx:148:  const filteredSessions = useMemo(() => {
+HEAD:src/components/SessionPlanningMicroservice.tsx:152:        session.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/SessionPlanningMicroservice.tsx:153:        session.name_ta.toLowerCase().includes(searchTerm.toLowerCase());
+HEAD:src/components/SessionPlanningMicroservice.tsx:156:  }, [sessions, filterStatus, searchTerm]);
+HEAD:src/components/SessionPlanningMicroservice.tsx:159:  const currentSessionData = useMemo(() => {
+HEAD:src/components/SessionPlanningMicroservice.tsx:385:                      value={searchTerm}
+HEAD:src/components/SessionPlanningMicroservice.tsx:386:                      onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/SimplifiedEventPlanner.tsx:72:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/SimplifiedEventPlanner.tsx:74:  const [showVegetarianOnly, setShowVegetarianOnly] = useState(false);
+HEAD:src/components/SimplifiedEventPlanner.tsx:165:          (language === 'en' ? item.name_en : item.name_ta).toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/SimplifiedEventPlanner.tsx:166:          categoryId.toLowerCase().includes(searchTerm.toLowerCase());
+HEAD:src/components/SimplifiedEventPlanner.tsx:167:        const matchesVegetarian = !showVegetarianOnly || item.isVegetarian;
+HEAD:src/components/SimplifiedEventPlanner.tsx:467:                        value={searchTerm}
+HEAD:src/components/SimplifiedEventPlanner.tsx:468:                        onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/SimplifiedEventPlanner.tsx:494:                        checked={showVegetarianOnly}
+HEAD:src/components/SimplifiedEventPlanner.tsx:495:                        onCheckedChange={(checked) => setShowVegetarianOnly(checked as boolean)}
+HEAD:src/components/VenueSelection.tsx:64:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/VenueSelection.tsx:177:        (language === 'en' ? venue.name : venue.name_ta).toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/VenueSelection.tsx:178:        (language === 'en' ? venue.address : venue.address_ta).toLowerCase().includes(searchTerm.toLowerCase());
+HEAD:src/components/VenueSelection.tsx:249:                    value={searchTerm}
+HEAD:src/components/VenueSelection.tsx:250:                    onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/admin/DataExport.tsx:160:    table.style.borderCollapse = 'collapse';
+HEAD:src/components/admin/DataExport.tsx:197:              table { border-collapse: collapse; width: 100%; }
+HEAD:src/components/admin/EventManagement.tsx:37:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/admin/EventManagement.tsx:129:    if (searchTerm) {
+HEAD:src/components/admin/EventManagement.tsx:131:        event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/admin/EventManagement.tsx:132:        event.client.toLowerCase().includes(searchTerm.toLowerCase())
+HEAD:src/components/admin/EventManagement.tsx:137:  }, [events, searchTerm, statusFilter, typeFilter]);
+HEAD:src/components/admin/EventManagement.tsx:200:    setSearchTerm('');
+HEAD:src/components/admin/EventManagement.tsx:242:              value={searchTerm}
+HEAD:src/components/admin/EventManagement.tsx:243:              onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/admin/MenuManagement.tsx:54:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/admin/MenuManagement.tsx:171:    if (searchTerm) {
+HEAD:src/components/admin/MenuManagement.tsx:173:        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/admin/MenuManagement.tsx:174:        item.nameTamil.toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/admin/MenuManagement.tsx:175:        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+HEAD:src/components/admin/MenuManagement.tsx:180:  }, [menuItems, searchTerm, categoryFilter, statusFilter]);
+HEAD:src/components/admin/MenuManagement.tsx:250:    setSearchTerm('');
+HEAD:src/components/admin/MenuManagement.tsx:309:                value={searchTerm}
+HEAD:src/components/admin/MenuManagement.tsx:310:                onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/admin/UserManagement.tsx:51:  const [searchTerm, setSearchTerm] = useState('');
+HEAD:src/components/admin/UserManagement.tsx:152:    if (searchTerm) {
+HEAD:src/components/admin/UserManagement.tsx:154:        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/admin/UserManagement.tsx:155:        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+HEAD:src/components/admin/UserManagement.tsx:156:        user.department.toLowerCase().includes(searchTerm.toLowerCase())
+HEAD:src/components/admin/UserManagement.tsx:161:  }, [users, searchTerm, roleFilter, statusFilter]);
+HEAD:src/components/admin/UserManagement.tsx:231:    setSearchTerm('');
+HEAD:src/components/admin/UserManagement.tsx:290:                value={searchTerm}
+HEAD:src/components/admin/UserManagement.tsx:291:                onChange={(e) => setSearchTerm(e.target.value)}
+HEAD:src/components/ui/accordion.tsx:2:import * as AccordionPrimitive from "@radix-ui/react-accordion"
+HEAD:src/components/ui/accordion.tsx:7:const Accordion = AccordionPrimitive.Root
+HEAD:src/components/ui/accordion.tsx:9:const AccordionItem = React.forwardRef<
+HEAD:src/components/ui/accordion.tsx:10:  React.ElementRef<typeof AccordionPrimitive.Item>,
+HEAD:src/components/ui/accordion.tsx:11:  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
+HEAD:src/components/ui/accordion.tsx:13:  <AccordionPrimitive.Item
+HEAD:src/components/ui/accordion.tsx:19:AccordionItem.displayName = "AccordionItem"
+HEAD:src/components/ui/accordion.tsx:21:const AccordionTrigger = React.forwardRef<
+HEAD:src/components/ui/accordion.tsx:22:  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+HEAD:src/components/ui/accordion.tsx:23:  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
+HEAD:src/components/ui/accordion.tsx:25:  <AccordionPrimitive.Header className="flex">
+HEAD:src/components/ui/accordion.tsx:26:    <AccordionPrimitive.Trigger
+HEAD:src/components/ui/accordion.tsx:36:    </AccordionPrimitive.Trigger>
+HEAD:src/components/ui/accordion.tsx:37:  </AccordionPrimitive.Header>
+HEAD:src/components/ui/accordion.tsx:39:AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
+HEAD:src/components/ui/accordion.tsx:41:const AccordionContent = React.forwardRef<
+HEAD:src/components/ui/accordion.tsx:42:  React.ElementRef<typeof AccordionPrimitive.Content>,
+HEAD:src/components/ui/accordion.tsx:43:  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
+HEAD:src/components/ui/accordion.tsx:45:  <AccordionPrimitive.Content
+HEAD:src/components/ui/accordion.tsx:47:    className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+HEAD:src/components/ui/accordion.tsx:51:  </AccordionPrimitive.Content>
+HEAD:src/components/ui/accordion.tsx:54:AccordionContent.displayName = AccordionPrimitive.Content.displayName
+HEAD:src/components/ui/accordion.tsx:56:export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+HEAD:src/components/ui/calendar.tsx:32:        table: "w-full border-collapse space-y-1",
+HEAD:src/components/ui/chart.tsx:134:    const tooltipLabel = React.useMemo(() => {
+HEAD:src/components/ui/collapsible.tsx:1:import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
+HEAD:src/components/ui/collapsible.tsx:3:const Collapsible = CollapsiblePrimitive.Root
+HEAD:src/components/ui/collapsible.tsx:5:const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger
+HEAD:src/components/ui/collapsible.tsx:7:const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent
+HEAD:src/components/ui/collapsible.tsx:9:export { Collapsible, CollapsibleTrigger, CollapsibleContent }
+HEAD:src/components/ui/sidebar.tsx:28:  state: "expanded" | "collapsed"
+HEAD:src/components/ui/sidebar.tsx:113:    // We add a state so that we can do data-state="expanded" or "collapsed".
+HEAD:src/components/ui/sidebar.tsx:115:    const state = open ? "expanded" : "collapsed"
+HEAD:src/components/ui/sidebar.tsx:117:    const contextValue = React.useMemo<SidebarContext>(
+HEAD:src/components/ui/sidebar.tsx:162:    collapsible?: "offcanvas" | "icon" | "none"
+HEAD:src/components/ui/sidebar.tsx:169:      collapsible = "offcanvas",
+HEAD:src/components/ui/sidebar.tsx:178:    if (collapsible === "none") {
+HEAD:src/components/ui/sidebar.tsx:218:        data-collapsible={state === "collapsed" ? collapsible : ""}
+HEAD:src/components/ui/sidebar.tsx:226:            "group-data-[collapsible=offcanvas]:w-0",
+HEAD:src/components/ui/sidebar.tsx:229:              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
+HEAD:src/components/ui/sidebar.tsx:230:              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
+HEAD:src/components/ui/sidebar.tsx:237:              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+HEAD:src/components/ui/sidebar.tsx:238:              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+HEAD:src/components/ui/sidebar.tsx:241:              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
+HEAD:src/components/ui/sidebar.tsx:242:              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
+HEAD:src/components/ui/sidebar.tsx:303:        "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
+HEAD:src/components/ui/sidebar.tsx:304:        "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-sidebar",
+HEAD:src/components/ui/sidebar.tsx:305:        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
+HEAD:src/components/ui/sidebar.tsx:306:        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+HEAD:src/components/ui/sidebar.tsx:324:        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+HEAD:src/components/ui/sidebar.tsx:405:        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+HEAD:src/components/ui/sidebar.tsx:441:        "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
+HEAD:src/components/ui/sidebar.tsx:464:        "group-data-[collapsible=icon]:hidden",
+HEAD:src/components/ui/sidebar.tsx:513:  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+HEAD:src/components/ui/sidebar.tsx:524:        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+HEAD:src/components/ui/sidebar.tsx:584:          hidden={state !== "collapsed" || isMobile}
+HEAD:src/components/ui/sidebar.tsx:613:        "group-data-[collapsible=icon]:hidden",
+HEAD:src/components/ui/sidebar.tsx:637:      "group-data-[collapsible=icon]:hidden",
+HEAD:src/components/ui/sidebar.tsx:652:  const width = React.useMemo(() => {
+HEAD:src/components/ui/sidebar.tsx:692:      "group-data-[collapsible=icon]:hidden",
+HEAD:src/components/ui/sidebar.tsx:727:        "group-data-[collapsible=icon]:hidden",

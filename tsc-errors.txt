@@ -1,0 +1,33 @@
+src/components/MenuEditor.tsx(4,10): error TS2724: '"@/services/pdfExportService"' has no exported member named 'generateMenuPDF'. Did you mean 'generateEventMenuPDF'?
+src/components/MenuEditor.tsx(39,29): error TS2353: Object literal may only specify known properties, and 'venueName' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(46,7): error TS2353: Object literal may only specify known properties, and 'sessionType' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(46,45): error TS2339: Property 'sessionType' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(53,29): error TS2353: Object literal may only specify known properties, and 'date' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(61,29): error TS2353: Object literal may only specify known properties, and 'headCount' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(76,59): error TS2339: Property 'name' does not exist on type '{ id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/MenuEditor.tsx(77,35): error TS2339: Property 'estimatedCost' does not exist on type '{ id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/MenuEditor.tsx(80,12): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(89,7): error TS2353: Object literal may only specify known properties, and 'items' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(97,46): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(100,7): error TS2353: Object literal may only specify known properties, and 'items' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(106,46): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(109,7): error TS2353: Object literal may only specify known properties, and 'items' does not exist in type 'EventMenu'.
+src/components/MenuEditor.tsx(115,14): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(135,29): error TS2339: Property 'venueName' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(143,35): error TS2339: Property 'sessionType' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(162,29): error TS2339: Property 'date' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(173,29): error TS2339: Property 'headCount' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(183,29): error TS2339: Property 'startTime' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(193,29): error TS2339: Property 'endTime' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(233,45): error TS2339: Property 'name' does not exist on type '{ id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/MenuEditor.tsx(233,59): error TS2339: Property 'estimatedCost' does not exist on type '{ id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/MenuEditor.tsx(262,13): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(281,25): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/MenuEditor.tsx(326,13): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/components/steps/ReviewStep.tsx(72,50): error TS2339: Property 'estimatedCost' does not exist on type '{ category: string; id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/steps/ReviewStep.tsx(214,92): error TS2339: Property 'name' does not exist on type '{ category: string; id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/steps/ReviewStep.tsx(225,69): error TS2339: Property 'estimatedCost' does not exist on type '{ category: string; id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/components/steps/ReviewStep.tsx(233,66): error TS2339: Property 'estimatedCost' does not exist on type '{ category: string; id: string; name_en: string; name_ta: string; isVegetarian: boolean; image: string; }'.
+src/services/menuCalculationService.ts(6,22): error TS2339: Property 'items' does not exist on type 'EventMenu'.
+src/services/menuCalculationService.ts(12,30): error TS2339: Property 'headCount' does not exist on type 'EventMenu'.
+src/services/menuCalculationService.ts(12,64): error TS2339: Property 'headCount' does not exist on type 'EventMenu'.

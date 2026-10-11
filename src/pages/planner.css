@@ -1,15 +1,27 @@
 .planner-page {
-  --planner-paper: var(--tp-bg);
-  --planner-card: var(--tp-surf);
-  --planner-ink: var(--tp-ink);
-  --planner-muted: var(--tp-mute);
-  --planner-line: var(--tp-line);
-  --planner-green: var(--tp-acc);
-  --planner-green-ink: var(--tp-acc-ink);
-  --planner-soft: var(--tp-surf-2);
+  --planner-paper: #f8f5ef;
+  --planner-card: #fffdf9;
+  --planner-ink: #302520;
+  --planner-muted: #655b53;
+  --planner-line: #e0d7ca;
+  --planner-green: #742530;
+  --planner-green-ink: #fffaf2;
+  --planner-soft: #f0e9de;
   min-height: 100vh;
   background: var(--planner-paper);
   color: var(--planner-ink);
+  transition: background-color 260ms ease, color 260ms ease;
+}
+
+.dark .planner-page {
+  --planner-paper: #171513;
+  --planner-card: #231e1c;
+  --planner-ink: #fff8ee;
+  --planner-muted: #d0c3b6;
+  --planner-line: #4a3933;
+  --planner-green: #e0b16d;
+  --planner-green-ink: #271b15;
+  --planner-soft: #332a26;
 }
 
 .planner-page h1,
@@ -17,11 +29,19 @@
 .planner-page h3,
 .planner-page h4 {
   color: inherit;
+  transition: color 260ms ease;
+}
+
+.planner-page p,
+.planner-page label,
+.planner-page span {
+  transition: color 260ms ease;
 }
 
 .planner-topbar {
   background: var(--planner-card);
   border-bottom: 1px solid var(--planner-line);
+  transition: background-color 260ms ease, border-color 260ms ease;
 }
 
 .planner-topbar-inner {
@@ -50,6 +70,10 @@
   width: 105px;
   max-height: 48px;
   object-fit: contain;
+}
+
+.planner-brand img {
+  transition: filter 260ms ease;
 }
 
 .planner-brand span {
@@ -85,6 +109,40 @@
   padding: 28px 0 56px;
 }
 
+.planner-welcome {
+  max-width: 760px;
+  margin: 8px 0 28px;
+  padding: 16px 0;
+}
+
+.planner-welcome-kicker {
+  margin: 0 0 12px;
+  color: var(--planner-green);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+.planner-welcome-kicker span {
+  padding: 0 5px;
+  color: var(--planner-muted);
+}
+
+.planner-page .planner-welcome h1 {
+  margin: 0;
+  color: var(--planner-ink);
+  font: 500 clamp(32px, 5vw, 54px)/1.02 var(--tp-font-display, Georgia, serif);
+  letter-spacing: -.025em;
+}
+
+.planner-welcome > p:last-child {
+  max-width: 610px;
+  margin: 13px 0 0;
+  color: var(--planner-muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
 .planning-flow {
   display: grid;
   gap: 20px;
@@ -98,6 +156,8 @@
   background: var(--planner-card);
   border: 1px solid var(--planner-line);
   border-radius: 9px;
+  box-shadow: 0 10px 30px rgba(57, 36, 27, .045);
+  transition: background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
 }
 
 .planner-progress ol {
@@ -158,6 +218,7 @@
 
 .planner-step-button.is-current {
   color: var(--planner-green);
+  font-weight: 700;
 }
 
 .planner-step-button.is-current .planner-step-number,
@@ -246,6 +307,16 @@
   color: var(--planner-green) !important;
 }
 
+.planner-page .text-pink-100,
+.planner-page .text-rose-100,
+.planner-page .text-red-100,
+.planner-page .text-orange-100,
+.planner-page .text-green-100,
+.planner-page .text-emerald-100,
+.planner-page .text-blue-100 {
+  color: var(--planner-muted) !important;
+}
+
 .planner-page .bg-pink-50,
 .planner-page .bg-pink-100,
 .planner-page .bg-red-50,
@@ -260,7 +331,7 @@
 .planner-page .shadow-lg,
 .planner-page .shadow-xl,
 .planner-page .shadow-md {
-  box-shadow: 0 4px 16px rgba(38, 56, 47, .06) !important;
+  box-shadow: 0 4px 16px rgba(49, 31, 24, .08) !important;
 }
 
 .planner-page input,
@@ -296,12 +367,16 @@
 .planner-page input:focus,
 .planner-page textarea:focus,
 .planner-page select:focus {
-  border-color: #78917b !important;
-  --tw-ring-color: #78917b !important;
+  border-color: var(--planner-green) !important;
+  --tw-ring-color: var(--planner-green) !important;
 }
 
 .planner-page button {
   border-radius: 5px;
+}
+
+.planner-page .planner-progress button {
+  transition: color 260ms ease, background-color 260ms ease, border-color 260ms ease;
 }
 
 .planner-page .bg-green-500,
@@ -312,7 +387,7 @@
 
 .planner-page .ring-green-200,
 .planner-page .ring-4 {
-  --tw-ring-color: #dce5d7 !important;
+  --tw-ring-color: color-mix(in srgb, var(--planner-green) 28%, transparent) !important;
 }
 
 .planner-page .bg-white\/20 {
@@ -408,6 +483,288 @@
   border-radius: 9px;
 }
 
+.planner-step-panel,
+.planner-summary-card,
+.planner-document-card,
+.planner-day-card {
+  overflow: hidden;
+  border: 1px solid var(--planner-line) !important;
+  border-radius: 14px !important;
+  background: var(--planner-card) !important;
+  box-shadow: 0 14px 36px rgba(47, 31, 24, .07) !important;
+}
+
+.planner-step-banner {
+  padding: clamp(22px, 4vw, 34px) !important;
+  color: #fff9f0 !important;
+  background: linear-gradient(115deg, #571d25, #883943) !important;
+}
+
+.planner-step-banner h2,
+.planner-step-banner h3,
+.planner-step-banner p {
+  color: #fff9f0 !important;
+}
+
+.planner-step-banner p {
+  color: #f1dcd0 !important;
+}
+
+.dark .planner-step-banner {
+  background: linear-gradient(115deg, #422027, #642e36) !important;
+}
+
+.planner-step-body {
+  padding: clamp(20px, 4vw, 38px) !important;
+  background: var(--planner-card) !important;
+}
+
+.planner-form-section {
+  padding: 0 0 26px;
+  border-bottom: 1px solid var(--planner-line);
+}
+
+.planner-form-section:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.planner-icon-badge {
+  width: 44px !important;
+  height: 44px !important;
+  color: var(--planner-green) !important;
+  background: color-mix(in srgb, var(--planner-green) 12%, var(--planner-card)) !important;
+  border: 1px solid color-mix(in srgb, var(--planner-green) 20%, var(--planner-line));
+  box-shadow: none !important;
+}
+
+.planner-icon-badge svg {
+  width: 19px;
+  height: 19px;
+}
+
+.planner-duration-summary {
+  border: 1px solid color-mix(in srgb, var(--planner-green) 25%, var(--planner-line)) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--planner-green) 10%, var(--planner-card)) !important;
+  box-shadow: none !important;
+}
+
+.planner-duration-summary p {
+  color: var(--planner-ink) !important;
+}
+
+.planner-progress {
+  padding: 17px 20px 15px;
+}
+
+.planner-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 2px 13px;
+}
+
+.planner-progress-kicker {
+  margin: 0 0 3px;
+  color: var(--planner-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.planner-progress-current {
+  margin: 0;
+  color: var(--planner-ink);
+  font-family: var(--tp-font-display, Georgia, serif);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.planner-progress-count {
+  color: var(--planner-green);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  white-space: nowrap;
+}
+
+.planner-progress-track {
+  height: 3px;
+  margin: 0 2px 12px;
+  overflow: hidden;
+  background: var(--planner-soft);
+  border-radius: 99px;
+}
+
+.planner-progress-track span {
+  height: 100%;
+  display: block;
+  background: var(--planner-green);
+  border-radius: inherit;
+  transition: width 300ms ease;
+}
+
+.planner-progress ol {
+  gap: 3px;
+}
+
+.planner-step-button {
+  min-height: 42px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.planner-step-button:hover {
+  background: var(--planner-soft);
+}
+
+.planner-step-number {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+
+.planner-step-connector {
+  margin-inline: 4px;
+}
+
+.planner-day-card {
+  margin-bottom: 3px;
+}
+
+.planner-day-heading {
+  color: var(--planner-ink) !important;
+  background: var(--planner-soft) !important;
+  border-bottom: 1px solid var(--planner-line);
+}
+
+.planner-day-heading h3,
+.planner-day-heading p {
+  color: var(--planner-ink) !important;
+}
+
+.planner-session-card,
+.planner-summary-card > div,
+.planner-document-card > div {
+  background-color: var(--planner-card);
+}
+
+.planner-session-card {
+  border-color: var(--planner-line) !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+}
+
+.planner-document-icon,
+.planner-generated-mark {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  color: var(--planner-green);
+  background: color-mix(in srgb, var(--planner-green) 11%, var(--planner-card));
+  border: 1px solid color-mix(in srgb, var(--planner-green) 18%, var(--planner-line));
+  border-radius: 12px;
+}
+
+.planner-generated-mark {
+  width: auto;
+  height: auto;
+  flex-basis: auto;
+  color: var(--planner-green);
+}
+
+.planner-feature-icon {
+  flex: 0 0 auto;
+  color: var(--planner-green);
+}
+
+.planner-vegetarian-mark {
+  color: var(--planner-green) !important;
+  background: var(--planner-card) !important;
+  border: 1px solid var(--planner-line);
+}
+
+.planner-category-tabs,
+.planner-category-tabs * {
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.planner-page .menu-session-heading {
+  color: #fff9f0 !important;
+  background: linear-gradient(115deg, #571d25, #883943) !important;
+  border: 0;
+  box-shadow: 0 14px 34px rgba(47, 31, 24, .12);
+}
+
+.planner-page .menu-session-heading h2,
+.planner-page .menu-session-heading p,
+.planner-page .menu-session-heading .text-white,
+.planner-page .menu-session-heading .text-white\/90 {
+  color: #fff9f0 !important;
+}
+
+.planner-page .menu-session-heading > div > div:last-child {
+  color: #fff9f0 !important;
+  background: rgba(255, 249, 240, .12) !important;
+  border: 1px solid rgba(255, 249, 240, .26);
+  border-radius: 12px !important;
+}
+
+.planner-page .menu-category-list ~ [role="tabpanel"] .grid > div > div {
+  background: var(--planner-card) !important;
+  border-width: 1px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 20px rgba(47, 31, 24, .07) !important;
+}
+
+.planner-page .menu-category-list ~ [role="tabpanel"] .grid > div > div > div:last-child {
+  background: var(--planner-card) !important;
+}
+
+.planner-page .menu-category-list ~ [role="tabpanel"] .grid > div > div h3 {
+  color: var(--planner-ink) !important;
+}
+
+.planner-page .menu-category-list ~ [role="tabpanel"] .grid > div > div p {
+  color: var(--planner-muted) !important;
+}
+
+.planner-page .menu-category-list ~ [role="tabpanel"] .grid > div > div .text-white {
+  color: var(--planner-green-ink) !important;
+}
+
+.planner-page .menu-selection-navigation {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  padding: 10px;
+  background: color-mix(in srgb, var(--planner-card) 94%, transparent);
+  border: 1px solid var(--planner-line);
+  border-radius: 12px;
+  box-shadow: 0 8px 26px rgba(47, 31, 24, .1);
+  backdrop-filter: blur(12px);
+}
+
+.planner-page .menu-selection-navigation button {
+  min-height: 48px;
+  border-radius: 8px !important;
+}
+
+.planner-page .planner-step-content > div,
+.planner-page .planner-step-content [class*="bg-gradient-to-"],
+.planner-page .planner-step-content [class~="bg-white"],
+.planner-page .planner-step-content [class~="bg-gray-50"],
+.planner-page .planner-step-content input,
+.planner-page .planner-step-content textarea,
+.planner-page .planner-step-content select {
+  transition: background-color 260ms ease, color 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
+}
+
 @media (max-width: 700px) {
   .planner-topbar-inner,
   .planner-main {
@@ -434,6 +791,15 @@
     white-space: normal;
   }
 
+  .planner-welcome {
+    margin: 0 0 18px;
+    padding: 8px 0;
+  }
+
+  .planner-welcome > p:last-child {
+    font-size: 13px;
+  }
+
   .planner-topbar-actions {
     gap: 0;
   }
@@ -458,7 +824,7 @@
   }
 
   .planner-progress {
-    padding: 9px 6px;
+    padding: 12px 8px 9px;
   }
 
   .planner-step-button {
@@ -468,6 +834,14 @@
     width: 100%;
     padding: 2px;
     text-align: center;
+  }
+
+  .planner-progress-heading {
+    margin-bottom: 10px;
+  }
+
+  .planner-progress-current {
+    font-size: 17px;
   }
 
   .planner-step-label {
@@ -527,6 +901,12 @@
 
   .planner-page .menu-selection-navigation {
     flex-direction: column;
+    position: static;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .planner-page .menu-selection-navigation button {

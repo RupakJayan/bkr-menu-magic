@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { EventMenu } from '@/types/menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getTamilSolarDate } from '@/utils/tamilDate';
 import { differenceInCalendarDays } from '@/utils/istDate';
+import { CalendarDays, Clock3, MapPin, NotebookPen, UserRound } from 'lucide-react';
 
 interface EventDetailsStepProps {
   menu: EventMenu;
@@ -33,7 +33,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
 
   const handleSave = () => {
     const numberOfDays = calculateDays();
-    
+
     onMenuChange({
       ...menu,
       clientDetails: {
@@ -52,30 +52,33 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
       numberOfDays,
       updatedAt: new Date(),
     });
-    
+
     onNext();
   };
 
   const isValid = clientName && clientPhone && venueName && venueAddress && startDate && endDate && endDate >= startDate;
 
   return (
-    <div className="bg-white rounded-xl shadow-xl border-2 border-red-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-red-600 to-orange-600 p-8 text-white">
+    <div className="planner-step-panel bg-white rounded-xl shadow-xl border-2 border-red-200 overflow-hidden">
+      <div className="planner-step-banner bg-gradient-to-r from-red-600 to-orange-600 p-8 text-white">
         <h2 className="text-3xl font-bold flex items-center gap-3">
-          <span className="text-4xl">📋</span>
+          <NotebookPen className="h-7 w-7" aria-hidden="true" />
           Event Details | நிகழ்வு விவரங்கள்
         </h2>
-        <p className="text-red-100 mt-2">Fill in your event information</p>
+        <p className="text-red-100 mt-2">Start with the people, place and dates. You can review everything before exporting.</p>
       </div>
-      
-      <div className="p-8 space-y-8 bg-gradient-to-b from-white to-orange-50">
+
+      <div className="planner-step-body p-8 space-y-8 bg-gradient-to-b from-white to-orange-50">
         {/* Client Details */}
-        <div className="space-y-4">
+        <section className="planner-form-section space-y-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-2xl shadow-lg">
-              👤
+            <div className="planner-icon-badge w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
+              <UserRound aria-hidden="true" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800">Client Information</h3>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">Client Information</h3>
+              <p className="text-sm text-gray-500">Who are we planning this celebration for?</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -99,15 +102,18 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
               />
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Venue Details */}
-        <div className="space-y-4">
+        <section className="planner-form-section space-y-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-2xl shadow-lg">
-              📍
+            <div className="planner-icon-badge w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg">
+              <MapPin aria-hidden="true" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800">Venue Information</h3>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">Venue Information</h3>
+              <p className="text-sm text-gray-500">Add the location and optional map link.</p>
+            </div>
           </div>
           <div className="space-y-6">
             <div className="space-y-2">
@@ -142,15 +148,18 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
               />
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Event Dates */}
-        <div className="space-y-4">
+        <section className="planner-form-section space-y-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg">
-              📅
+            <div className="planner-icon-badge w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-lg">
+              <CalendarDays aria-hidden="true" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800">Event Duration</h3>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">Event Duration</h3>
+              <p className="text-sm text-gray-500">Tamil date is calculated from your selected start date.</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -176,7 +185,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
                 className="h-12 rounded-lg border-2 border-red-200 focus:border-red-600"
               />
               <p id="tamilDateHelp" className="text-xs text-gray-500" aria-live="polite">
-                Calculated from the start date using the Tamil solar calendar (India time).
+                Tamil solar calendar · India time
               </p>
             </div>
             <div className="space-y-2">
@@ -205,18 +214,18 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
             />
           </div>
           {startDate && endDate && (
-            <div className="p-5 bg-gradient-to-r from-red-100 to-orange-100 rounded-xl border-2 border-red-300 shadow-md">
+            <div className="planner-duration-summary p-5 bg-gradient-to-r from-red-100 to-orange-100 rounded-xl border-2 border-red-300 shadow-md">
               <p className="text-base text-red-900 font-bold flex items-center gap-2">
-                <span className="text-2xl">⏱️</span>
-                Event Duration: <span className="text-xl font-bold">{calculateDays()}</span> day(s)
+                <Clock3 className="h-5 w-5" aria-hidden="true" />
+                Event duration <span className="text-xl font-bold">{calculateDays()}</span> day(s)
               </p>
             </div>
           )}
-        </div>
+        </section>
 
-        <Button 
-          onClick={handleSave} 
-          disabled={!isValid} 
+        <Button
+          onClick={handleSave}
+          disabled={!isValid}
           className="w-full h-14 text-lg font-bold rounded-lg bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:opacity-50 shadow-lg"
         >
           Save & Continue to Session Planning →

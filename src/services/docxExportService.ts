@@ -3,7 +3,6 @@ import {
   BorderStyle,
   Document,
   HeadingLevel,
-  ImageRun,
   Packer,
   Paragraph,
   Table,
@@ -12,6 +11,7 @@ import {
   TextRun,
   WidthType,
 } from "docx";
+import JSZip from "jszip";
 import type { EventMenu, Session } from "@/types/menu";
 import {
   findDishByKey,
@@ -25,8 +25,12 @@ import { formatISTDate } from "@/utils/istDate";
 import { getTamilSolarDate } from "@/utils/tamilDate";
 
 const TAMIL_FONT = "Latha";
-const ENGLISH_FONT = "Times New Roman";
-const BORDER = { style: BorderStyle.SINGLE, size: 1, color: "333333" } as const;
+const ENGLISH_FONT = "Arial";
+const SESSION_FONT = "Nirmala UI";
+const BRAND_BROWN = "5C2E1F";
+const BORDER = { style: BorderStyle.SINGLE, size: 4, color: "auto" } as const;
+const OUTER_BORDER = { style: BorderStyle.SINGLE, size: 8, color: "auto" } as const;
+const NO_BORDER = { style: BorderStyle.NIL, size: 0, color: "auto" } as const;
 const copyToClipboardFallback = (blob: Blob, fileName: string): void => {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -36,6 +40,14 @@ const copyToClipboardFallback = (blob: Blob, fileName: string): void => {
   link.click();
   link.remove();
   window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+};
+
+const formatSessionTime = (value: string): string => {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+  if (!match) return value;
+  const hour = Number(match[1]);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${match[2]} ${suffix}`;
 };
 
 const requestSaveFile = async (fileName: string): Promise<FileSystemFileHandle | null> => {
@@ -76,33 +88,80 @@ const downloadDocument = async (
 
 const cell = (
   text: string,
-  options: { bold?: boolean; width?: number; alignment?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {},
+  options: {
+    bold?: boolean;
+    width?: number;
+    alignment?: (typeof AlignmentType)[keyof typeof AlignmentType];
+    font?: string;
+    size?: number;
+    color?: string;
+    borders?: {
+      top?: typeof BORDER | typeof OUTER_BORDER | typeof NO_BORDER;
+      bottom?: typeof BORDER | typeof OUTER_BORDER | typeof NO_BORDER;
+      left?: typeof BORDER | typeof OUTER_BORDER | typeof NO_BORDER;
+      right?: typeof BORDER | typeof OUTER_BORDER | typeof NO_BORDER;
+    };
+  } = {},
 ): TableCell => new TableCell({
   width: options.width ? { size: options.width, type: WidthType.DXA } : undefined,
-  borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+  borders: options.borders ?? { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+  margins: { top: 70, bottom: 70, left: 90, right: 90 },
   children: [new Paragraph({
     alignment: options.alignment,
-    children: [new TextRun({ text, bold: options.bold, size: 20 })],
+    spacing: { before: 0, after: 0 },
+    children: [new TextRun({
+      text,
+      bold: options.bold,
+      size: options.size ?? 22,
+      font: options.font ?? ENGLISH_FONT,
+      color: options.color,
+    })],
   })],
 });
 
 const metaTable = (rows: [string, string][]): Table => new Table({
   width: { size: 9639, type: WidthType.DXA },
+  indent: { size: -10, type: WidthType.DXA },
   columnWidths: [2717, 567, 6355],
-  rows: rows.map(([label, value]) => new TableRow({
-    children: [
-      cell(label, { width: 2717, bold: true }),
-      cell(":", { width: 567 }),
-      cell(value, { width: 6355 }),
-    ],
-  })),
+  rows: rows.map(([label, value], rowIndex) => {
+    const top = rowIndex === 0 ? OUTER_BORDER : NO_BORDER;
+    const bottom = rowIndex === rows.length - 1 ? OUTER_BORDER : NO_BORDER;
+    return new TableRow({
+      children: [
+        cell(label, {
+          width: 2717,
+          bold: true,
+          size: 24,
+          font: label.match(/[\u0B80-\u0BFF]/) ? TAMIL_FONT : ENGLISH_FONT,
+          borders: { top, bottom, left: OUTER_BORDER, right: NO_BORDER },
+        }),
+        cell(":", {
+          width: 567,
+          size: 24,
+          borders: { top, bottom, left: NO_BORDER, right: NO_BORDER },
+        }),
+        cell(value, {
+          width: 6355,
+          size: 24,
+          font: value.match(/[\u0B80-\u0BFF]/) ? TAMIL_FONT : ENGLISH_FONT,
+          borders: { top, bottom, left: NO_BORDER, right: OUTER_BORDER },
+        }),
+      ],
+    });
+  }),
 });
 
 const heading = (text: string, level: (typeof HeadingLevel)[keyof typeof HeadingLevel]) =>
   new Paragraph({
-    text,
+    children: [new TextRun({
+      text,
+      font: text.match(/[\u0B80-\u0BFF]/) ? TAMIL_FONT : ENGLISH_FONT,
+      size: 28,
+      bold: true,
+      color: BRAND_BROWN,
+    })],
     heading: level,
-    spacing: { before: 160, after: 80 },
+    spacing: { before: 200, after: 100 },
     keepNext: true,
   });
 
@@ -112,20 +171,51 @@ const localized = (
   tamil: string,
 ): string => language === "ta" ? tamil : english;
 
-const formatDate = (value: string, language: "en" | "ta"): string => {
-  return formatISTDate(value, language === "ta" ? "ta-IN" : "en-IN", {
+const formatDate = (value: string): string => {
+  return formatISTDate(value, "en-IN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  });
+  }).replace(/\//g, "-");
 };
 
-const loadBrandAsset = async (path: string): Promise<ArrayBuffer> => {
-  const response = await fetch(path);
-  if (!response.ok) {
-    throw new Error(`Could not load the BKR document artwork (${path}).`);
+const applyReferenceTemplate = async (menuDocument: Blob): Promise<Blob> => {
+  const [templateResponse, menuZip] = await Promise.all([
+    fetch("/bkr-menu-template.docx"),
+    JSZip.loadAsync(menuDocument),
+  ]);
+  if (!templateResponse.ok) {
+    throw new Error("Could not load the BKR Word template.");
   }
-  return response.arrayBuffer();
+  const templateZip = await JSZip.loadAsync(await templateResponse.arrayBuffer());
+  const templateDocument = templateZip.file("word/document.xml");
+  const generatedDocument = menuZip.file("word/document.xml");
+  if (!templateDocument || !generatedDocument) {
+    throw new Error("The Word template or generated document is missing required Word content.");
+  }
+
+  const [templateXml, generatedXml] = await Promise.all([
+    templateDocument.async("string"),
+    generatedDocument.async("string"),
+  ]);
+  const bodyMatch = /<w:body>([\s\S]*?)<w:sectPr\b[\s\S]*?<\/w:sectPr>\s*<\/w:body>/.exec(generatedXml);
+  if (!bodyMatch) throw new Error("Could not read generated Word menu content.");
+  const generatedBody = bodyMatch[1];
+  const contentWithoutImages = generatedBody.replace(
+    /<w:p\b[\s\S]*?<\/w:p>/g,
+    (paragraph) => paragraph.includes("<w:drawing>") || paragraph.includes("<w:pict>") ? "" : paragraph,
+  );
+  const referenceBody = templateXml.replace(
+    /(<w:body>)[\s\S]*?(<w:sectPr\b[\s\S]*?<\/w:sectPr>\s*<\/w:body>)/,
+    `$1${contentWithoutImages}$2`,
+  );
+  templateZip.file("word/document.xml", referenceBody);
+  return templateZip.generateAsync({
+    type: "blob",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 };
 
 const getSessionLabel = (session: Session, language: "en" | "ta"): string => {
@@ -163,21 +253,26 @@ const createSessionRows = (
     day.sessions.map((session) => ({
       title: new Paragraph({
         children: [
-          new TextRun({ text: getSessionLabel(session, language), bold: true, size: 25 }),
           new TextRun({
-            text: ` @ ${session.startTime}              ${localized(language, "NOS", "எண்ணிக்கை")}: ${session.headCount}`,
+            text: getSessionLabel(session, language),
             bold: true,
-            size: 21,
+            size: 28,
+            font: language === "ta" ? SESSION_FONT : ENGLISH_FONT,
+          }),
+          new TextRun({
+            text: ` @ ${formatSessionTime(session.startTime)}              NOS: ${session.headCount}`,
+            bold: true,
+            size: 24,
+            font: SESSION_FONT,
           }),
         ],
-        spacing: { before: 180, after: 70 },
+        spacing: { before: 140, after: 80 },
         keepNext: true,
       }),
       dishes: groupSessionDishes(session).flatMap(([category, dishes]) => [
         new Paragraph({
-          text: category,
-          heading: HeadingLevel.HEADING_3,
-          spacing: { before: 90, after: 20 },
+          children: [new TextRun({ text: category, font: ENGLISH_FONT, size: 24 })],
+          spacing: { before: 70, after: 20 },
           keepNext: true,
         }),
         ...dishes.map((dish) => new Paragraph({
@@ -185,10 +280,11 @@ const createSessionRows = (
             text: language === "ta"
               ? dish?.name_ta ?? dish?.name_en ?? ""
               : dish?.name_en ?? dish?.name_ta ?? "",
-            size: 21,
+            font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
+            size: 24,
           })],
-          indent: { left: 240 },
-          spacing: { after: 15 },
+          indent: { left: 300 },
+          spacing: { after: 20 },
         })),
       ]),
     })),
@@ -199,22 +295,22 @@ const createSessionRows = (
     new TableRow({
       tableHeader: true,
       children: [
-        cell(localized(language, "S.NO", "வ.எண்"), { width: 883, bold: true }),
-        cell(localized(language, "SESSION", "நிகழ்வு"), { width: 3233, bold: true }),
-        cell(localized(language, "RATE", "விலை"), { width: 1978, bold: true }),
-        cell(localized(language, "NOS", "எண்ணிக்கை"), { width: 1959, bold: true }),
-        cell(localized(language, "TOTAL", "மொத்தம்"), { width: 1986, bold: true }),
+        cell("S.NO", { width: 883, size: 28, font: SESSION_FONT }),
+        cell("SESSION", { width: 3233, size: 28, font: SESSION_FONT }),
+        cell("RATES", { width: 1978, size: 28, font: SESSION_FONT }),
+        cell("NOS", { width: 1959, size: 28, font: SESSION_FONT }),
+        cell("TOTAL", { width: 1986, size: 28, font: SESSION_FONT }),
       ],
     }),
     ...sessions.map((session, index) => {
       const rate = session.ratePerPerson ?? 0;
       return new TableRow({
         children: [
-          cell(String(index + 1), { width: 883 }),
-          cell(getSessionLabel(session, language), { width: 3233 }),
-          cell(rate ? `₹ ${rate.toLocaleString("en-IN")}` : "—", { width: 1978 }),
-          cell(`${session.headCount} ${localized(language, "NOS", "பேர்")}`, { width: 1959 }),
-          cell(rate ? `₹ ${(rate * session.headCount).toLocaleString("en-IN")}` : "—", { width: 1986 }),
+          cell(String(index + 1), { width: 883, size: 28, font: SESSION_FONT }),
+          cell(session.name.toUpperCase(), { width: 3233, size: 28, font: SESSION_FONT }),
+          cell(rate ? `₹ ${rate.toLocaleString("en-IN")}` : "—", { width: 1978, size: 28, font: SESSION_FONT }),
+          cell(`${session.headCount} NOS`, { width: 1959, size: 28, font: SESSION_FONT }),
+          cell(rate ? (rate * session.headCount).toLocaleString("en-IN") : "—", { width: 1986, size: 28, font: SESSION_FONT }),
         ],
       });
     }),
@@ -224,15 +320,24 @@ const createSessionRows = (
     (total, session) => total + (session.ratePerPerson ?? 0) * session.headCount,
     0,
   );
+  rateRows.push(new TableRow({
+    children: [
+      cell("", { width: 883 }),
+      cell("TOTAL", { width: 3233, size: 28, font: SESSION_FONT }),
+      cell("", { width: 1978 }),
+      cell("", { width: 1959 }),
+      cell(quotedTotal ? quotedTotal.toLocaleString("en-IN") : "—", { width: 1986, size: 28, font: SESSION_FONT }),
+    ],
+  }));
   const transportCharge = menu.transportCharge ?? 0;
   if (transportCharge > 0) {
     rateRows.push(new TableRow({
       children: [
-        cell(String(sessions.length + 1), { width: 883 }),
-        cell(localized(language, "TRANSPORT / OTHER", "போக்குவரத்து / இதர"), { width: 3233 }),
-        cell("", { width: 1978 }),
-        cell("", { width: 1959 }),
-        cell(`₹ ${transportCharge.toLocaleString("en-IN")}`, { width: 1986 }),
+        cell(String(sessions.length + 1), { width: 883, size: 28, font: SESSION_FONT }),
+        cell("TRANSPORT", { width: 3233, size: 28, font: SESSION_FONT }),
+        cell("", { width: 1978, size: 28, font: SESSION_FONT }),
+        cell("", { width: 1959, size: 28, font: SESSION_FONT }),
+        cell(transportCharge.toLocaleString("en-IN"), { width: 1986, size: 28, font: SESSION_FONT }),
       ],
     }));
   }
@@ -240,27 +345,42 @@ const createSessionRows = (
   rateRows.push(new TableRow({
     children: [
       cell("", { width: 883 }),
-      cell(localized(language, "GRAND TOTAL", "மொத்தத் தொகை"), { width: 3233, bold: true }),
+      cell("GRAND TOTAL", { width: 3233, size: 28, font: SESSION_FONT }),
       cell("", { width: 1978 }),
       cell("", { width: 1959 }),
-      cell(grandTotal ? `₹ ${grandTotal.toLocaleString("en-IN")}` : "—", { width: 1986, bold: true }),
+      cell(grandTotal ? grandTotal.toLocaleString("en-IN") : "—", { width: 1986, size: 28, font: SESSION_FONT }),
     ],
   }));
 
   return [
     ...rows.flatMap((row) => [row.title, ...row.dishes]),
-    heading(localized(language, "Rates", "விலை விவரம்"), HeadingLevel.HEADING_2),
+    new Paragraph({
+      children: [new TextRun({
+        text: "Rates:",
+        font: "Bahnschrift",
+        size: 32,
+        bold: true,
+        color: BRAND_BROWN,
+      })],
+      spacing: { before: 240, after: 120 },
+      keepNext: true,
+    }),
     new Table({
-      width: { size: 10039, type: WidthType.DXA },
+      width: { size: 0, type: WidthType.AUTO },
+      indent: { size: -574, type: WidthType.DXA },
       columnWidths: [883, 3233, 1978, 1959, 1986],
       rows: rateRows,
     }),
     heading(localized(language, "Terms & Conditions", "விதிமுறைகள் மற்றும் நிபந்தனைகள்"), HeadingLevel.HEADING_2),
     ...(language === "ta" ? settings.termsTamil : settings.termsEnglish).map((term) =>
       new Paragraph({
-        text: `• ${term}`,
+        children: [new TextRun({
+          text: `• ${term}`,
+          font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
+          size: 22,
+        })],
         indent: { left: 240 },
-        spacing: { after: 45 },
+        spacing: { after: 70 },
       }),
     ),
   ];
@@ -285,46 +405,27 @@ export const generateEventMenuDOCX = async (
   const fileName = `BKR_Event_Menu_${safeName}${langSuffix}.docx`;
   const saveHandle = await requestSaveFile(fileName);
   if (typeof window.showSaveFilePicker === "function" && !saveHandle) return;
-  const [logoData, contactBannerData] = await Promise.all([
-    loadBrandAsset("/bkr-catering-reference.png"),
-    loadBrandAsset("/bkr-contact-banner.jpeg"),
-  ]);
-
   const infoRows: [string, string][] = [
     [localized(language, "NAME", "பெயர்"), menu.clientDetails.name],
     [localized(language, "VENUE", "இடம்"), menu.venueDetails.name],
     [localized(language, "DATE", "தேதி"), menu.startDate === menu.endDate
-      ? formatDate(menu.startDate, language)
-      : `${formatDate(menu.startDate, language)} & ${formatDate(menu.endDate, language)}`],
+      ? formatDate(menu.startDate)
+      : `${formatDate(menu.startDate)} & ${formatDate(menu.endDate)}`],
     [localized(language, "TAMIL DATE & DAY", "தமிழ் தேதி மற்றும் கிழமை"),
       getTamilSolarDate(menu.startDate) || menu.tamilDate || ""],
     [localized(language, "PHONE NO", "தொலைபேசி எண்"), menu.clientDetails.phone],
   ];
   const children = [
     new Paragraph({
-      children: [new ImageRun({
-        type: "png",
-        data: logoData,
-        transformation: { width: 300, height: 137 },
-        altText: { name: "BKR Catering", description: "Anaimalai's BKR Catering" },
+      children: [new TextRun({
+        text: localized(language, "CATERING SERVICES", "கேட்டரிங் சேவைகள்"),
+        font: language === "ta" ? TAMIL_FONT : "Bahnschrift",
+        size: 32,
+        bold: true,
+        color: BRAND_BROWN,
       })],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-    }),
-    new Paragraph({
-      children: [new ImageRun({
-        type: "jpg",
-        data: contactBannerData,
-        transformation: { width: 468, height: 70 },
-        altText: { name: "BKR Catering contacts", description: "BKR Catering services, address and contact details" },
-      })],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-    }),
-    new Paragraph({
-      text: localized(language, "CATERING SERVICES", "கேட்டரிங் சேவைகள்"),
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
+      spacing: { before: 80, after: 180 },
     }),
     metaTable(infoRows),
     ...createSessionRows(menu, language, settings),
@@ -339,12 +440,16 @@ export const generateEventMenuDOCX = async (
     },
     sections: [{
       properties: {
-        page: { size: { width: 11906, height: 16838 }, margin: { top: 720, right: 720, bottom: 720, left: 720 } },
+        page: {
+          size: { width: 11906, height: 16838 },
+          margin: { top: 720, right: 991, bottom: 1440, left: 1440, header: 432, footer: 0 },
+        },
       },
       children,
     }],
   });
 
-  const blob = await Packer.toBlob(doc);
-  await downloadDocument(blob, fileName, saveHandle);
+  const generatedBlob = await Packer.toBlob(doc);
+  const templateMatchedBlob = await applyReferenceTemplate(generatedBlob);
+  await downloadDocument(templateMatchedBlob, fileName, saveHandle);
 };

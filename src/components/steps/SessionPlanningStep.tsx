@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus } from 'lucide-react';
+import { CalendarDays, Clock3, Plus, Trash2, Utensils } from 'lucide-react';
 import { addDaysToISODate } from '@/utils/istDate';
 import { formatISTDate } from '@/utils/istDate';
 
@@ -38,7 +38,7 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
         sessions: [],
       });
     }
-    
+
     return dayPlans;
   }
 
@@ -103,30 +103,33 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
   const isValid = days.every(day => day.sessions.length > 0);
 
   return (
-    <div className="bg-white rounded-xl shadow-xl border-2 border-pink-300 overflow-hidden">
-      <div className="bg-gradient-to-r from-pink-600 to-rose-600 p-8 text-white">
+    <div className="planner-step-panel bg-white rounded-xl shadow-xl border-2 border-pink-300 overflow-hidden">
+      <div className="planner-step-banner bg-gradient-to-r from-pink-600 to-rose-600 p-8 text-white">
         <h2 className="text-3xl font-bold flex items-center gap-3">
-          <span className="text-4xl">⏰</span>
+          <Clock3 className="h-7 w-7" aria-hidden="true" />
           Session Planning | அமர்வு திட்டமிடல்
         </h2>
-        <p className="text-pink-100 mt-2">Plan sessions for each day of your event</p>
+        <p className="text-pink-100 mt-2">Choose the service times, guest counts and rates for each event day.</p>
       </div>
-      
-      <div className="p-8 space-y-6 bg-gradient-to-b from-white to-pink-50">
+
+      <div className="planner-step-body p-8 space-y-6 bg-gradient-to-b from-white to-pink-50">
         {days.map((day, dayIndex) => (
-          <div key={dayIndex} className="border-2 border-pink-300 rounded-xl overflow-hidden shadow-lg">
-            <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-6 text-white">
-              <h3 className="text-2xl font-bold flex items-center gap-2">
-                <span className="text-3xl">📅</span>
+          <section key={dayIndex} className="planner-day-card border-2 border-pink-300 rounded-xl overflow-hidden shadow-lg">
+            <div className="planner-day-heading bg-gradient-to-r from-orange-500 to-pink-500 p-6 text-white">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" aria-hidden="true" />
                 Day {day.dayNumber} - {formatISTDate(day.date, 'en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </h3>
+              <p className="mt-1 text-sm text-white/80">
+                {day.sessions.length} {day.sessions.length === 1 ? 'session' : 'sessions'} planned
+              </p>
             </div>
             <div className="p-6 space-y-4 bg-white">
               {day.sessions.map((session, sessionIndex) => (
-                <div key={session.id} className="p-5 border-2 border-pink-300 rounded-lg bg-gradient-to-br from-white to-pink-50 shadow-md space-y-4">
+                <article key={session.id} className="planner-session-card p-5 border-2 border-pink-300 rounded-lg bg-gradient-to-br from-white to-pink-50 shadow-md space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                      <span className="text-2xl">🍽️</span>
+                      <Utensils className="h-5 w-5" aria-hidden="true" />
                       Session {sessionIndex + 1}
                     </h4>
                     <Button
@@ -213,7 +216,7 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
                       />
                     </div>
                   </div>
-                </div>
+                </article>
               ))}
 
               <Button
@@ -225,20 +228,20 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
                 Add Session to Day {day.dayNumber}
               </Button>
             </div>
-          </div>
+          </section>
         ))}
 
         <div className="flex gap-4 pt-4">
-          <Button 
-            variant="outline" 
-            onClick={onPrevious} 
+          <Button
+            variant="outline"
+            onClick={onPrevious}
             className="flex-1 h-14 text-lg font-bold rounded-lg border-2 border-pink-400 hover:bg-pink-50"
           >
             Previous
           </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={!isValid} 
+          <Button
+            onClick={handleSave}
+            disabled={!isValid}
             className="flex-1 h-14 text-lg font-bold rounded-lg bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 disabled:opacity-50 shadow-lg"
           >
             Save & Continue to Menu Selection →

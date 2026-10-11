@@ -1,5 +1,6 @@
 const CREDENTIALS_KEY = "bkr-admin-credentials";
 const SESSION_KEY = "bkr-admin-session";
+const SESSION_CHANGE_EVENT = "bkr-admin-session-change";
 const HASH_ITERATIONS = 310_000;
 const SALT_BYTES = 16;
 const HASH_BYTES = 32;
@@ -75,6 +76,15 @@ export const isAdminPasswordConfigured = (): boolean =>
 export const hasAdminSession = (): boolean =>
   sessionStorage.getItem(SESSION_KEY) === "authenticated";
 
+const notifySessionChange = (): void => {
+  window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
+};
+
+export const subscribeToAdminSession = (listener: () => void): (() => void) => {
+  window.addEventListener(SESSION_CHANGE_EVENT, listener);
+  return () => window.removeEventListener(SESSION_CHANGE_EVENT, listener);
+};
+
 export const setAdminPassword = async (password: string): Promise<void> => {
   if (password.length < 8) {
     throw new Error("Choose a password with at least 8 characters.");
@@ -92,6 +102,7 @@ export const setAdminPassword = async (password: string): Promise<void> => {
   };
   localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
   sessionStorage.setItem(SESSION_KEY, "authenticated");
+  notifySessionChange();
 };
 
 export const loginAdmin = async (password: string): Promise<boolean> => {
@@ -112,9 +123,11 @@ export const loginAdmin = async (password: string): Promise<boolean> => {
   if (difference !== 0) return false;
 
   sessionStorage.setItem(SESSION_KEY, "authenticated");
+  notifySessionChange();
   return true;
 };
 
 export const logoutAdmin = (): void => {
   sessionStorage.removeItem(SESSION_KEY);
+  notifySessionChange();
 };

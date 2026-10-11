@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { EventMenu, PlanningStep } from '@/types/menu';
+import { Check } from 'lucide-react';
 import { EventDetailsStep } from './steps/EventDetailsStep';
 import { SessionPlanningStep } from './steps/SessionPlanningStep';
 import { MenuSelectionStep } from './steps/MenuSelectionStep';
@@ -43,6 +44,23 @@ export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({ menu, onMe
   return (
     <div className="planning-flow">
       <nav className="planner-progress" aria-label="Event planning steps">
+        <div className="planner-progress-heading">
+          <div>
+            <p className="planner-progress-kicker">EVENT MENU WORKFLOW</p>
+            <p className="planner-progress-current">{STEPS[currentStepIndex]?.label}</p>
+          </div>
+          <span className="planner-progress-count">STEP {currentStepIndex + 1} OF {STEPS.length}</span>
+        </div>
+        <div
+          className="planner-progress-track"
+          role="progressbar"
+          aria-label="Menu planning progress"
+          aria-valuemin={1}
+          aria-valuemax={STEPS.length}
+          aria-valuenow={currentStepIndex + 1}
+        >
+          <span style={{ width: `${((currentStepIndex + 1) / STEPS.length) * 100}%` }} />
+        </div>
         <ol>
           {STEPS.map((step, index) => (
             <li key={step.id} className="planner-progress-item">
@@ -55,7 +73,9 @@ export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({ menu, onMe
                   currentStep === step.id ? 'is-current' : index < currentStepIndex ? 'is-complete' : ''
                 }`}
               >
-                <span className="planner-step-number">{index < currentStepIndex ? '✓' : index + 1}</span>
+                <span className="planner-step-number">
+                  {index < currentStepIndex ? <Check className="h-4 w-4" aria-hidden="true" /> : index + 1}
+                </span>
                 <span className="planner-step-label">
                   <span className="planner-step-label-full">{step.label}</span>
                   <span className="planner-step-label-compact">{step.compactLabel}</span>
