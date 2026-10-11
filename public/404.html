@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      (function() {
+        var path = window.location.pathname;
+        var prefix = "/bkr-menu-magic";
+        if (path.startsWith(prefix)) {
+          var subPath = path.slice(prefix.length);
+          if (subPath && subPath !== "/") {
+            window.location.replace(prefix + "/#" + subPath + window.location.search);
+            return;
+          }
+        }
+        window.location.replace(prefix + "/");
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to <a href="/bkr-menu-magic/">BKR Catering</a>...</p>
+  </body>
+</html>

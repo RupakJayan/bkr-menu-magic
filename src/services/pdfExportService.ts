@@ -4,6 +4,7 @@ import { findDishByKey } from "@/services/menuCatalogService";
 import { getBusinessSettings } from "@/services/localAdminService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
 import { getTamilSolarDate } from "@/utils/tamilDate";
+import { assetUrl } from "@/utils/assetUrl";
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
@@ -53,7 +54,7 @@ export const generateEventMenuPDF = async (
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const settings = getBusinessSettings();
   const measureContext = getTamilCanvasContext();
-  const logo = await loadImage("/bkr-catering-reference.png");
+  const logo = await loadImage(assetUrl("/bkr-catering-reference.png"));
   const contentWidth = PAGE_WIDTH - MARGIN * 2;
   let y = 15;
 

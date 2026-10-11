@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 
@@ -15,14 +15,14 @@ const NotFound = () => {
   return (
     <div className="not-found-page min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <a href="/" className="not-found-brand" aria-label="BKR Catering home">
+        <Link to="/" className="not-found-brand" aria-label="BKR Catering home">
           <BrandLogo />
-        </a>
+        </Link>
         <h1 className="text-4xl font-bold mb-4">404</h1>
         <p className="text-xl text-mute mb-4">Oops! Page not found</p>
-        <a href="/" className="text-acc hover:underline">
+        <Link to="/" className="text-acc hover:underline">
           Return to Home
-        </a>
+        </Link>
       </div>
     </div>
   );

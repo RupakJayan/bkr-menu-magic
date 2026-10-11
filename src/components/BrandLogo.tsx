@@ -1,4 +1,5 @@
 import { useTheme } from "@/contexts/ThemeContext";
+import { assetUrl } from "@/utils/assetUrl";
 
 interface BrandLogoProps {
   alt?: string;
@@ -15,8 +16,8 @@ export function BrandLogo({
     <img
       src={
         resolvedTheme === "dark"
-          ? "/bkr-catering-dark-logo.png"
-          : "/bkr-catering-reference.png"
+          ? assetUrl("/bkr-catering-dark-logo.png")
+          : assetUrl("/bkr-catering-reference.png")
       }
       alt={alt}
       width={800}

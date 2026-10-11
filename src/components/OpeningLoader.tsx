@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useTheme } from "@/contexts/ThemeContext";
+import { assetUrl } from "@/utils/assetUrl";
 
 interface OpeningLoaderProps {
   onComplete: () => void;
@@ -44,11 +45,11 @@ export function OpeningLoader({ onComplete }: OpeningLoaderProps) {
               muted
               playsInline
               preload="auto"
-              poster="/bkr-catering-reference.png"
+              poster={assetUrl("/bkr-catering-reference.png")}
               onEnded={onComplete}
               onError={onComplete}
             >
-              <source src="/bkr-logo-intro.mp4" type="video/mp4" />
+              <source src={assetUrl("/bkr-logo-intro.mp4")} type="video/mp4" />
             </video>
           </div>
         )}

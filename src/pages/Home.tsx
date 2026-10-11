@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowDown,
   ArrowRight,
@@ -16,6 +16,7 @@ import {
 import "./home.css";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
+import { assetUrl } from "@/utils/assetUrl";
 import {
   hasAdminSession,
   subscribeToAdminSession,
@@ -45,10 +46,10 @@ const Home: React.FC = () => {
         </div>
       </div>
       <header className="home-nav">
-        <a className="home-brand" href="/" aria-label="BKR Catering home">
+        <Link className="home-brand" to="/" aria-label="BKR Catering home">
           <BrandLogo />
           <span>Good food, warmly served.</span>
-        </a>
+        </Link>
         <nav
           id="home-main-navigation"
           className={`home-nav-links${mobileMenuOpen ? " is-open" : ""}`}
@@ -85,7 +86,7 @@ const Home: React.FC = () => {
         <section className="home-hero" aria-label="BKR Catering introduction">
           <img
             className="home-hero-image"
-            src="/home-catering-table.jpg"
+            src={assetUrl("/home-catering-table.jpg")}
             alt=""
           />
           <div className="home-hero-copy">
@@ -158,7 +159,7 @@ const Home: React.FC = () => {
           <div className="home-experience-gallery" aria-label="Food and celebration">
             <figure className="home-experience-photo home-experience-photo-table">
               <img
-                src="/home-south-indian-feast.jpg"
+                src={assetUrl("/home-south-indian-feast.jpg")}
                 alt="A celebratory biryani meal prepared for sharing"
                 loading="lazy"
               />
@@ -169,7 +170,7 @@ const Home: React.FC = () => {
             </figure>
             <figure className="home-experience-photo home-experience-photo-food">
               <img
-                src="/home-south-indian-snacks.jpg"
+                src={assetUrl("/home-south-indian-snacks.jpg")}
                 alt="Golden samosas with fresh green chutney"
                 loading="lazy"
               />

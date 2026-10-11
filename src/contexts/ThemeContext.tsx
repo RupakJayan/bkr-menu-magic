@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { assetUrl } from "@/utils/assetUrl";
 
 /**
  * WEDDING SUITE ships one palette with a light "paper" and a dark "dusk"
@@ -79,8 +80,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     const favicon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
     if (favicon) {
       favicon.href = isDark
-        ? "/bkr-catering-dark-logo.png"
-        : "/bkr-catering-reference.png";
+        ? assetUrl("/bkr-catering-dark-logo.png")
+        : assetUrl("/bkr-catering-reference.png");
     }
   }, [resolvedTheme]);
 

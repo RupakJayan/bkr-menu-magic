@@ -23,6 +23,7 @@ import {
 } from "@/services/localAdminService";
 import { formatISTDate } from "@/utils/istDate";
 import { getTamilSolarDate } from "@/utils/tamilDate";
+import { assetUrl } from "@/utils/assetUrl";
 
 const TAMIL_FONT = "Latha";
 const ENGLISH_FONT = "Arial";
@@ -181,7 +182,7 @@ const formatDate = (value: string): string => {
 
 const applyReferenceTemplate = async (menuDocument: Blob): Promise<Blob> => {
   const [templateResponse, menuZip] = await Promise.all([
-    fetch("/bkr-menu-template.docx"),
+    fetch(assetUrl("/bkr-menu-template.docx")),
     JSZip.loadAsync(menuDocument),
   ]);
   if (!templateResponse.ok) {
