@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import "./home.css";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BrandLogo } from "@/components/BrandLogo";
 import {
   hasAdminSession,
   subscribeToAdminSession,
@@ -45,7 +46,7 @@ const Home: React.FC = () => {
       </div>
       <header className="home-nav">
         <a className="home-brand" href="/" aria-label="BKR Catering home">
-          <img src="/bkr-catering-reference.png" alt="BKR Catering" />
+          <BrandLogo />
           <span>Good food, warmly served.</span>
         </a>
         <nav
@@ -257,7 +258,7 @@ const Home: React.FC = () => {
 
       <footer className="home-footer" id="contact">
         <div className="home-footer-brand">
-          <img src="/bkr-catering-reference.png" alt="BKR Catering" />
+          <BrandLogo />
           <p>Good food brings people together.</p>
           <p>Owner: Raghavendrar PB</p>
         </div>

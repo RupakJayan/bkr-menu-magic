@@ -1,6 +1,6 @@
 /* ============================================================================
    Theme Pack 164 - WEDDING SUITE  (v1.9.0)
-   Engraved-invitation calm: cream canvas, sage accent, Cormorant display type,
+   Warm invitation palette: parchment canvas, BKR burgundy and brass accents,
    squared plates, pill buttons, arched imagery. All component styling must read
    from var(--tp-*); --tp-h is the single re-brand dial (0-360).
    ========================================================================== */
@@ -54,25 +54,25 @@
   --tp-reveal-dist: 20px;
 
   --tp-img-r: 999px 999px 4px 4px;
-  --tp-img-frame: 1px solid #dfe0d2;
+  --tp-img-frame: 1px solid #e2d8ce;
   --tp-img-sh: none;
-  --tp-img-filter: saturate(.85) brightness(1.04);
+  --tp-img-filter: saturate(.9) brightness(1.02);
   --tp-img-overlay-op: 0.05;
   --tp-img-blend: soft-light;
   --tp-img-tilt: 0deg;
   --tp-img-ar: 3 / 4;
 
-  --tp-bg: #f7f6f0;
-  --tp-canvas: #f7f6f0;
-  --tp-surf: #fffefa;
-  --tp-surf-2: #e9eee6;
-  --tp-ink: #27352d;
-  --tp-mute: #5f6d63;
-  --tp-acc: #315b43;
-  --tp-acc-2: #a9b99a;
-  --tp-acc-ink: #fffefa;
-  --tp-line: #d9e0d7;
-  --tp-grad: linear-gradient(135deg, #426d52, #315b43);
+  --tp-bg: #f6f2ec;
+  --tp-canvas: #f6f2ec;
+  --tp-surf: #fffdf9;
+  --tp-surf-2: #eee6dd;
+  --tp-ink: #302526;
+  --tp-mute: #605456;
+  --tp-acc: #762934;
+  --tp-acc-2: #b78a4b;
+  --tp-acc-ink: #fffaf5;
+  --tp-line: #ded3c9;
+  --tp-grad: linear-gradient(135deg, #8a3540, #762934);
 
   --tp-r: 2px;
   --tp-r-sm: 0px;
@@ -102,22 +102,22 @@
    Keeps the invitation calm, only the paper changes. */
 .dark {
   color-scheme: dark;
-  --tp-bg: #191e1a;
-  --tp-canvas: #191e1a;
-  --tp-surf: #222923;
-  --tp-surf-2: #2c362e;
-  --tp-ink: #f1f3ed;
-  --tp-mute: #b6c0b6;
-  --tp-acc: #9cbea0;
-  --tp-acc-2: #c0c89f;
-  --tp-acc-ink: #1b261e;
-  --tp-line: #3b493e;
-  --tp-grad: linear-gradient(135deg, #9cbea0, #7ea587);
-  --tp-img-frame: 1px solid #3b493e;
-  --tp-img-filter: saturate(.82) brightness(.92);
-  --tp-img-overlay-op: 0.08;
-  --tp-sh: 0 16px 40px rgba(0, 0, 0, .38);
-  --tp-sh-sm: 0 3px 10px rgba(0, 0, 0, .28);
+  --tp-bg: #191719;
+  --tp-canvas: #191719;
+  --tp-surf: #242124;
+  --tp-surf-2: #332e31;
+  --tp-ink: #f5f0e9;
+  --tp-mute: #c4b8b5;
+  --tp-acc: #d8b36d;
+  --tp-acc-2: #e6c98e;
+  --tp-acc-ink: #261f1b;
+  --tp-line: #4b4245;
+  --tp-grad: linear-gradient(135deg, #e2c17e, #c89d5d);
+  --tp-img-frame: 1px solid #4b4245;
+  --tp-img-filter: saturate(.86) brightness(.9);
+  --tp-img-overlay-op: 0.06;
+  --tp-sh: 0 16px 40px rgba(0, 0, 0, .4);
+  --tp-sh-sm: 0 3px 10px rgba(0, 0, 0, .3);
 }
 
 /* ---------------------------------------------------------------------------
@@ -189,4 +189,175 @@
 .dark {
   --tp-danger: #e08b80;
   --tp-danger-ink: #281c1a;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--tp-bg);
+  color: var(--tp-ink);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.admin-dashboard {
+  background: var(--tp-bg);
+  color: var(--tp-ink);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.admin-dashboard .bg-white {
+  background-color: var(--tp-surf) !important;
+}
+
+.admin-dashboard .bg-slate-50,
+.admin-dashboard .bg-gray-50,
+.admin-dashboard .bg-gray-100 {
+  background-color: var(--tp-surf-2) !important;
+}
+
+.admin-dashboard .border-gray-200,
+.admin-dashboard .border-gray-300,
+.admin-dashboard .border {
+  border-color: var(--tp-line);
+}
+
+.admin-dashboard .text-gray-900,
+.admin-dashboard .text-gray-800,
+.admin-dashboard .text-gray-700 {
+  color: var(--tp-ink);
+}
+
+.admin-dashboard .text-gray-600,
+.admin-dashboard .text-gray-500,
+.admin-dashboard .text-gray-400 {
+  color: var(--tp-mute);
+}
+
+.admin-dashboard .text-rose-700,
+.admin-dashboard .text-rose-600 {
+  color: var(--tp-acc);
+}
+
+.admin-dashboard .bg-rose-600 {
+  background-color: var(--tp-acc);
+  color: var(--tp-acc-ink);
+}
+
+.admin-dashboard .bg-rose-600.text-white {
+  color: var(--tp-acc-ink) !important;
+}
+
+.admin-dashboard .hover\:bg-rose-50:hover {
+  background-color: color-mix(in srgb, var(--tp-acc) 10%, var(--tp-surf));
+}
+
+.admin-dashboard input,
+.admin-dashboard textarea,
+.admin-dashboard select {
+  border-color: var(--tp-line);
+  background-color: var(--tp-surf);
+  color: var(--tp-ink);
+}
+
+.admin-dashboard input::placeholder,
+.admin-dashboard textarea::placeholder {
+  color: var(--tp-mute);
+  opacity: .82;
+}
+
+.admin-dashboard .bg-amber-100,
+.admin-dashboard .bg-blue-100,
+.admin-dashboard .bg-emerald-100,
+.admin-dashboard .bg-rose-100 {
+  background-color: var(--tp-surf-2);
+}
+
+.admin-dashboard .text-amber-800 {
+  color: #87551a;
+}
+
+.admin-dashboard .text-blue-800,
+.admin-dashboard .text-blue-900 {
+  color: #285a84;
+}
+
+.admin-dashboard .text-emerald-800 {
+  color: #286347;
+}
+
+.admin-dashboard .text-rose-900 {
+  color: #762934;
+}
+
+.dark .admin-dashboard .text-amber-800 {
+  color: #f0c77f;
+}
+
+.dark .admin-dashboard .text-blue-800,
+.dark .admin-dashboard .text-blue-900 {
+  color: #a6d0f2;
+}
+
+.dark .admin-dashboard .text-emerald-800 {
+  color: #9fd3b3;
+}
+
+.dark .admin-dashboard .text-rose-900 {
+  color: #f0b2b4;
+}
+
+.dark .admin-dashboard .bg-blue-50 {
+  color: #d8eafb;
+  background-color: #243647;
+  border-color: #41617d;
+}
+
+.dark .admin-dashboard .border-blue-200 {
+  border-color: #41617d;
+}
+
+.dark .admin-dashboard .bg-amber-100,
+.dark .admin-dashboard .bg-blue-100,
+.dark .admin-dashboard .bg-emerald-100,
+.dark .admin-dashboard .bg-rose-100 {
+  background-color: var(--tp-surf-2);
+}
+
+.dark .admin-dashboard .hover\:bg-rose-50:hover {
+  background-color: #44343a;
+}
+
+.dark .admin-dashboard .border-b,
+.dark .admin-dashboard .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--tp-line);
+}
+
+.dark .admin-dashboard table {
+  color: var(--tp-ink);
+}
+
+.dark .admin-dashboard .bg-blue-500 {
+  background-color: #77b8e8;
+}
+
+.dark .admin-dashboard .bg-emerald-500 {
+  background-color: #79bf96;
+}
+
+.dark .admin-dashboard .bg-rose-500 {
+  background-color: #df8490;
+}
+
+.dark .admin-dashboard .bg-amber-500 {
+  background-color: #e4b65e;
+}
+
+.not-found-page {
+  color: var(--tp-ink);
+  background: var(--tp-bg);
+}
+
+.not-found-page a {
+  color: var(--tp-acc);
 }

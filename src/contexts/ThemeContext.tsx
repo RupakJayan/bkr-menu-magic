@@ -74,10 +74,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     theme === "system" ? (systemDark ? "dark" : "light") : theme;
 
   useEffect(() => {
-    document.documentElement.classList.toggle(
-      DARK_CLASS,
-      resolvedTheme === "dark"
-    );
+    const isDark = resolvedTheme === "dark";
+    document.documentElement.classList.toggle(DARK_CLASS, isDark);
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+    if (favicon) {
+      favicon.href = isDark
+        ? "/bkr-catering-dark-logo.png"
+        : "/bkr-catering-reference.png";
+    }
   }, [resolvedTheme]);
 
   useEffect(() => {

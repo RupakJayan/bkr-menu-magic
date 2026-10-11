@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BrandLogo } from "@/components/BrandLogo";
 import AdminDashboard from "@/pages/AdminDashboard";
 import {
   hasAdminSession,
@@ -63,10 +65,11 @@ export default function AdminAccess() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4 py-10 text-ink">
+    <main className="relative flex min-h-screen items-center justify-center bg-bg px-4 py-10 text-ink">
+      <ThemeToggle className="absolute right-4 top-4 sm:right-6 sm:top-6" />
       <section className="w-full max-w-md rounded-xl border border-line bg-surf p-6 shadow-theme sm:p-8">
-        <a href="/" className="text-sm font-semibold text-acc hover:underline">
-          BKR Catering
+        <a href="/" className="admin-access-brand" aria-label="BKR Catering home">
+          <BrandLogo />
         </a>
         <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-surf2 text-acc">
           <LockKeyhole aria-hidden="true" />

@@ -24,6 +24,8 @@ import {
 } from "@/services/localAdminService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BrandLogo } from "@/components/BrandLogo";
 import { generateEventMenuDOCX } from "@/services/docxExportService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
 
@@ -239,14 +241,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const savedDishes = Object.values(managedCatalog).reduce((sum, dishes) => sum + dishes.length, 0);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="admin-dashboard min-h-screen bg-slate-50 text-ink">
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4">
           <div>
-            <Link to="/" className="text-xl font-extrabold text-rose-700">BKR Catering</Link>
+            <Link to="/" className="admin-dashboard-brand" aria-label="BKR Catering home">
+              <BrandLogo />
+            </Link>
             <p className="text-sm text-gray-500">{settings.businessName} · Local Admin</p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
+            <ThemeToggle />
             <Button variant="outline" onClick={() => startBooking()}>Create event</Button>
             <Button variant="outline" onClick={exportBackup}><FileJson className="mr-2 h-4 w-4" />Backup</Button>
             <Button onClick={exportEvents}><ArrowDownToLine className="mr-2 h-4 w-4" />Export events</Button>

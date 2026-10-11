@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BrandLogo } from '@/components/BrandLogo';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -53,10 +54,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               >
                 {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
-              <Link to="/" className="flex ml-2 md:mr-24">
-                <span className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-orange-500 bg-clip-text text-transparent">
-                  🍛 BKR Catering
-                </span>
+              <Link to="/" className="flex ml-2 md:mr-24" aria-label="BKR Catering home">
+                <BrandLogo className="w-32" />
               </Link>
             </div>
             

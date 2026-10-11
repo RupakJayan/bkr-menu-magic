@@ -5,6 +5,7 @@ import { createEmptyMenu } from '@/services/menuCalculationService';
 import { EventPlanningFlow } from '@/components/EventPlanningFlow';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { BrandLogo } from '@/components/BrandLogo';
 import { ArrowLeft, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveEventMenu } from '@/services/localAdminService';
@@ -59,7 +60,7 @@ const MenuCreator: React.FC = () => {
       <nav className="planner-topbar sticky top-0 z-50">
         <div className="planner-topbar-inner">
           <button className="planner-brand" onClick={() => navigate('/')} aria-label="Back to BKR Catering home">
-            <img src="/bkr-catering-reference.png" alt="BKR Catering" />
+            <BrandLogo />
             <span>Event menu planner</span>
           </button>
           <div className="planner-topbar-actions">

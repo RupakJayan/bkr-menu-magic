@@ -1,27 +1,16 @@
 .planner-page {
-  --planner-paper: #f8f5ef;
-  --planner-card: #fffdf9;
-  --planner-ink: #302520;
-  --planner-muted: #655b53;
-  --planner-line: #e0d7ca;
-  --planner-green: #742530;
-  --planner-green-ink: #fffaf2;
-  --planner-soft: #f0e9de;
+  --planner-paper: var(--tp-bg);
+  --planner-card: var(--tp-surf);
+  --planner-ink: var(--tp-ink);
+  --planner-muted: var(--tp-mute);
+  --planner-line: var(--tp-line);
+  --planner-green: var(--tp-acc);
+  --planner-green-ink: var(--tp-acc-ink);
+  --planner-soft: var(--tp-surf-2);
   min-height: 100vh;
   background: var(--planner-paper);
   color: var(--planner-ink);
   transition: background-color 260ms ease, color 260ms ease;
-}
-
-.dark .planner-page {
-  --planner-paper: #171513;
-  --planner-card: #231e1c;
-  --planner-ink: #fff8ee;
-  --planner-muted: #d0c3b6;
-  --planner-line: #4a3933;
-  --planner-green: #e0b16d;
-  --planner-green-ink: #271b15;
-  --planner-soft: #332a26;
 }
 
 .planner-page h1,
@@ -74,6 +63,11 @@
 
 .planner-brand img {
   transition: filter 260ms ease;
+}
+
+.dark .planner-brand img {
+  width: 118px;
+  max-height: 56px;
 }
 
 .planner-brand span {
@@ -260,7 +254,12 @@
 
 .planner-page .text-pink-100,
 .planner-page .text-red-100,
-.planner-page .text-orange-100 {
+.planner-page .text-orange-100,
+.planner-page .text-blue-600,
+.planner-page .text-indigo-600,
+.planner-page .text-purple-600,
+.planner-page .text-emerald-600,
+.planner-page .text-teal-600 {
   color: var(--planner-muted) !important;
 }
 
@@ -324,7 +323,17 @@
 .planner-page .bg-orange-50,
 .planner-page .bg-orange-100,
 .planner-page .bg-green-50,
-.planner-page .bg-green-100 {
+.planner-page .bg-green-100,
+.planner-page .bg-blue-50,
+.planner-page .bg-blue-100,
+.planner-page .bg-indigo-50,
+.planner-page .bg-indigo-100,
+.planner-page .bg-emerald-50,
+.planner-page .bg-emerald-100,
+.planner-page .bg-purple-50,
+.planner-page .bg-purple-100,
+.planner-page .bg-teal-50,
+.planner-page .bg-teal-100 {
   background-color: var(--planner-soft) !important;
 }
 
@@ -343,6 +352,12 @@
   color: var(--planner-ink);
 }
 
+.planner-page input::placeholder,
+.planner-page textarea::placeholder {
+  color: var(--planner-muted);
+  opacity: .82;
+}
+
 .planner-page .bg-white,
 .planner-page [class~="bg-gray-50"] {
   background-color: var(--planner-card) !important;
@@ -350,7 +365,8 @@
 
 .planner-page .text-gray-900,
 .planner-page .text-gray-800,
-.planner-page .text-gray-700 {
+.planner-page .text-gray-700,
+.planner-page .text-gray-400 {
   color: var(--planner-ink) !important;
 }
 
