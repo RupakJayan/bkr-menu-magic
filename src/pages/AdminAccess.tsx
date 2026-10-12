@@ -13,7 +13,7 @@ import {
   logoutAdmin,
   setAdminPassword,
 } from "@/services/adminAccessService";
-import { requestGoogleLogin } from "@/services/googleAuthService";
+import { requestGoogleLogin, getGoogleClientId } from "@/services/googleAuthService";
 
 export default function AdminAccess() {
   const [configured, setConfigured] = useState(isAdminPasswordConfigured);
@@ -31,9 +31,15 @@ export default function AdminAccess() {
       sessionStorage.setItem("bkr-admin-session", "authenticated");
       setAuthenticated(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Google sign-in could not be completed.",
-      );
+      console.error("Google sign-in error:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("401") || msg.toLowerCase().includes("client not found") || msg.toLowerCase().includes("invalid_client")) {
+        setError(
+          `Google OAuth Error: "${msg}". This means Google Cloud does not find or recognize Client ID ${getGoogleClientId().slice(0, 20)}... for this origin (${window.location.origin}). Ensure your OAuth Client ID is type "Web application" and has Authorized JavaScript Origin: ${window.location.origin}.`,
+        );
+      } else {
+        setError(msg || "Google sign-in could not be completed.");
+      }
     } finally {
       setBusy(false);
     }
