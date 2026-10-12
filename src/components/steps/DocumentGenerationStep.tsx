@@ -11,9 +11,10 @@ type DocumentType = 'pdf-en' | 'pdf-ta' | 'docx-en' | 'docx-ta';
 interface DocumentGenerationStepProps {
   menu: EventMenu;
   onPrevious: () => void;
+  onStartNewEvent?: () => void;
 }
 
-export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ menu, onPrevious }) => {
+export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ menu, onPrevious, onStartNewEvent }) => {
   const [generating, setGenerating] = useState<DocumentType | null>(null);
   const [generated, setGenerated] = useState<DocumentType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -182,13 +183,23 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
 
       {/* Navigation */}
       <div className="bg-white rounded-xl shadow-lg p-5 border border-pink-200">
-        <Button
-          variant="outline"
-          onClick={onPrevious}
-          className="w-full h-12 text-base font-semibold rounded-lg border-2 border-pink-300 hover:bg-pink-50"
-        >
-          ← Back to Review
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="outline"
+            onClick={onPrevious}
+            className="flex-1 h-12 text-base font-semibold rounded-lg border-2 border-pink-300 hover:bg-pink-50"
+          >
+            ← Back to Review
+          </Button>
+          {onStartNewEvent && (
+            <Button
+              onClick={onStartNewEvent}
+              className="flex-1 h-12 text-base font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              ✨ Create Another Event | புதிய நிகழ்வு
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

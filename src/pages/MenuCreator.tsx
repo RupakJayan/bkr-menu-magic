@@ -6,7 +6,7 @@ import { EventPlanningFlow } from '@/components/EventPlanningFlow';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { BrandLogo } from '@/components/BrandLogo';
-import { ArrowLeft, Check, Download, FileText, Save } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileText, PlusCircle, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
@@ -22,6 +22,18 @@ const MenuCreator: React.FC = () => {
     const saved = localStorage.getItem('currentMenu');
     return saved ? JSON.parse(saved) : createEmptyMenu();
   });
+
+  const handleCreateNew = () => {
+    try {
+      localStorage.removeItem('currentMenu');
+    } catch {}
+    const fresh = createEmptyMenu();
+    setMenu(fresh);
+    toast({
+      title: "Started New Blank Event",
+      description: "All previous details cleared. You are ready to plan a fresh event.",
+    });
+  };
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -101,6 +113,17 @@ const MenuCreator: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
+              onClick={handleCreateNew}
+              className="border-rose-300 text-rose-700 hover:bg-rose-50 font-medium"
+              aria-label="Create new blank event"
+              title="Clear all fields and plan a fresh blank event"
+            >
+              <PlusCircle className="h-4 w-4 mr-1" />
+              <span>New event</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => exportMenuJSON(menu)}
               aria-label="Download menu backup file"
               title="Download menu backup file (.json)"
@@ -130,7 +153,11 @@ const MenuCreator: React.FC = () => {
           <h1>Plan a gathering worth remembering.</h1>
           <p>Bring the details, sessions and menu together, then share a polished copy in English or Tamil.</p>
         </section>
-        <EventPlanningFlow menu={menu} onMenuChange={handleMenuChange} />
+        <EventPlanningFlow
+          menu={menu}
+          onMenuChange={handleMenuChange}
+          onStartNewEvent={handleCreateNew}
+        />
       </main>
     </div>
   );

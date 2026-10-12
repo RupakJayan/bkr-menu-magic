@@ -10,6 +10,7 @@ import { DocumentGenerationStep } from './steps/DocumentGenerationStep';
 interface EventPlanningFlowProps {
   menu: EventMenu;
   onMenuChange: (menu: EventMenu) => void;
+  onStartNewEvent?: () => void;
 }
 
 const STEPS: { id: PlanningStep; label: string; compactLabel: string }[] = [
@@ -20,10 +21,19 @@ const STEPS: { id: PlanningStep; label: string; compactLabel: string }[] = [
   { id: 'document-generation', label: 'Generate Documents', compactLabel: 'Export' },
 ];
 
-export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({ menu, onMenuChange }) => {
+export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({
+  menu,
+  onMenuChange,
+  onStartNewEvent,
+}) => {
   const [currentStep, setCurrentStep] = useState<PlanningStep>('event-details');
 
   const currentStepIndex = STEPS.findIndex(s => s.id === currentStep);
+
+  const handleStartNew = () => {
+    setCurrentStep('event-details');
+    onStartNewEvent?.();
+  };
 
   const handleNext = () => {
     if (currentStepIndex < STEPS.length - 1) {
@@ -99,10 +109,20 @@ export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({ menu, onMe
           <MenuSelectionStep menu={menu} onMenuChange={onMenuChange} onNext={handleNext} onPrevious={handlePrevious} />
         )}
         {currentStep === 'review' && (
-          <ReviewStep menu={menu} onMenuChange={onMenuChange} onNext={handleNext} onPrevious={handlePrevious} />
+          <ReviewStep
+            menu={menu}
+            onMenuChange={onMenuChange}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            onStartNewEvent={handleStartNew}
+          />
         )}
         {currentStep === 'document-generation' && (
-          <DocumentGenerationStep menu={menu} onPrevious={handlePrevious} />
+          <DocumentGenerationStep
+            menu={menu}
+            onPrevious={handlePrevious}
+            onStartNewEvent={handleStartNew}
+          />
         )}
       </div>
     </div>

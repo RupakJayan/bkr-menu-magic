@@ -18,9 +18,10 @@ interface ReviewStepProps {
   onMenuChange: (menu: EventMenu) => void;
   onNext: () => void;
   onPrevious: () => void;
+  onStartNewEvent?: () => void;
 }
 
-export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNext, onPrevious }) => {
+export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNext, onPrevious, onStartNewEvent }) => {
   const { toast } = useToast();
   const [editingSession, setEditingSession] = useState<{ dayIndex: number; sessionIndex: number } | null>(null);
   const [customCosts, setCustomCosts] = useState<Record<string, number>>({});
@@ -379,6 +380,15 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
           >
             ← Previous
           </Button>
+          {onStartNewEvent && (
+            <Button
+              variant="outline"
+              onClick={onStartNewEvent}
+              className="h-12 px-4 text-base font-semibold rounded-lg border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-50 flex items-center justify-center gap-2"
+            >
+              ✨ New Event
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={handleManualSave}

@@ -9,6 +9,7 @@ import { getTamilSolarDate } from "@/utils/tamilDate";
 import { buildEventMenuPDFBlob } from "@/services/pdfExportService";
 import { buildEventMenuDOCXBlob } from "@/services/docxExportService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
+import { ALLOWED_ADMIN_EMAILS } from "@/services/googleAuthService";
 
 export const BKR_FOLDER_NAME = "BKR Catering Events";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
@@ -54,34 +55,109 @@ export const getEventSubfolderName = (menu: EventMenu): string => {
 };
 
 /**
- * Find or create the dedicated "BKR Catering Events" root folder in Google Drive
+ * Automatically share the "BKR Catering Events" root folder with all authorized admin accounts
+ * so that events added from different Google accounts sync in one central shared folder.
+ */
+export const shareFolderWithAuthorizedAdmins = async (
+  folderId: string,
+  accessToken: string,
+): Promise<void> => {
+  try {
+    const listRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${folderId}/permissions?fields=permissions(id,emailAddress,role)&supportsAllDrives=true`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+
+    const existingEmails = new Set<string>();
+    if (listRes.ok) {
+      const data = await listRes.json();
+      (data.permissions || []).forEach((p: { emailAddress?: string }) => {
+        if (p.emailAddress) existingEmails.add(p.emailAddress.toLowerCase().trim());
+      });
+    }
+
+    for (const email of ALLOWED_ADMIN_EMAILS) {
+      const normalized = email.toLowerCase().trim();
+      if (!existingEmails.has(normalized)) {
+        try {
+          await fetch(
+            `https://www.googleapis.com/drive/v3/files/${folderId}/permissions?sendNotificationEmail=false&supportsAllDrives=true`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                role: "writer",
+                type: "user",
+                emailAddress: email,
+              }),
+            },
+          );
+        } catch {
+          // If permission fails or already owner, continue
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Could not auto-share folder with all admins:", e);
+  }
+};
+
+/**
+ * Find or create the dedicated "BKR Catering Events" root folder in Google Drive.
+ * Searches both user's drive and shared items across all authorized accounts.
  */
 export const getOrCreateBkrFolder = async (
   accessToken: string,
 ): Promise<string> => {
+  // 1. Search in user's owned files or accessible shared files
   const query = encodeURIComponent(
     `mimeType='${FOLDER_MIME}' and name='${BKR_FOLDER_NAME}' and trashed=false`,
   );
 
   const searchRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`,
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
   );
 
-  if (!searchRes.ok) {
-    const err = await searchRes.text();
-    throw new Error(`Google Drive folder search failed: ${err}`);
+  if (searchRes.ok) {
+    const searchData: DriveFileList = await searchRes.json();
+    if (searchData.files && searchData.files.length > 0) {
+      const folderId = searchData.files[0].id;
+      shareFolderWithAuthorizedAdmins(folderId, accessToken).catch(() => {});
+      return folderId;
+    }
   }
 
-  const searchData: DriveFileList = await searchRes.json();
-  if (searchData.files && searchData.files.length > 0) {
-    return searchData.files[0].id;
+  // 2. Search explicitly in shared items (sharedWithMe)
+  const sharedQuery = encodeURIComponent(
+    `mimeType='${FOLDER_MIME}' and name='${BKR_FOLDER_NAME}' and sharedWithMe=true and trashed=false`,
+  );
+
+  const sharedRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${sharedQuery}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  if (sharedRes.ok) {
+    const sharedData: DriveFileList = await sharedRes.json();
+    if (sharedData.files && sharedData.files.length > 0) {
+      const folderId = sharedData.files[0].id;
+      shareFolderWithAuthorizedAdmins(folderId, accessToken).catch(() => {});
+      return folderId;
+    }
   }
 
-  // Create folder if it doesn't exist
-  const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+  // 3. Create folder if it doesn't exist yet
+  const createRes = await fetch("https://www.googleapis.com/drive/v3/files?supportsAllDrives=true", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -99,7 +175,9 @@ export const getOrCreateBkrFolder = async (
   }
 
   const createdData = await createRes.json();
-  return createdData.id;
+  const newFolderId = createdData.id;
+  shareFolderWithAuthorizedAdmins(newFolderId, accessToken).catch(() => {});
+  return newFolderId;
 };
 
 /**
@@ -330,7 +408,7 @@ export const loadMenusFromGoogleDrive = async (
   );
 
   const listRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType)&pageSize=100`,
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
