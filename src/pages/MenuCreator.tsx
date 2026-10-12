@@ -154,6 +154,7 @@ const MenuCreator: React.FC = () => {
           <p>Bring the details, sessions and menu together, then share a polished copy in English or Tamil.</p>
         </section>
         <EventPlanningFlow
+          key={menu.id}
           menu={menu}
           onMenuChange={handleMenuChange}
           onStartNewEvent={handleCreateNew}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EventMenu, Session, DayPlan } from '@/types/menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,10 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
 
     return dayPlans;
   }
+
+  useEffect(() => {
+    setDays(menu.days.length > 0 ? menu.days : initializeDays());
+  }, [menu.id]);
 
   const addSession = (dayIndex: number) => {
     const newSession: Session = {

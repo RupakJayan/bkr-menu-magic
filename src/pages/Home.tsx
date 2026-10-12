@@ -92,11 +92,9 @@ const Home: React.FC = () => {
           <button className="home-nav-admin" onClick={() => { setMobileMenuOpen(false); navigate("/admin"); }}>
             {isAdmin ? "Admin dashboard" : "Admin login"}
           </button>
-          {isAdmin && (
-            <button className="home-button home-button-small" onClick={() => { setMobileMenuOpen(false); navigate("/menu-creator"); }}>
-              Plan an event <ArrowRight size={16} />
-            </button>
-          )}
+          <button className="home-button home-button-small" onClick={() => { setMobileMenuOpen(false); navigate("/menu-creator"); }}>
+            Plan an event <ArrowRight size={16} />
+          </button>
         </nav>
         <button
           type="button"
@@ -130,15 +128,9 @@ const Home: React.FC = () => {
               traditions and the moments you want to remember.
             </p>
             <div className="home-hero-actions">
-              {isAdmin ? (
-                <button className="home-button" onClick={() => navigate("/menu-creator")}>
-                  Plan your event <ArrowRight size={17} />
-                </button>
-              ) : (
-                <a className="home-button" href={primaryPhoneHref}>
-                  Talk to our team <Phone size={17} />
-                </a>
-              )}
+              <button className="home-button" onClick={() => navigate("/menu-creator")}>
+                Plan your event <ArrowRight size={17} />
+              </button>
               <a className="home-text-link" href="#how-it-works">
                 See how it works <ArrowDown size={15} />
               </a>

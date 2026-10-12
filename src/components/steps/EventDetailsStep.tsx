@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EventMenu } from '@/types/menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,19 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
   const [googleMapsUrl, setGoogleMapsUrl] = useState(menu.venueDetails.googleMapsUrl || '');
   const [startDate, setStartDate] = useState(menu.startDate);
   const [endDate, setEndDate] = useState(menu.endDate);
+
+  // Sync internal state if a new blank menu is passed in
+  useEffect(() => {
+    setClientName(menu.clientDetails.name);
+    setClientPhone(menu.clientDetails.phone);
+    setVenueName(menu.venueDetails.name);
+    setVenueAddress(menu.venueDetails.address);
+    setTransportCharge(menu.transportCharge ?? 0);
+    setGoogleMapsUrl(menu.venueDetails.googleMapsUrl || '');
+    setStartDate(menu.startDate);
+    setEndDate(menu.endDate);
+  }, [menu.id]);
+
   const tamilDateTa = getTamilSolarDate(startDate, "ta");
   const tamilDateEn = getTamilSolarDate(startDate, "en");
   const displayTamilDate = tamilDateTa ? `${tamilDateTa} (${tamilDateEn})` : "";
