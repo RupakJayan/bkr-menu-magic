@@ -43,6 +43,11 @@ const App = () => {
         >
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/instagram" element={<Home />} />
+            <Route path="/our-approach" element={<Home />} />
+            <Route path="/experience" element={<Home />} />
+            <Route path="/how-it-works" element={<Home />} />
+            <Route path="/contact" element={<Home />} />
             <Route path="/menu-creator" element={<MenuCreator />} />
             <Route path="/admin" element={<AdminAccess />} />
             <Route path="*" element={<NotFound />} />

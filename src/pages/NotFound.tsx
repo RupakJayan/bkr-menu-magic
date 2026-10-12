@@ -1,16 +1,25 @@
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 
+const HOME_SECTIONS = ["instagram", "our-approach", "experience", "how-it-works", "contact"];
+
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const clean = location.pathname.replace(/^\//, "").split("/")[0].toLowerCase();
+    if (HOME_SECTIONS.includes(clean)) {
+      navigate(`/${clean}`, { replace: true });
+      return;
+    }
+
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   return (
     <div className="not-found-page min-h-screen flex items-center justify-center">

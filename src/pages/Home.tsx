@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   ArrowDown,
   ArrowRight,
@@ -24,10 +24,38 @@ import {
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(hasAdminSession);
 
   useEffect(() => subscribeToAdminSession(() => setIsAdmin(hasAdminSession())), []);
+
+  const scrollToSection = (id: string, e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const rawTarget =
+      location.pathname.replace(/^\//, "") ||
+      window.location.hash.replace(/^#\/?/, "");
+    const targetId = rawTarget.split("/")[0];
+    if (
+      targetId &&
+      ["instagram", "our-approach", "experience", "how-it-works", "contact"].includes(
+        targetId,
+      )
+    ) {
+      const timer = window.setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" });
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname]);
 
   const primaryPhone = "+91 80126 86883";
   const primaryPhoneHref = "tel:+918012686883";
@@ -55,11 +83,11 @@ const Home: React.FC = () => {
           className={`home-nav-links${mobileMenuOpen ? " is-open" : ""}`}
           aria-label="Main navigation"
         >
-          <a href="#our-approach" onClick={() => setMobileMenuOpen(false)}>Our approach</a>
-          <a href="#experience" onClick={() => setMobileMenuOpen(false)}>Our food</a>
-          <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How it works</a>
-          <a href="#instagram" onClick={() => setMobileMenuOpen(false)}>From our kitchen</a>
-          <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+          <a href="#our-approach" onClick={(e) => scrollToSection("our-approach", e)}>Our approach</a>
+          <a href="#experience" onClick={(e) => scrollToSection("experience", e)}>Our food</a>
+          <a href="#how-it-works" onClick={(e) => scrollToSection("how-it-works", e)}>How it works</a>
+          <a href="#instagram" onClick={(e) => scrollToSection("instagram", e)}>From our kitchen</a>
+          <a href="#contact" onClick={(e) => scrollToSection("contact", e)}>Contact</a>
           <ThemeToggle className="home-theme-toggle" />
           <button className="home-nav-admin" onClick={() => { setMobileMenuOpen(false); navigate("/admin"); }}>
             {isAdmin ? "Admin dashboard" : "Admin login"}
@@ -151,7 +179,7 @@ const Home: React.FC = () => {
               gathering together with familiar South Indian favourites and a
               menu that feels like yours.
             </p>
-            <a className="home-text-link" href="#how-it-works">
+            <a className="home-text-link" href="#how-it-works" onClick={(e) => scrollToSection("how-it-works", e)}>
               Shape your menu <ArrowRight size={15} />
             </a>
             <span className="home-experience-note">BKR CATERING <span>·</span> ANAIMALAI, TAMIL NADU</span>

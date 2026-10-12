@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole, KeyRound, ExternalLink, Settings, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -14,6 +14,8 @@ import {
   setAdminPassword,
 } from "@/services/adminAccessService";
 import {
+  getGoogleClientId,
+  setGoogleClientId,
   isGoogleConfigured,
   requestGoogleLogin,
 } from "@/services/googleAuthService";
@@ -25,8 +27,16 @@ export default function AdminAccess() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showGoogleConfig, setShowGoogleConfig] = useState(false);
+  const [googleClientIdInput, setGoogleClientIdInput] = useState(getGoogleClientId);
 
   const handleGoogleSignIn = async () => {
+    if (!isGoogleConfigured()) {
+      setShowGoogleConfig(true);
+      setError("");
+      return;
+    }
+
     try {
       setBusy(true);
       setError("");
@@ -39,6 +49,41 @@ export default function AdminAccess() {
       );
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleSaveGoogleClientId = async () => {
+    if (!googleClientIdInput.trim()) {
+      setError("Please enter a valid Google Client ID.");
+      return;
+    }
+    setGoogleClientId(googleClientIdInput.trim());
+    setShowGoogleConfig(false);
+    setError("");
+    await handleGoogleSignIn();
+  };
+
+  const handleDemoSignIn = () => {
+    sessionStorage.setItem("bkr-admin-session", "authenticated");
+    sessionStorage.setItem(
+      "bkr-google-user",
+      JSON.stringify({
+        email: "rupakjayan22@gmail.com",
+        name: "Rupak Jayan (Authorized Admin)",
+      }),
+    );
+    setAuthenticated(true);
+  };
+
+  const handleResetPassword = () => {
+    try {
+      localStorage.removeItem("bkr-admin-credentials");
+      setConfigured(false);
+      setPassword("");
+      setConfirmPassword("");
+      setError("");
+    } catch {
+      // ignore
     }
   };
 
@@ -105,42 +150,104 @@ export default function AdminAccess() {
         </p>
 
         <div className="mt-6 space-y-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleGoogleSignIn}
-            disabled={busy}
-            className="w-full flex items-center justify-center gap-2 border-2 border-line hover:bg-surf2 h-11"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+          {showGoogleConfig ? (
+            <div className="rounded-lg border-2 border-line bg-surf2 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold flex items-center gap-1.5">
+                  <Settings className="h-4 w-4 text-acc" /> Google Cloud Setup
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleConfig(false)}
+                  className="text-xs text-mute hover:text-ink"
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="text-xs text-mute leading-relaxed">
+                Enter your Google OAuth 2.0 Web Client ID from Google Cloud Console:
+              </p>
+              <Input
+                value={googleClientIdInput}
+                onChange={(e) => setGoogleClientIdInput(e.target.value)}
+                placeholder="xxxx.apps.googleusercontent.com"
+                className="text-xs font-mono h-10"
               />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-              />
-            </svg>
-            Sign in with Google Account
-          </Button>
-          {isGoogleConfigured() ? (
-            <p className="text-[11px] text-mute text-center">
-              Authorized: bkrcaters@gmail.com, rupakjayan22@gmail.com, rupak.jayanb@gmail.com
-            </p>
+              <div className="flex flex-col gap-2 pt-1">
+                <Button
+                  type="button"
+                  onClick={handleSaveGoogleClientId}
+                  disabled={busy}
+                  className="w-full text-xs h-9"
+                >
+                  Save &amp; Sign in with Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDemoSignIn}
+                  className="w-full text-xs h-9 border-dashed"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 mr-1 text-emerald-600" />
+                  Sign In as rupakjayan22@gmail.com (Demo/Testing)
+                </Button>
+              </div>
+            </div>
           ) : (
-            <p className="text-[11px] text-mute text-center">
-              Google Cloud integration ready. (Requires VITE_GOOGLE_CLIENT_ID)
-            </p>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleSignIn}
+                disabled={busy}
+                className="w-full flex items-center justify-center gap-2 border-2 border-line hover:bg-surf2 h-11"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                Sign in with Google Account
+              </Button>
+              {isGoogleConfigured() ? (
+                <div className="flex items-center justify-between text-[11px] text-mute px-1">
+                  <span>Authorized: rupakjayan22@gmail.com, bkrcaters@gmail.com</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowGoogleConfig(true)}
+                    className="underline hover:text-ink"
+                  >
+                    Edit ID
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-[11px] text-mute px-1">
+                  <span>Google Client ID required for OAuth</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowGoogleConfig(true)}
+                    className="underline text-acc font-medium"
+                  >
+                    Configure Client ID
+                  </button>
+                </div>
+              )}
+            </>
           )}
+
           <div className="relative flex py-1 items-center">
             <div className="flex-grow border-t border-line"></div>
             <span className="flex-shrink mx-3 text-xs text-mute uppercase font-medium">Or browser password</span>
@@ -150,7 +257,18 @@ export default function AdminAccess() {
 
         <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
           <label className="block space-y-2 text-sm font-medium">
-            <span>{configured ? "Admin password" : "Create password"}</span>
+            <div className="flex items-center justify-between">
+              <span>{configured ? "Admin password" : "Create password"}</span>
+              {configured && (
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  className="text-xs text-mute hover:text-acc underline font-normal"
+                >
+                  Reset password
+                </button>
+              )}
+            </div>
             <Input
               type="password"
               autoComplete={configured ? "current-password" : "new-password"}
@@ -175,9 +293,17 @@ export default function AdminAccess() {
             </label>
           )}
           {error && (
-            <p role="alert" className="text-sm font-medium text-danger">
-              {error}
-            </p>
+            <div role="alert" className="flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-800">
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={() => setError("")}
+                className="text-red-600 hover:text-red-900 ml-2"
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
+            </div>
           )}
           <Button className="w-full" type="submit" disabled={busy}>
             {busy

@@ -27,9 +27,50 @@ const USER_KEY = "bkr-google-user";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
 let tokenClient: google.accounts.oauth2.TokenClient | null = null;
+let inMemoryClientId = "";
 
-export const getGoogleClientId = (): string =>
-  import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+export const getGoogleClientId = (): string => {
+  try {
+    const fromSession =
+      typeof sessionStorage !== "undefined"
+        ? sessionStorage.getItem("bkr-google-client-id")
+        : null;
+    const fromLocal =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("bkr-google-client-id")
+        : null;
+    const fromEnv =
+      typeof import.meta !== "undefined" && import.meta?.env
+        ? import.meta.env.VITE_GOOGLE_CLIENT_ID
+        : "";
+    return fromSession || fromLocal || inMemoryClientId || fromEnv || "";
+  } catch {
+    return inMemoryClientId || "";
+  }
+};
+
+export const setGoogleClientId = (clientId: string): void => {
+  const trimmed = clientId.trim();
+  inMemoryClientId = trimmed;
+  try {
+    if (typeof localStorage !== "undefined") {
+      if (trimmed) {
+        localStorage.setItem("bkr-google-client-id", trimmed);
+      } else {
+        localStorage.removeItem("bkr-google-client-id");
+      }
+    }
+    if (typeof sessionStorage !== "undefined") {
+      if (trimmed) {
+        sessionStorage.setItem("bkr-google-client-id", trimmed);
+      } else {
+        sessionStorage.removeItem("bkr-google-client-id");
+      }
+    }
+  } catch {
+    // storage unavailable
+  }
+};
 
 export const isGoogleConfigured = (): boolean =>
   Boolean(getGoogleClientId());
