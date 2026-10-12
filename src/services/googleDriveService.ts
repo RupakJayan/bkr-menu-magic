@@ -107,6 +107,8 @@ export const shareFolderWithAuthorizedAdmins = async (
   }
 };
 
+const CACHED_BKR_FOLDER_KEY = "bkr-shared-folder-id";
+
 /**
  * Find or create the dedicated "BKR Catering Events" root folder in Google Drive.
  * Searches both user's drive and shared items across all authorized accounts.
@@ -114,6 +116,24 @@ export const shareFolderWithAuthorizedAdmins = async (
 export const getOrCreateBkrFolder = async (
   accessToken: string,
 ): Promise<string> => {
+  // Check local cache first if another account already shared the exact folder ID
+  try {
+    const cachedFolderId = localStorage.getItem(CACHED_BKR_FOLDER_KEY);
+    if (cachedFolderId) {
+      const checkRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${cachedFolderId}?fields=id,name,trashed&supportsAllDrives=true`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (!checkData.trashed) {
+          shareFolderWithAuthorizedAdmins(cachedFolderId, accessToken).catch(() => {});
+          return cachedFolderId;
+        }
+      }
+    }
+  } catch {}
+
   // 1. Search in user's owned files or accessible shared files
   const query = encodeURIComponent(
     `mimeType='${FOLDER_MIME}' and name='${BKR_FOLDER_NAME}' and trashed=false`,
@@ -130,6 +150,9 @@ export const getOrCreateBkrFolder = async (
     const searchData: DriveFileList = await searchRes.json();
     if (searchData.files && searchData.files.length > 0) {
       const folderId = searchData.files[0].id;
+      try {
+        localStorage.setItem(CACHED_BKR_FOLDER_KEY, folderId);
+      } catch {}
       shareFolderWithAuthorizedAdmins(folderId, accessToken).catch(() => {});
       return folderId;
     }
@@ -151,6 +174,9 @@ export const getOrCreateBkrFolder = async (
     const sharedData: DriveFileList = await sharedRes.json();
     if (sharedData.files && sharedData.files.length > 0) {
       const folderId = sharedData.files[0].id;
+      try {
+        localStorage.setItem(CACHED_BKR_FOLDER_KEY, folderId);
+      } catch {}
       shareFolderWithAuthorizedAdmins(folderId, accessToken).catch(() => {});
       return folderId;
     }
@@ -176,6 +202,9 @@ export const getOrCreateBkrFolder = async (
 
   const createdData = await createRes.json();
   const newFolderId = createdData.id;
+  try {
+    localStorage.setItem(CACHED_BKR_FOLDER_KEY, newFolderId);
+  } catch {}
   shareFolderWithAuthorizedAdmins(newFolderId, accessToken).catch(() => {});
   return newFolderId;
 };

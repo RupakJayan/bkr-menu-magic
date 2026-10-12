@@ -27,7 +27,7 @@ export const isEmailAllowed = (email?: string): boolean => {
 
 const TOKEN_KEY = "bkr-google-access-token";
 const USER_KEY = "bkr-google-user";
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
 
 export const DEFAULT_GOOGLE_CLIENT_ID =
   "827617794538-iuu24eotjtmafui7fni969rk6l5n50vv.apps.googleusercontent.com";
