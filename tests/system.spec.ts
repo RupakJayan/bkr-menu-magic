@@ -67,7 +67,7 @@ test.describe("ST - System / End-to-End Tests", () => {
     }
   });
 
-  test("ST-04: Admin Access page provides Google Client ID setup, Demo Sign In, and Password Reset", async ({ page }) => {
+  test("ST-04: Admin Access page provides direct Google Sign In and Password Access", async ({ page }) => {
     await page.goto("/bkr-menu-magic/#/admin");
     await page.waitForTimeout(500);
 
@@ -75,33 +75,31 @@ test.describe("ST - System / End-to-End Tests", () => {
     const adminHeading = page.locator("h1");
     await expect(adminHeading).toBeVisible();
 
-    // Verify "Sign in with Google Account" button is present
+    // Verify "Sign in with Google Account" button is present and directly clickable
     const googleButton = page.locator('button:has-text("Sign in with Google Account")');
     await expect(googleButton).toBeVisible();
 
-    // Click "Edit ID" or "Configure Client ID" to open Google setup
-    const editIdButton = page.locator('button:has-text("Edit ID")');
-    const configureLink = page.locator('button:has-text("Configure Client ID")');
-    if (await editIdButton.isVisible()) {
-      await editIdButton.click();
-    } else if (await configureLink.isVisible()) {
-      await configureLink.click();
-    } else {
-      await googleButton.click();
-    }
+    // Verify helper caption is displayed without asking user to manually configure OAuth client ID
+    const caption = page.locator('text=Sign in with your authorized BKR Catering Google Account');
+    await expect(caption).toBeVisible();
 
-    // Verify Google Cloud Setup panel appears
-    const setupPanel = page.locator('text=Google Cloud Setup');
-    await expect(setupPanel).toBeVisible();
+    // Authenticate session to verify dashboard access
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+      sessionStorage.setItem(
+        "bkr-google-user",
+        JSON.stringify({
+          email: "rupakjayan22@gmail.com",
+          name: "Rupak Jayan",
+        }),
+      );
+    });
 
-    // Test Demo Sign In button
-    const demoButton = page.locator('button:has-text("Sign In as rupakjayan22@gmail.com")');
-    await expect(demoButton).toBeVisible();
-    await demoButton.click();
+    await page.reload();
+    await page.waitForTimeout(600);
 
     // Verify successful sign-in into Admin Dashboard
-    await page.waitForTimeout(500);
-    const dashboardHeader = page.locator('header:has-text("Local Admin")');
+    const dashboardHeader = page.locator('text=Local Admin');
     await expect(dashboardHeader).toBeVisible();
 
     // Verify Admin tabs are accessible

@@ -33,10 +33,16 @@
     4. Tamil Word (`.docx`)
     *(Plus JSON state backup for cross-device loading)*.
   - **Master Google Sheet**: Automatically maintains `BKR Catering - Event Register & Analytics` inside Google Drive with live totals, guest counts, and revenue forecasts.
-- **🔐 Google OAuth 2.0 (GIS) & Secure Local Login**:
-  - Direct one-click login with Google Account (preconfigured Web Client ID).
-  - Authorized admin allowlist: `bkrcaters@gmail.com` (default), `rupakjayan22@gmail.com`, `rupak.jayanb@gmail.com`.
-  - Standalone PBKDF2 cryptographic password fallback for offline browser sessions.
+- **🔐 Google OAuth 2.0 (GIS) & Direct Admin Login**:
+  - Seamless one-click Google Sign-in with the configured Web Client ID.
+  - Authorized admin allowlist (6 Google Cloud Console test users):
+    - `bkrcaters@gmail.com` (Default primary drive owner)
+    - `imurugansea@gmail.com`
+    - `raghavendrarbass@gmail.com`
+    - `ragsrups22@gmail.com`
+    - `rupak.jayanb@gmail.com`
+    - `rupakjayan22@gmail.com`
+  - Standalone PBKDF2 cryptographic browser password fallback for offline access.
 - **📊 7-Module Admin Dashboard**:
   - **Overview**: Live statistics and upcoming events.
   - **Events**: Search, filter, status tracker (`Pending`, `Confirmed`, `Completed`, `Cancelled`), and one-click Drive sync.
@@ -214,8 +220,11 @@ Configured in [`src/services/googleAuthService.ts`](file:///C:/Users/rupak/.gemi
 ```ts
 export const ALLOWED_ADMIN_EMAILS = [
   "bkrcaters@gmail.com",       // Primary owner
-  "rupakjayan22@gmail.com",
+  "imurugansea@gmail.com",
+  "raghavendrarbass@gmail.com",
+  "ragsrups22@gmail.com",
   "rupak.jayanb@gmail.com",
+  "rupakjayan22@gmail.com",
 ] as const;
 ```
 

@@ -10,8 +10,11 @@ export interface GoogleUser {
 
 export const ALLOWED_ADMIN_EMAILS = [
   "bkrcaters@gmail.com",
-  "rupakjayan22@gmail.com",
+  "imurugansea@gmail.com",
+  "raghavendrarbass@gmail.com",
+  "ragsrups22@gmail.com",
   "rupak.jayanb@gmail.com",
+  "rupakjayan22@gmail.com",
 ] as const;
 
 export const isEmailAllowed = (email?: string): boolean => {

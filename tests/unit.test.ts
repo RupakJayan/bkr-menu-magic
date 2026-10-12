@@ -46,9 +46,12 @@ test.describe("UT - Unit Tests", () => {
 
   test("UT-05: Google Auth Email Allowlist validates administrator emails", () => {
     expect(isEmailAllowed("bkrcaters@gmail.com")).toBe(true);
-    expect(isEmailAllowed("rupakjayan22@gmail.com")).toBe(true);
+    expect(isEmailAllowed("imurugansea@gmail.com")).toBe(true);
+    expect(isEmailAllowed("raghavendrarbass@gmail.com")).toBe(true);
+    expect(isEmailAllowed("ragsrups22@gmail.com")).toBe(true);
     expect(isEmailAllowed("rupak.jayanb@gmail.com")).toBe(true);
-    expect(isEmailAllowed("RUPAKJAYAN22@GMAIL.COM")).toBe(true); // Case-insensitive
+    expect(isEmailAllowed("rupakjayan22@gmail.com")).toBe(true);
+    expect(isEmailAllowed("BKRCATERS@GMAIL.COM")).toBe(true); // Case-insensitive
     expect(isEmailAllowed("unknown@example.com")).toBe(false);
     expect(isEmailAllowed(undefined)).toBe(false);
     expect(isEmailAllowed("")).toBe(false);

@@ -153,7 +153,7 @@ Both Word (`.docx`) and PDF (`.pdf`) are carefully synchronized to present ident
 | What to Configure | File to Modify | Variable / Setting | Notes |
 |---|---|---|---|
 | **Google Client ID** | [`src/services/googleAuthService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/googleAuthService.ts) | `DEFAULT_GOOGLE_CLIENT_ID` | Preconfigured with client ID `827617794538-...apps.googleusercontent.com` |
-| **Admin Email Allowlist** | [`src/services/googleAuthService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/googleAuthService.ts) | `ALLOWED_ADMIN_EMAILS` | Array containing `bkrcaters@gmail.com`, `rupakjayan22@gmail.com`, etc. |
+| **Admin Email Allowlist** | [`src/services/googleAuthService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/googleAuthService.ts) | `ALLOWED_ADMIN_EMAILS` | Array containing `bkrcaters@gmail.com`, `imurugansea@gmail.com`, `raghavendrarbass@gmail.com`, `ragsrups22@gmail.com`, `rupak.jayanb@gmail.com`, `rupakjayan22@gmail.com` |
 | **Google Drive Root Folder** | [`src/services/googleDriveService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/googleDriveService.ts) | `BKR_FOLDER_NAME` | Default: `"BKR Catering Events"` |
 | **Default Drive Account** | [`src/services/googleDriveService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/googleDriveService.ts) | `DEFAULT_DRIVE_ACCOUNT` | Default: `"bkrcaters@gmail.com"` |
 | **Kitchen Google Maps Link** | [`src/pages/Home.tsx`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/pages/Home.tsx) | `kitchenMapUrl` | Set to `https://maps.app.goo.gl/YXXNzhruoA9XZwn26` |
