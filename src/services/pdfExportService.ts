@@ -47,10 +47,10 @@ const getTamilCanvasContext = (): CanvasRenderingContext2D => {
   return context;
 };
 
-export const generateEventMenuPDF = async (
+export const buildEventMenuPDFBlob = async (
   menu: EventMenu,
   language: Language = "en",
-): Promise<void> => {
+): Promise<{ blob: Blob; fileName: string }> => {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const settings = getBusinessSettings();
   const measureContext = getTamilCanvasContext();
@@ -388,5 +388,22 @@ export const generateEventMenuPDF = async (
 
   const safeName = menu.clientDetails.name.trim().replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_") || "Event";
   const suffix: Record<Language, string> = { en: "English", ta: "Tamil" };
-  doc.save(`BKR_Event_Menu_${safeName}_${suffix[language]}.pdf`);
+  const fileName = `BKR_Event_Menu_${safeName}_${suffix[language]}.pdf`;
+  const blob = doc.output("blob");
+  return { blob, fileName };
+};
+
+export const generateEventMenuPDF = async (
+  menu: EventMenu,
+  language: Language = "en",
+): Promise<void> => {
+  const { blob, fileName } = await buildEventMenuPDFBlob(menu, language);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 };

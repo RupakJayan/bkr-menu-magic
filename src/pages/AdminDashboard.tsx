@@ -40,6 +40,7 @@ import {
 import {
   loadMenusFromGoogleDrive,
   saveMenuToGoogleDrive,
+  syncAnalyticsSpreadsheetToGoogleDrive,
 } from "@/services/googleDriveService";
 
 type Tab = "overview" | "events" | "calendar" | "contacts" | "menu" | "analytics" | "settings";
@@ -160,8 +161,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         await saveMenuToGoogleDrive(event.menu, token);
       }
 
+      await syncAnalyticsSpreadsheetToGoogleDrive(currentEvents, token);
+
       setEvents(getSavedEvents());
-      setNotice(`Google Drive synced successfully (${currentEvents.length} events up to date in "BKR Catering Events").`);
+      setNotice(`Google Drive synced successfully (${currentEvents.length} events organized into subfolders with 4 files each + Master Analytics Spreadsheet).`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Sync with Google Drive failed.");
     } finally {
@@ -252,7 +255,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       if (token) {
         const found = updated.find((e) => e.id === id);
         if (found) {
-          saveMenuToGoogleDrive(found.menu, token).catch(() => {});
+          saveMenuToGoogleDrive(found.menu, token)
+            .then(() => syncAnalyticsSpreadsheetToGoogleDrive(updated, token).catch(() => {}))
+            .catch(() => {});
         }
       }
     } catch (error) {

@@ -53,4 +53,20 @@ test.describe("UT - Unit Tests", () => {
     expect(isEmailAllowed(undefined)).toBe(false);
     expect(isEmailAllowed("")).toBe(false);
   });
+
+  test("UT-06: Google Drive event subfolder naming follows date_venueplace_clientname_tamil", async () => {
+    const { getEventSubfolderName } = await import("../src/services/googleDriveService");
+    const { createEmptyMenu } = await import("../src/services/menuCalculationService");
+
+    const menu = createEmptyMenu();
+    menu.startDate = "2026-10-15";
+    menu.venueDetails.name = "Sri Krishna Mahal";
+    menu.clientDetails.name = "Rupak Jayan";
+
+    const subfolderName = getEventSubfolderName(menu);
+    expect(subfolderName).toContain("2026-10-15");
+    expect(subfolderName).toContain("Sri_Krishna_Mahal");
+    expect(subfolderName).toContain("Rupak_Jayan");
+    expect(subfolderName.split("_").length).toBeGreaterThanOrEqual(4);
+  });
 });
