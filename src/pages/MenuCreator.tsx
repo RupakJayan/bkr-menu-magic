@@ -10,6 +10,8 @@ import { ArrowLeft, Check, Download, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
+import { getStoredGoogleToken } from '@/services/googleAuthService';
+import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import './planner.css';
 
 const MenuCreator: React.FC = () => {
@@ -41,6 +43,10 @@ const MenuCreator: React.FC = () => {
     ) {
       saveEventMenu(menu);
       setAutoSaved(true);
+      const token = getStoredGoogleToken();
+      if (token) {
+        saveMenuToGoogleDrive(menu, token).catch(() => {});
+      }
       const timer = setTimeout(() => setAutoSaved(false), 2500);
       return () => clearTimeout(timer);
     }
@@ -53,6 +59,15 @@ const MenuCreator: React.FC = () => {
   const handleSave = () => {
     try {
       saveEventMenu(menu);
+      const token = getStoredGoogleToken();
+      if (token) {
+        saveMenuToGoogleDrive(menu, token).then(() => {
+          toast({
+            title: "Menu Synced to Google Drive",
+            description: "Saved to 'BKR Catering Events' in Google Drive.",
+          });
+        }).catch(() => {});
+      }
       toast({
         title: "Menu Saved",
         description: "Your event menu has been saved to this browser.",

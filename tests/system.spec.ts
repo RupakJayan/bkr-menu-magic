@@ -79,9 +79,12 @@ test.describe("ST - System / End-to-End Tests", () => {
     const googleButton = page.locator('button:has-text("Sign in with Google Account")');
     await expect(googleButton).toBeVisible();
 
-    // Click "Configure Client ID" or Google Sign In to open Google setup
+    // Click "Edit ID" or "Configure Client ID" to open Google setup
+    const editIdButton = page.locator('button:has-text("Edit ID")');
     const configureLink = page.locator('button:has-text("Configure Client ID")');
-    if (await configureLink.isVisible()) {
+    if (await editIdButton.isVisible()) {
+      await editIdButton.click();
+    } else if (await configureLink.isVisible()) {
       await configureLink.click();
     } else {
       await googleButton.click();

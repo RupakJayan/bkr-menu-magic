@@ -1,4 +1,4 @@
-import { useState, useRef, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowDownToLine, CalendarDays, Download, FileJson, LogOut, Menu as MenuIcon, Plus, Search, Trash2, Upload, Users } from "lucide-react";
 import type { EventMenu } from "@/types/menu";
@@ -169,6 +169,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
+  useEffect(() => {
+    const token = getStoredGoogleToken();
+    if (token) {
+      syncWithGoogleDrive(token).catch(() => {});
+    }
+  }, []);
+
   const handleGoogleConnect = async () => {
     try {
       setGoogleSyncing(true);
@@ -238,8 +245,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const saveEventStatus = (id: string, status: EventStatus) => {
     try {
-      setEvents(updateEventStatus(id, status));
+      const updated = updateEventStatus(id, status);
+      setEvents(updated);
       setNotice("Event status saved.");
+      const token = getStoredGoogleToken();
+      if (token) {
+        const found = updated.find((e) => e.id === id);
+        if (found) {
+          saveMenuToGoogleDrive(found.menu, token).catch(() => {});
+        }
+      }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not update event status.");
     }

@@ -26,6 +26,9 @@ const TOKEN_KEY = "bkr-google-access-token";
 const USER_KEY = "bkr-google-user";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
+export const DEFAULT_GOOGLE_CLIENT_ID =
+  "827617794538-iuu24eotjtmafui7fni969rk6l5n50vv.apps.googleusercontent.com";
+
 let tokenClient: google.accounts.oauth2.TokenClient | null = null;
 let inMemoryClientId = "";
 
@@ -43,9 +46,15 @@ export const getGoogleClientId = (): string => {
       typeof import.meta !== "undefined" && import.meta?.env
         ? import.meta.env.VITE_GOOGLE_CLIENT_ID
         : "";
-    return fromSession || fromLocal || inMemoryClientId || fromEnv || "";
+    return (
+      fromSession ||
+      fromLocal ||
+      inMemoryClientId ||
+      fromEnv ||
+      DEFAULT_GOOGLE_CLIENT_ID
+    );
   } catch {
-    return inMemoryClientId || "";
+    return inMemoryClientId || DEFAULT_GOOGLE_CLIENT_ID;
   }
 };
 

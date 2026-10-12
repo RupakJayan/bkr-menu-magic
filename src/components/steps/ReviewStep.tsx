@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
 import { saveEventMenu } from '@/services/localAdminService';
+import { getStoredGoogleToken } from '@/services/googleAuthService';
+import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReviewStepProps {
@@ -27,6 +29,15 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
   const handleManualSave = () => {
     try {
       saveEventMenu(menu);
+      const token = getStoredGoogleToken();
+      if (token) {
+        saveMenuToGoogleDrive(menu, token).then(() => {
+          toast({
+            title: "Menu Synced to Google Drive",
+            description: "Saved to 'BKR Catering Events' in Google Drive.",
+          });
+        }).catch(() => {});
+      }
       toast({
         title: "Menu Saved to Dashboard",
         description: "Event has been saved in your dashboard records.",

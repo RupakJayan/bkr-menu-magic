@@ -62,7 +62,7 @@ const Home: React.FC = () => {
   const secondaryPhone = "+91 70109 68184";
   const secondaryPhoneHref = "tel:+917010968184";
   const kitchenAddress = "1B, Krishna Iyengar Street, Anaimalai";
-  const kitchenMapUrl = "https://maps.app.goo.gl/zScEeCnzqjL7Viz47";
+  const kitchenMapUrl = "https://maps.app.goo.gl/YXXNzhruoA9XZwn26";
 
   return (
     <div className="home-page">

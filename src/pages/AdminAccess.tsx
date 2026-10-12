@@ -18,6 +18,7 @@ import {
   setGoogleClientId,
   isGoogleConfigured,
   requestGoogleLogin,
+  ALLOWED_ADMIN_EMAILS,
 } from "@/services/googleAuthService";
 
 export default function AdminAccess() {
@@ -224,7 +225,7 @@ export default function AdminAccess() {
               </Button>
               {isGoogleConfigured() ? (
                 <div className="flex items-center justify-between text-[11px] text-mute px-1">
-                  <span>Authorized: rupakjayan22@gmail.com, bkrcaters@gmail.com</span>
+                  <span>Authorized: {ALLOWED_ADMIN_EMAILS.join(", ")}</span>
                   <button
                     type="button"
                     onClick={() => setShowGoogleConfig(true)}
