@@ -423,40 +423,102 @@ export const saveMenuToGoogleDrive = async (
   return { folderId: rootFolderId, subfolderId, fileIds };
 };
 
+export const getCachedBkrFolderId = (): string => {
+  try {
+    return localStorage.getItem(CACHED_BKR_FOLDER_KEY) || "";
+  } catch {
+    return "";
+  }
+};
+
+export const setCachedBkrFolderId = (folderId: string): void => {
+  try {
+    if (folderId.trim()) {
+      localStorage.setItem(CACHED_BKR_FOLDER_KEY, folderId.trim());
+    } else {
+      localStorage.removeItem(CACHED_BKR_FOLDER_KEY);
+    }
+  } catch {}
+};
+
 /**
  * Load all EventMenu JSON files from Google Drive
+ * Performs multi-level search:
+ * 1. Inside root folder
+ * 2. Inside all event subfolders
+ * 3. Across Drive for accessible files
  */
 export const loadMenusFromGoogleDrive = async (
   accessToken: string,
 ): Promise<EventMenu[]> => {
-  await getOrCreateBkrFolder(accessToken);
+  const rootFolderId = await getOrCreateBkrFolder(accessToken);
+  const foundFileIds = new Map<string, string>();
 
-  // Search for all event JSON files inside root or across Drive
-  const query = encodeURIComponent(
-    `name contains 'BKR_Event_' and name contains '.json' and trashed=false`,
-  );
+  // 1. Search inside root folder
+  try {
+    const rootQuery = encodeURIComponent(
+      `'${rootFolderId}' in parents and name contains 'BKR_Event_' and name contains '.json' and trashed=false`,
+    );
+    const rootRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${rootQuery}&fields=files(id,name)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (rootRes.ok) {
+      const data: DriveFileList = await rootRes.json();
+      (data.files || []).forEach((f) => foundFileIds.set(f.id, f.name));
+    }
+  } catch {}
 
-  const listRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,mimeType)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-  );
+  // 2. Search inside event subfolders
+  try {
+    const subfolderQuery = encodeURIComponent(
+      `mimeType='${FOLDER_MIME}' and '${rootFolderId}' in parents and trashed=false`,
+    );
+    const subfolderRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${subfolderQuery}&fields=files(id,name)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (subfolderRes.ok) {
+      const subData: DriveFileList = await subfolderRes.json();
+      for (const sub of subData.files || []) {
+        try {
+          const sfQuery = encodeURIComponent(
+            `'${sub.id}' in parents and name contains 'BKR_Event_' and name contains '.json' and trashed=false`,
+          );
+          const sfRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=${sfQuery}&fields=files(id,name)&pageSize=50&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+            { headers: { Authorization: `Bearer ${accessToken}` } },
+          );
+          if (sfRes.ok) {
+            const sfData: DriveFileList = await sfRes.json();
+            (sfData.files || []).forEach((f) => foundFileIds.set(f.id, f.name));
+          }
+        } catch {}
+      }
+    }
+  } catch {}
 
-  if (!listRes.ok) {
-    const err = await listRes.text();
-    throw new Error(`Failed to list Google Drive files: ${err}`);
-  }
-
-  const listData: DriveFileList = await listRes.json();
-  const jsonFiles = listData.files || [];
+  // 3. Global search across Drive as fallback
+  try {
+    const globalQuery = encodeURIComponent(
+      `name contains 'BKR_Event_' and name contains '.json' and trashed=false`,
+    );
+    const globalRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${globalQuery}&fields=files(id,name)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (globalRes.ok) {
+      const globalData: DriveFileList = await globalRes.json();
+      (globalData.files || []).forEach((f) => foundFileIds.set(f.id, f.name));
+    }
+  } catch {}
 
   const menusMap = new Map<string, EventMenu>();
 
-  for (const file of jsonFiles) {
+  for (const [fileId, fileName] of foundFileIds.entries()) {
     try {
       const contentRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         },
@@ -469,7 +531,7 @@ export const loadMenusFromGoogleDrive = async (
         }
       }
     } catch (e) {
-      console.warn(`Could not read Drive file ${file.name}:`, e);
+      console.warn(`Could not read Drive file ${fileName}:`, e);
     }
   }
 
@@ -532,6 +594,8 @@ export const syncAnalyticsSpreadsheetToGoogleDrive = async (
     "Transport Charge (INR)",
     "Grand Total (INR)",
     "Status",
+    "Added By (Nickname)",
+    "Last Edited By",
     "Saved At",
   ];
   rows.push(headers.map(escapeCsv).join(","));
@@ -584,6 +648,8 @@ export const syncAnalyticsSpreadsheetToGoogleDrive = async (
       transport,
       grandTotal,
       status.toUpperCase(),
+      menu.createdBy?.nickname || menu.createdBy?.name || "Admin",
+      menu.lastEditedBy?.nickname || menu.lastEditedBy?.name || "Admin",
       savedAt || "",
     ];
     rows.push(row.map(escapeCsv).join(","));

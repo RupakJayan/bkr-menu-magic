@@ -33,55 +33,35 @@ export const DEFAULT_GOOGLE_CLIENT_ID =
   "827617794538-iuu24eotjtmafui7fni969rk6l5n50vv.apps.googleusercontent.com";
 
 let tokenClient: google.accounts.oauth2.TokenClient | null = null;
-let inMemoryClientId = "";
 
 export const getGoogleClientId = (): string => {
   try {
-    const fromSession =
-      typeof sessionStorage !== "undefined"
-        ? sessionStorage.getItem("bkr-google-client-id")
-        : null;
-    const fromLocal =
-      typeof localStorage !== "undefined"
-        ? localStorage.getItem("bkr-google-client-id")
-        : null;
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("bkr-google-client-id");
+    }
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("bkr-google-client-id");
+    }
     const fromEnv =
       typeof import.meta !== "undefined" && import.meta?.env
         ? import.meta.env.VITE_GOOGLE_CLIENT_ID
         : "";
-    return (
-      fromSession ||
-      fromLocal ||
-      inMemoryClientId ||
-      fromEnv ||
-      DEFAULT_GOOGLE_CLIENT_ID
-    );
+    return fromEnv || DEFAULT_GOOGLE_CLIENT_ID;
   } catch {
-    return inMemoryClientId || DEFAULT_GOOGLE_CLIENT_ID;
+    return DEFAULT_GOOGLE_CLIENT_ID;
   }
 };
 
-export const setGoogleClientId = (clientId: string): void => {
-  const trimmed = clientId.trim();
-  inMemoryClientId = trimmed;
+export const setGoogleClientId = (_clientId: string): void => {
+  // Clear any existing stored client ID to prevent invalid client 401 errors
   try {
     if (typeof localStorage !== "undefined") {
-      if (trimmed) {
-        localStorage.setItem("bkr-google-client-id", trimmed);
-      } else {
-        localStorage.removeItem("bkr-google-client-id");
-      }
+      localStorage.removeItem("bkr-google-client-id");
     }
     if (typeof sessionStorage !== "undefined") {
-      if (trimmed) {
-        sessionStorage.setItem("bkr-google-client-id", trimmed);
-      } else {
-        sessionStorage.removeItem("bkr-google-client-id");
-      }
+      sessionStorage.removeItem("bkr-google-client-id");
     }
-  } catch {
-    // storage unavailable
-  }
+  } catch {}
 };
 
 export const isGoogleConfigured = (): boolean =>

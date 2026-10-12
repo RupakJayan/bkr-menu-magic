@@ -38,8 +38,11 @@ import {
   logoutGoogle,
 } from "@/services/googleAuthService";
 import {
+  getCachedBkrFolderId,
+  getOrCreateBkrFolder,
   loadMenusFromGoogleDrive,
   saveMenuToGoogleDrive,
+  shareFolderWithAuthorizedAdmins,
   syncAnalyticsSpreadsheetToGoogleDrive,
 } from "@/services/googleDriveService";
 
@@ -94,15 +97,15 @@ const makeBlankMenu = (): EventMenu => ({
 });
 
 const statusStyles: Record<EventStatus, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  completed: "bg-emerald-100 text-emerald-800",
-  cancelled: "bg-rose-100 text-rose-800",
+  pending: "bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30",
+  confirmed: "bg-blue-500/20 text-blue-800 dark:text-blue-200 border border-blue-500/30",
+  completed: "bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30",
+  cancelled: "bg-rose-500/20 text-rose-800 dark:text-rose-200 border border-rose-500/30",
 };
 
 const Card = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-    <h2 className="mb-4 text-lg font-bold text-gray-900">{title}</h2>
+  <section className="rounded-xl border border-line bg-surf p-5 shadow-theme-sm text-ink">
+    <h2 className="mb-4 text-lg font-bold text-ink">{title}</h2>
     {children}
   </section>
 );
@@ -363,14 +366,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const savedDishes = Object.values(managedCatalog).reduce((sum, dishes) => sum + dishes.length, 0);
 
   return (
-    <div className="admin-dashboard min-h-screen bg-slate-50 text-ink">
-      <header className="border-b bg-white">
+    <div className="admin-dashboard min-h-screen bg-bg text-ink">
+      <header className="border-b border-line bg-surf">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4">
           <div>
             <Link to="/" className="admin-dashboard-brand" aria-label="BKR Catering home">
               <BrandLogo />
             </Link>
-            <p className="text-sm text-gray-500">{settings.businessName} · Local Admin</p>
+            <p className="text-sm text-mute">{settings.businessName} · Local Admin</p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <ThemeToggle />
@@ -379,7 +382,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               onClick={() => syncWithGoogleDrive()}
               disabled={googleSyncing}
               title={googleUser?.email ? `Connected as ${googleUser.email}` : "Sync menus with Google Drive folder"}
-              className="border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+              className="border-line bg-surf hover:bg-surf2 text-ink shadow-theme-sm"
             >
               <svg className="mr-2 h-4 w-4 inline" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -409,28 +412,33 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-        <div className="flex flex-wrap gap-2 border-b pb-3">
+        <div className="flex flex-wrap gap-2 border-b border-line pb-3">
           {TABS.map((item) => (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === item.id ? "bg-rose-600 text-white" : "bg-white text-gray-700 hover:bg-rose-50"}`}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                tab === item.id
+                  ? "bg-acc text-accink shadow-theme-sm"
+                  : "bg-surf border border-line text-ink hover:bg-surf2"
+              }`}
             >
               {item.label}
             </button>
           ))}
         </div>
         {notice && (
-          <div role="status" className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            {notice}<button onClick={() => setNotice("")} aria-label="Dismiss notification">×</button>
+          <div role="status" className="flex items-center justify-between rounded-lg border border-line bg-surf2 px-4 py-3 text-sm text-ink shadow-theme-sm">
+            <span>{notice}</span>
+            <button onClick={() => setNotice("")} className="text-mute hover:text-ink font-bold ml-2" aria-label="Dismiss notification">×</button>
           </div>
         )}
 
         {tab === "overview" && (
           <>
             <div>
-              <h1 className="text-2xl font-bold">Event dashboard</h1>
-              <p className="text-sm text-gray-500">Live totals from menus saved on this device; no sample records are included.</p>
+              <h1 className="text-2xl font-bold text-ink">Event dashboard</h1>
+              <p className="text-sm text-mute">Live totals from menus saved on this device; synced with Google Drive.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
@@ -439,7 +447,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 ["Contacts", contacts.length],
                 ["Quoted total", formatMoney(totalQuote)],
               ].map(([label, value]) => (
-                <Card key={String(label)} title={String(label)}><p className="text-3xl font-bold text-rose-700">{value}</p></Card>
+                <Card key={String(label)} title={String(label)}><p className="text-3xl font-bold text-acc">{value}</p></Card>
               ))}
             </div>
             <Card title="Upcoming events">
@@ -459,7 +467,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {tab === "events" && (
           <Card title="Saved events and bookings">
-            <p className="mb-4 text-sm text-gray-500">Bookings are stored in this browser. Creating or editing a menu saves it here when you generate a document.</p>
+            <p className="mb-4 text-sm text-mute">Bookings are stored locally and synced with Google Drive. Creating or editing a menu updates the central record.</p>
             <EventTable
               events={filteredEvents}
               query={query}
@@ -475,14 +483,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {tab === "calendar" && (
           <Card title="Upcoming calendar">
-            <p className="mb-4 text-sm text-gray-500">Monthly view of saved events. Select an event to open its menu.</p>
+            <p className="mb-4 text-sm text-mute">Monthly view of saved events. Select an event to open its menu.</p>
             <div className="mb-4 flex items-center justify-between">
               <Button variant="outline" onClick={() => setCalendarMonth(new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth() - 1, 1, 6, 30)))}>Previous month</Button>
-              <h3 className="font-bold">{formatISTDate(`${calendarMonth.getUTCFullYear()}-${String(calendarMonth.getUTCMonth() + 1).padStart(2, "0")}-01`, "en-IN", { month: "long", year: "numeric" })}</h3>
+              <h3 className="font-bold text-ink">{formatISTDate(`${calendarMonth.getUTCFullYear()}-${String(calendarMonth.getUTCMonth() + 1).padStart(2, "0")}-01`, "en-IN", { month: "long", year: "numeric" })}</h3>
               <Button variant="outline" onClick={() => setCalendarMonth(new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth() + 1, 1, 6, 30)))}>Next month</Button>
             </div>
-            <div className="grid grid-cols-7 border-l border-t text-xs">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <div key={day} className="border-b border-r bg-gray-50 p-2 text-center font-bold">{day}</div>)}
+            <div className="grid grid-cols-7 border-l border-t border-line text-xs">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <div key={day} className="border-b border-r border-line bg-surf2 p-2 text-center font-bold text-mute">{day}</div>)}
               {Array.from({ length: 42 }, (_, index) => {
                 const monthStart = new Date(Date.UTC(calendarMonth.getUTCFullYear(), calendarMonth.getUTCMonth(), 1));
                 const dayDate = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth(), index - monthStart.getUTCDay() + 1, 6, 30));
@@ -492,10 +500,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 );
                 const inMonth = dayDate.getUTCMonth() === calendarMonth.getUTCMonth();
                 return (
-                  <div key={key} className={`min-h-24 border-b border-r p-1.5 ${inMonth ? "bg-white" : "bg-gray-50 text-gray-400"}`}>
-                    <span>{dayDate.getUTCDate()}</span>
+                  <div key={key} className={`min-h-24 border-b border-r border-line p-1.5 ${inMonth ? "bg-surf text-ink" : "bg-surf2/40 text-mute opacity-60"}`}>
+                    <span className="font-medium">{dayDate.getUTCDate()}</span>
                     <div className="mt-1 space-y-1">
-                      {items.map((event) => <button key={event.id} onClick={() => startBooking(event)} title={`${event.menu.clientDetails.name} · ${event.menu.venueDetails.name}`} className="block w-full truncate rounded bg-rose-100 px-1 py-1 text-left text-[10px] text-rose-900">{event.menu.clientDetails.name || event.menu.venueDetails.name || "Event"}</button>)}
+                      {items.map((event) => (
+                        <button
+                          key={event.id}
+                          onClick={() => startBooking(event)}
+                          title={`${event.menu.clientDetails.name} · ${event.menu.venueDetails.name}`}
+                          className="block w-full truncate rounded bg-acc/15 border border-acc/25 px-1 py-1 text-left text-[10px] font-medium text-acc hover:bg-acc/25 transition-colors"
+                        >
+                          {event.menu.clientDetails.name || event.menu.venueDetails.name || "Event"}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 );
@@ -511,19 +528,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Input placeholder="Name *" value={contactDraft.name} onChange={(e) => setContactDraft({ ...contactDraft, name: e.target.value })} />
                 <Input placeholder="Phone *" value={contactDraft.phone} onChange={(e) => setContactDraft({ ...contactDraft, phone: e.target.value })} />
                 <Input type="email" placeholder="Email" value={contactDraft.email} onChange={(e) => setContactDraft({ ...contactDraft, email: e.target.value })} />
-                <select className="h-10 w-full rounded-md border px-3" value={contactDraft.role} onChange={(e) => setContactDraft({ ...contactDraft, role: e.target.value as LocalContact["role"] })}>
-                  {["Admin", "Manager", "Staff"].map((role) => <option key={role}>{role}</option>)}
+                <select className="h-10 w-full rounded-md border border-line bg-surf text-ink px-3" value={contactDraft.role} onChange={(e) => setContactDraft({ ...contactDraft, role: e.target.value as LocalContact["role"] })}>
+                  {["Admin", "Manager", "Staff"].map((role) => <option key={role} value={role}>{role}</option>)}
                 </select>
                 <Button onClick={addContact} className="w-full"><Plus className="mr-2 h-4 w-4" />Save contact</Button>
               </div>
             </Card>
             <Card title={`Contacts (${contacts.length})`}>
               {contacts.length === 0 ? <Empty message="No manually added contacts yet. Client details are available in saved event records." /> : (
-                <div className="divide-y">
+                <div className="divide-y divide-line">
                   {contacts.map((contact) => (
                     <div key={contact.id} className="flex items-center gap-3 py-3">
-                      <Users className="h-5 w-5 text-gray-400" />
-                      <div className="min-w-0 flex-1"><b>{contact.name}</b><p className="truncate text-sm text-gray-500">{contact.phone} · {contact.email || "No email"} · {contact.role}</p></div>
+                      <Users className="h-5 w-5 text-mute" />
+                      <div className="min-w-0 flex-1"><b className="text-ink">{contact.name}</b><p className="truncate text-sm text-mute">{contact.phone} · {contact.email || "No email"} · {contact.role}</p></div>
                       <Button variant="ghost" size="icon" aria-label={`Delete ${contact.name}`} onClick={() => { setContacts(deleteContact(contact.id)); setNotice("Contact deleted."); }}><Trash2 className="h-4 w-4 text-rose-600" /></Button>
                     </div>
                   ))}
@@ -548,8 +565,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div className="max-h-[65vh] space-y-5 overflow-y-auto">
                 {Object.entries(managedCatalog).map(([category, dishes]) => (
                   <div key={category}>
-                    <h3 className="mb-2 font-bold text-rose-700">{category}</h3>
-                    <div className="divide-y rounded-lg border">
+                    <h3 className="mb-2 font-bold text-acc">{category}</h3>
+                    <div className="divide-y divide-line rounded-lg border border-line">
                       {dishes.map((dish) => {
                         const key = buildCatalogKey(category, dish.id);
                         const custom = menuState.customDishes.some((item) => item.id === dish.id);
@@ -593,17 +610,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         {tab === "analytics" && (
           <div className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card title="Bookings"><p className="text-2xl font-bold">{events.length}</p></Card>
-              <Card title="Sessions"><p className="text-2xl font-bold">{eventSessions.length}</p></Card>
-              <Card title="Guests (session count)"><p className="text-2xl font-bold">{eventSessions.reduce((sum, entry) => sum + entry.session.headCount, 0).toLocaleString("en-IN")}</p></Card>
-              <Card title="Quoted revenue"><p className="text-2xl font-bold">{formatMoney(totalQuote)}</p></Card>
+              <Card title="Bookings"><p className="text-2xl font-bold text-ink">{events.length}</p></Card>
+              <Card title="Sessions"><p className="text-2xl font-bold text-ink">{eventSessions.length}</p></Card>
+              <Card title="Guests (session count)"><p className="text-2xl font-bold text-ink">{eventSessions.reduce((sum, entry) => sum + entry.session.headCount, 0).toLocaleString("en-IN")}</p></Card>
+              <Card title="Quoted revenue"><p className="text-2xl font-bold text-acc">{formatMoney(totalQuote)}</p></Card>
             </div>
             <Card title="Bookings by status">
               <div className="space-y-3">
                 {STATUS_OPTIONS.map((status) => {
                   const count = events.filter((event) => event.status === status).length;
                   const width = events.length ? `${(count / events.length) * 100}%` : "0%";
-                  return <div key={status} className="grid grid-cols-[100px_1fr_40px] items-center gap-3"><span className="capitalize">{status}</span><div className="h-3 rounded-full bg-gray-100"><div className={`h-full rounded-full ${status === "confirmed" ? "bg-blue-500" : status === "completed" ? "bg-emerald-500" : status === "cancelled" ? "bg-rose-500" : "bg-amber-500"}`} style={{ width }} /></div><b>{count}</b></div>;
+                  return <div key={status} className="grid grid-cols-[100px_1fr_40px] items-center gap-3"><span className="capitalize text-ink">{status}</span><div className="h-3 rounded-full bg-surf2 border border-line"><div className={`h-full rounded-full ${status === "confirmed" ? "bg-blue-500" : status === "completed" ? "bg-emerald-500" : status === "cancelled" ? "bg-rose-500" : "bg-amber-500"}`} style={{ width }} /></div><b className="text-ink">{count}</b></div>;
                 })}
               </div>
             </Card>
@@ -612,20 +629,75 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {tab === "settings" && (
           <div className="grid gap-5 lg:grid-cols-2">
-            <Card title="Business settings">
-              <label className="mb-2 block text-sm font-semibold">Business name</label>
+            <Card title="Admin Profile & Attribution">
+              <label className="mb-2 block text-sm font-semibold text-ink">Admin Nickname (Who Added / Edited Menus)</label>
+              <Input
+                placeholder="e.g. Rupak, Murugan, Raghavendra"
+                value={settings.adminNickname || ""}
+                onChange={(e) => setSettings({ ...settings, adminNickname: e.target.value })}
+              />
+              <p className="mt-1 text-xs text-mute">
+                This nickname is saved with every event you create or edit so all admins know who added each menu.
+              </p>
+              <label className="mt-4 mb-2 block text-sm font-semibold text-ink">Business name</label>
               <Input value={settings.businessName} onChange={(e) => setSettings({ ...settings, businessName: e.target.value })} />
-              <Button className="mt-3" onClick={saveSettings}>Save settings</Button>
+              <Button className="mt-4" onClick={saveSettings}>Save profile settings</Button>
             </Card>
+
+            <Card title="Google Drive Central Synchronization">
+              <p className="mb-3 text-sm text-mute">
+                All event menus and the analytics spreadsheet are synced to one central Google Drive folder shared across all authorized admin accounts.
+              </p>
+              <div className="rounded-lg border border-line bg-surf2 p-3 space-y-2 text-xs">
+                <div>
+                  <span className="font-semibold text-ink">Signed-in Google Account: </span>
+                  <span className="text-mute">{googleUser?.email || "Not signed in"}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-ink">Central Drive Folder: </span>
+                  <code className="text-acc font-mono">{getCachedBkrFolderId() || "Auto-discovering 'BKR Catering Events'"}</code>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => syncWithGoogleDrive()}
+                  disabled={googleSyncing}
+                >
+                  {googleSyncing ? "Syncing Drive…" : "Sync Drive Now"}
+                </Button>
+                {googleUser && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      const token = getStoredGoogleToken();
+                      if (token) {
+                        try {
+                          const folderId = await getOrCreateBkrFolder(token);
+                          await shareFolderWithAuthorizedAdmins(folderId, token);
+                          setNotice("Central folder re-shared with all 6 authorized admin Gmail accounts.");
+                        } catch (e) {
+                          setNotice(e instanceof Error ? e.message : "Could not re-share folder.");
+                        }
+                      }
+                    }}
+                  >
+                    Re-share Folder with All Admins
+                  </Button>
+                )}
+              </div>
+            </Card>
+
             <Card title="Payment terms (English)">
               <TermsEditor value={settings.termsEnglish} onChange={(termsEnglish) => setSettings({ ...settings, termsEnglish })} />
+              <Button className="mt-3" onClick={saveSettings}>Save English terms</Button>
             </Card>
             <Card title="Payment terms (Tamil)">
               <TermsEditor value={settings.termsTamil} onChange={(termsTamil) => setSettings({ ...settings, termsTamil })} />
-              <Button className="mt-3" onClick={saveSettings}>Save business settings</Button>
+              <Button className="mt-3" onClick={saveSettings}>Save Tamil terms</Button>
             </Card>
             <Card title="Local storage and data export">
-              <p className="mb-3 text-sm text-gray-600">This admin stores bookings, contacts, menu edits and settings in this browser only. It has no sign-in or cloud sync. Keep regular backups if you clear browser data or change devices.</p>
+              <p className="mb-3 text-sm text-mute">This admin keeps events locally for instant load and syncs with Google Drive. Keep regular backups if you clear browser data or change devices.</p>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={exportBackup}><FileJson className="mr-2 h-4 w-4" />Download JSON backup</Button>
                 <Button variant="outline" onClick={exportEvents}><Download className="mr-2 h-4 w-4" />Download event CSV</Button>
@@ -639,7 +711,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 }
 
 function Empty({ message }: { message: string }) {
-  return <p className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">{message}</p>;
+  return <p className="rounded-lg bg-surf2 border border-line px-4 py-8 text-center text-sm text-mute">{message}</p>;
 }
 
 function EventTable({
@@ -664,20 +736,38 @@ function EventTable({
   return (
     <div className="space-y-3">
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        <Input className="pl-9" placeholder="Search client, venue, phone" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-mute" />
+        <Input className="pl-9 bg-surf border-line text-ink placeholder:text-mute" placeholder="Search client, venue, phone" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
       {events.length === 0 ? <Empty message={query ? "No events match this search." : "No saved event menus yet."} /> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] border-collapse text-left text-sm">
-            <thead><tr className="border-b bg-gray-50 text-gray-500"><th className="p-3">Client</th><th className="p-3">Venue & date</th><th className="p-3">Sessions</th><th className="p-3">Quote</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+          <table className="w-full min-w-[950px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-line bg-surf2 text-mute font-medium">
+                <th className="p-3">Client</th>
+                <th className="p-3">Venue & date</th>
+                <th className="p-3">Added by</th>
+                <th className="p-3">Sessions</th>
+                <th className="p-3">Quote</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Actions</th>
+              </tr>
+            </thead>
             <tbody>
               {events.map((event) => (
-                <tr key={event.id} className="border-b last:border-0">
-                  <td className="p-3"><b>{event.menu.clientDetails.name || "Unnamed client"}</b><p className="text-gray-500">{event.menu.clientDetails.phone}</p></td>
-                  <td className="p-3">{event.menu.venueDetails.name || "Venue not set"}<p className="text-gray-500">{eventDate(event.menu)}</p></td>
-                  <td className="p-3">{event.menu.days.reduce((sum, day) => sum + day.sessions.length, 0)}</td>
-                  <td className="p-3">{formatMoney(eventAmount(event.menu))}</td>
+                <tr key={event.id} className="border-b border-line hover:bg-surf2/30 transition-colors last:border-0">
+                  <td className="p-3"><b className="text-ink">{event.menu.clientDetails.name || "Unnamed client"}</b><p className="text-mute text-xs">{event.menu.clientDetails.phone}</p></td>
+                  <td className="p-3"><span className="text-ink">{event.menu.venueDetails.name || "Venue not set"}</span><p className="text-mute text-xs">{eventDate(event.menu)}</p></td>
+                  <td className="p-3">
+                    <span className="inline-flex items-center rounded-md bg-surf2 px-2 py-0.5 text-xs font-semibold text-ink border border-line">
+                      {event.menu.createdBy?.nickname || event.menu.createdBy?.name || "Admin"}
+                    </span>
+                    {event.menu.lastEditedBy?.nickname && event.menu.lastEditedBy.nickname !== event.menu.createdBy?.nickname && (
+                      <p className="text-[10px] text-mute mt-0.5">ed: {event.menu.lastEditedBy.nickname}</p>
+                    )}
+                  </td>
+                  <td className="p-3 text-ink">{event.menu.days.reduce((sum, day) => sum + day.sessions.length, 0)}</td>
+                  <td className="p-3 font-semibold text-ink">{formatMoney(eventAmount(event.menu))}</td>
                   <td className="p-3"><select aria-label={`Status for ${event.menu.clientDetails.name}`} className={`rounded-full px-2 py-1 text-xs font-semibold ${statusStyles[event.status]}`} value={event.status} onChange={(e) => onStatusChange(event.id, e.target.value as EventStatus)}>{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></td>
                   <td className="p-3"><div className="flex flex-wrap gap-1"><Button variant="outline" size="sm" onClick={() => onOpen(event)}>Edit</Button><Button variant="ghost" size="sm" onClick={() => void onExport(event, "en")}>EN Word</Button><Button variant="ghost" size="sm" onClick={() => void onExport(event, "ta")}>தமிழ் Word</Button><Button variant="ghost" size="sm" onClick={() => exportMenuJSON(event.menu)} title="Download JSON file">JSON</Button>{onSaveToDrive && (<Button variant="ghost" size="sm" onClick={() => onSaveToDrive(event)} title="Save to Google Drive">Drive</Button>)}<Button variant="ghost" size="icon" aria-label={`Delete ${event.menu.clientDetails.name} event`} onClick={() => onDelete(event.id)}><Trash2 className="h-4 w-4 text-rose-600" /></Button></div></td>
                 </tr>

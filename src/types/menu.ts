@@ -51,6 +51,13 @@ export interface VenueDetails {
   googleMapsUrl?: string;
 }
 
+export interface EventUserAttribution {
+  email?: string;
+  name?: string;
+  nickname?: string;
+  timestamp?: string;
+}
+
 export interface EventMenu {
   id: string;
   clientDetails: ClientDetails;
@@ -63,6 +70,8 @@ export interface EventMenu {
   days: DayPlan[];
   createdAt: Date;
   updatedAt: Date;
+  createdBy?: EventUserAttribution;
+  lastEditedBy?: EventUserAttribution;
 }
 
 export interface MenuSummary {

@@ -44,12 +44,16 @@ export interface ManagedMenuState {
 
 export interface BusinessSettings {
   businessName: string;
+  adminNickname?: string;
+  sharedDriveFolderId?: string;
   termsEnglish: string[];
   termsTamil: string[];
 }
 
 const DEFAULT_SETTINGS: BusinessSettings = {
   businessName: "BKR Catering Services",
+  adminNickname: "Admin",
+  sharedDriveFolderId: "",
   termsEnglish: [
     "Please take the counting at every serving.",
     "Tables, chairs and shamiyana are not included.",
@@ -95,15 +99,48 @@ const writeStored = <T,>(key: string, value: T): void => {
 export const getSavedEvents = (): SavedEvent[] =>
   readStored<SavedEvent[]>(STORAGE_KEYS.events, []);
 
-export const saveEventMenu = (menu: EventMenu): SavedEvent[] => {
+export const saveEventMenu = (
+  menu: EventMenu,
+  statusOverride?: EventStatus,
+  attribution?: { nickname?: string; name?: string; email?: string },
+): SavedEvent[] => {
   const events = getSavedEvents();
   const existing = events.find((event) => event.id === menu.id);
+
+  const settings = readStored<BusinessSettings>(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
+  const defaultNick = attribution?.nickname || settings.adminNickname || "Admin";
+  const defaultEmail = attribution?.email || "";
+  const defaultName = attribution?.name || defaultNick;
+  const nowIso = new Date().toISOString();
+
+  const createdBy = menu.createdBy || existing?.menu.createdBy || {
+    nickname: defaultNick,
+    name: defaultName,
+    email: defaultEmail,
+    timestamp: nowIso,
+  };
+
+  const lastEditedBy = {
+    nickname: attribution?.nickname || settings.adminNickname || defaultNick,
+    name: attribution?.name || defaultName,
+    email: attribution?.email || defaultEmail,
+    timestamp: nowIso,
+  };
+
+  const updatedMenu: EventMenu = {
+    ...menu,
+    createdBy,
+    lastEditedBy,
+    updatedAt: new Date(),
+  };
+
   const saved: SavedEvent = {
     id: menu.id,
-    menu: { ...menu, updatedAt: new Date() },
-    status: existing?.status ?? "pending",
-    savedAt: new Date().toISOString(),
+    menu: updatedMenu,
+    status: statusOverride ?? existing?.status ?? "pending",
+    savedAt: nowIso,
   };
+
   writeStored(
     STORAGE_KEYS.events,
     existing
