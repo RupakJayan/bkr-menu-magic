@@ -166,7 +166,21 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setEvents(getSavedEvents());
       setNotice(`Google Drive synced successfully (${currentEvents.length} events organized into subfolders with 4 files each + Master Analytics Spreadsheet).`);
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Sync with Google Drive failed.");
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes("403") || errMsg.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT") || errMsg.includes("insufficientPermissions")) {
+        sessionStorage.removeItem("bkr-google-access-token");
+        setNotice("Google permission scope was updated. Prompting for updated Google authorization...");
+        try {
+          const freshToken = await requestGoogleLogin();
+          setGoogleUser(getStoredGoogleUser());
+          await syncWithGoogleDrive(freshToken);
+          return;
+        } catch (reAuthErr) {
+          setNotice(reAuthErr instanceof Error ? reAuthErr.message : "Re-authorization failed. Please click 'Sync Drive' again.");
+        }
+      } else {
+        setNotice(errMsg || "Sync with Google Drive failed.");
+      }
     } finally {
       setGoogleSyncing(false);
     }
