@@ -242,4 +242,65 @@ test.describe("UT - Unit Tests", () => {
     expect(sortedDishes[1].name).toBe("Medu Vada");
     expect(sortedDishes[sortedDishes.length - 1].name).toBe("Filter Coffee");
   });
+
+  test("UT-14: Custom Dish Human-Readable ID Generation & Bilingual Live Update Reflection", async () => {
+    const { addCustomDishToCatalog, updateDishInCatalog, getManagedMenuCatalog, findDishByKey, buildDishKey } = await import("../src/services/menuCatalogService");
+    const { commitVoiceDishesToSession } = await import("../src/services/aiVoiceAssistantService");
+
+    // 1. Create a custom dish
+    const custom = addCustomDishToCatalog({
+      category: "Special Dishes",
+      name_en: "Madurai Kari Dosai",
+      name_ta: "மதுரை காரி தோசை",
+      isVegetarian: true,
+    });
+
+    // Verify ID is human-readable and doesn't contain raw 36-char UUIDs
+    expect(custom.id.startsWith("custom_")).toBe(true);
+    expect(custom.id.length).toBeLessThan(35);
+    expect(custom.name_en).toBe("Madurai Kari Dosai");
+    expect(custom.name_ta).toBe("மதுரை காரி தோசை");
+
+    // 2. Update dish with corrected bilingual names
+    updateDishInCatalog("Special Dishes", custom.id, {
+      name_en: "Madurai Special Kari Dosai",
+      name_ta: "மதுரை ஸ்பெஷல் காரி தோசை",
+    });
+
+    // 3. Verify findDishByKey resolves updated names immediately
+    const key = buildDishKey("Special Dishes", custom.id);
+    const resolved = findDishByKey(key);
+    expect(resolved).not.toBeNull();
+    expect(resolved?.name_en).toBe("Madurai Special Kari Dosai");
+    expect(resolved?.name_ta).toBe("மதுரை ஸ்பெஷல் காரி தோசை");
+
+    // 4. Verify voice review edits persist in commitVoiceDishesToSession
+    const catalog = getManagedMenuCatalog();
+    const firstCat = Object.keys(catalog)[0];
+    const existing = catalog[firstCat][0];
+
+    const voiceDishes = [
+      {
+        name_en: "Corrected Royal Pongal",
+        name_ta: "ராயல் பொங்கல்",
+        category: firstCat,
+        catalogDish: existing,
+        isExistingMatch: true,
+        isAlreadyInSession: false,
+        selected: true,
+      },
+    ];
+
+    let updatedFlag = false;
+    commitVoiceDishesToSession(
+      voiceDishes,
+      () => {},
+      () => { updatedFlag = true; }
+    );
+
+    expect(updatedFlag).toBe(true);
+    const updatedExisting = findDishByKey(buildDishKey(firstCat, existing.id));
+    expect(updatedExisting?.name_en).toBe("Corrected Royal Pongal");
+    expect(updatedExisting?.name_ta).toBe("ராயல் பொங்கல்");
+  });
 });

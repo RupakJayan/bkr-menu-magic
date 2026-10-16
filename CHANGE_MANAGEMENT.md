@@ -9,6 +9,7 @@
 1. [Change Management Philosophy & Governance](#1-change-management-philosophy--governance)
 2. [Version History & Release Matrix](#2-version-history--release-matrix)
 3. [Comprehensive Change Log](#3-comprehensive-change-log)
+   - [v1.5.7 — Live Bilingual Update Reflection in Session Review, Friendly Custom Dish Badging & Human-Readable IDs](#v157--live-bilingual-update-reflection-in-session-review-friendly-custom-dish-badging--human-readable-ids)
    - [v1.5.6 — Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback for AI Voice Assistant](#v156--inline-gemini-api-key-setup--multi-tier-browser-storage-fallback-for-ai-voice-assistant)
    - [v1.5.5 — Session Dish Serving Sequence Arrangement & Traditional South Indian Catering Course Sorting](#v155--session-dish-serving-sequence-arrangement--traditional-south-indian-catering-course-sorting)
    - [v1.5.4 — AI Catering Voice Assistant (Gemini 2.5 Flash), Mic Echo Guard, and Unlocked Mobile Keyboard Inputs](#v154--ai-catering-voice-assistant-gemini-25-flash-mic-echo-guard-and-unlocked-mobile-keyboard-inputs)
@@ -46,6 +47,7 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 | Version | Release Date | Summary of Core Deliverables | Verification Status |
 |---|---|---|---|
+| **v1.5.7** | October 2026 | Live Bilingual Update Reflection in Session Review (`SessionMenuManageDialog`), Friendly Custom Dish Badging (`✨ Custom Dish`), Human-Readable Custom IDs (`custom_slug_suffix`), Voice Review Edit Persistence (`commitVoiceDishesToSession`), Headless Resilient Storage, Unit Test UT-14 | ✅ Verified (23/23 Tests & Clean Build Pass) |
 | **v1.5.6** | October 2026 | Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback (`localStorage`, `sessionStorage`, `window`, `.env`), 1-Click Key Persist, Friendly Guidance, Uninterrupted Speech Recording | ✅ Verified (22/22 Tests & Clean Build Pass) |
 | **v1.5.5** | October 2026 | Session Dish Serving Sequence Arrangement (Move Up/Down, Drag-and-Drop, Sequence numbering #1, #2...), 1-Click Traditional South Indian Catering Course Sequence (Starters → Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts), Alphabetical & Category Sorting, Live Serving Order Strip on Main Planner, Unit Test UT-13 | ✅ Verified (22/22 Tests & Clean Build Pass) |
 | **v1.5.4** | October 2026 | World-Class AI Catering Voice Assistant powered by Gemini 2.5 Flash, Zero Audio Reflection & Mic Echo Guard (Muted synthetic TTS, auto-pause on input focus), Mobile Virtual Keyboard Lock Elimination (Non-overwriting inputs, `autoComplete="off"`, `autoCorrect="off"`, `spellCheck={false}`), Unit Test UT-12 | ✅ Verified (21/21 Tests & Clean Build Pass) |
@@ -62,6 +64,35 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 ---
 
 ## 3. Comprehensive Change Log
+
+### v1.5.7 — Live Bilingual Update Reflection in Session Review, Friendly Custom Dish Badging & Human-Readable IDs
+
+#### 1. Background & Problem Statement
+Users modifying dishes in the Session Review dialog (`SessionMenuManageDialog.tsx`) and the AI Voice Assistant Review table encountered three noticeable inconsistencies:
+1. **Edits Not Reflected in Session Review**: Editing a dish's English or Tamil name and clicking "Save" did not immediately update the displayed card in the session review list. Because `sessionDishes` was memoized solely on `session.selectedDishes`, and editing a name within the same category did not change the dish key, `useMemo` never re-executed, leaving the old unedited dish names on screen.
+2. **Ugly Technical ID Display**: The dish editing card showed raw internal technical IDs such as `custom-46fe8a8a-b851-41b9-89b5-4a6c4bda3068` in a badge (`<Badge>{dish.id}</Badge>`), confusing caterers.
+3. **Voice Review Edits Dropped**: When reviewing extracted voice dishes in `AiVoiceAssistantDialog.tsx`, if a user corrected an existing match's English or Tamil name, `commitVoiceDishesToSession` previously added the unedited catalog match directly, dropping the user's manual corrections.
+4. **Custom Dish Update Matching**: `updateDishInCatalog` checked `dishId.startsWith("custom-")`, failing to recognize custom dishes generated with other custom prefixes like `custom_`.
+
+#### 2. Key Engineering Solutions Implemented
+- **Instant Reactive Updates in `SessionMenuManageDialog.tsx`**:
+  - Introduced `localCatalogVersion` state that automatically increments on `saveEditedDish` and `handleAddNewDish`.
+  - Added `localCatalogVersion` to `sessionDishes` useMemo dependency array, ensuring instant re-evaluation and immediate re-render of corrected English and Tamil names.
+  - Linked `onCatalogChanged` in `MenuSelectionStep.tsx` to touch `menu.updatedAt`, keeping downstream planning steps, PDF export, and Word DOCX engines in sync.
+- **Friendly Custom Dish Badging**:
+  - Replaced the raw technical `{dish.id}` badge with an elegant, human-friendly badge:
+    - Custom dishes display: `✨ Custom Dish` (gold/amber badge).
+    - Catalog items display: `Catalog Item`.
+  - Cleaned up custom dish ID generation in `localAdminService.ts` to use semantic slugs (e.g. `custom_madurai-kari-dosai_x7k2`) instead of raw 36-character UUID strings.
+- **Voice Review Edit Persistence in `commitVoiceDishesToSession`**:
+  - `commitVoiceDishesToSession` in `aiVoiceAssistantService.ts` now inspects user-modified names on existing matches. If the user changed the English name, Tamil name, or category during voice review, `updateDishInCatalog` and `registerDishToDictionary` are called before adding to the session.
+- **Resilient Multi-Environment Storage Fallback**:
+  - Added in-memory fallback store to `readStored` and `writeStored` in `localAdminService.ts` to ensure consistent data persistence across headless Node.js tests and browser environments.
+- **Automated Verification**:
+  - Added Unit Test `UT-14` in `tests/unit.test.ts`. All 23 Playwright integration, end-to-end, and unit tests passing green (`23 passed`).
+  - Production build compiled successfully (`npm run build`).
+
+---
 
 ### v1.5.6 — Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback for AI Voice Assistant
 

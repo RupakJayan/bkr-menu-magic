@@ -1530,7 +1530,10 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         onNextSession={handleNext}
         isLastSession={nextSessionInfo.isLast}
         nextSessionName={nextSessionInfo.name}
-        onCatalogChanged={() => setCatalogVersion((v) => v + 1)}
+        onCatalogChanged={() => {
+          setCatalogVersion((v) => v + 1);
+          onMenuChange({ ...menu, updatedAt: new Date() });
+        }}
       />
 
       {/* World-Class AI Voice Assistant Dialog (Powered by Gemini 2.5 Flash, Zero Audio Reflection) */}
@@ -1542,7 +1545,10 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         sessionDishKeys={currentSession.selectedDishes}
         categories={categories as string[]}
         onAddDishToSession={(cat, dishId) => toggleDish(cat, dishId)}
-        onCatalogUpdated={() => setCatalogVersion((v) => v + 1)}
+        onCatalogUpdated={() => {
+          setCatalogVersion((v) => v + 1);
+          onMenuChange({ ...menu, updatedAt: new Date() });
+        }}
       />
     </div>
   );

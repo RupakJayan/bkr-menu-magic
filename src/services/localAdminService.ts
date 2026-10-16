@@ -74,8 +74,18 @@ const DEFAULT_SETTINGS: BusinessSettings = {
   ],
 };
 
+const inMemoryStore: Record<string, string> = {};
+
 const readStored = <T,>(key: string, fallback: T): T => {
-  if (typeof window === "undefined" || !window.localStorage) return fallback;
+  if (typeof window === "undefined" || !window.localStorage) {
+    const mem = inMemoryStore[key];
+    if (mem === undefined) return fallback;
+    try {
+      return JSON.parse(mem) as T;
+    } catch {
+      return fallback;
+    }
+  }
   const raw = window.localStorage.getItem(key);
   if (raw === null) return fallback;
   try {
@@ -87,9 +97,13 @@ const readStored = <T,>(key: string, fallback: T): T => {
 };
 
 const writeStored = <T,>(key: string, value: T): void => {
-  if (typeof window === "undefined" || !window.localStorage) return;
+  const serialized = JSON.stringify(value);
+  if (typeof window === "undefined" || !window.localStorage) {
+    inMemoryStore[key] = serialized;
+    return;
+  }
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    window.localStorage.setItem(key, serialized);
   } catch (error) {
     console.error(`Unable to save BKR data (${key}).`, error);
     throw new Error(`Could not save ${key}. Check browser storage and available space.`);
@@ -226,7 +240,7 @@ export const getManagedMenuCatalog = (): MenuCatalog => {
       const key = buildCatalogKey(category, dish.id);
       const override = state.overrides[key];
       if (override?.isAvailable === false) return [];
-      return [{ ...dish, ...override }];
+      return [{ ...dish, category, ...override }];
     });
     catalog[category] = availableDishes;
   }
@@ -246,7 +260,14 @@ export const addCustomDishToCatalog = (dish: {
   image?: string;
 }): CustomMenuDish => {
   const state = getMenuAdminState();
-  const id = `custom-${crypto.randomUUID()}`;
+  const rawSlug = (dish.name_en || dish.name_ta || "item")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24);
+  const slug = rawSlug || "dish";
+  const suffix = Math.random().toString(36).substring(2, 6);
+  const id = `custom_${slug}_${suffix}`;
   const newCustomDish: CustomMenuDish = {
     id,
     category: dish.category.trim() || "Special Dishes",
@@ -274,16 +295,19 @@ export const updateDishInCatalog = (
   }
 ): void => {
   const state = getMenuAdminState();
-  const isCustom = dishId.startsWith("custom-");
+  const isCustom = dishId.startsWith("custom") || state.customDishes.some((d) => d.id === dishId);
   if (isCustom) {
     const updatedCustom = state.customDishes.map((dish) => {
       if (dish.id === dishId) {
+        const nextEn = updates.name_en !== undefined ? updates.name_en.trim() : dish.name_en;
+        const nextTa = updates.name_ta !== undefined ? updates.name_ta.trim() : dish.name_ta;
+        const nextCat = updates.category !== undefined ? updates.category.trim() : dish.category;
         return {
           ...dish,
-          name: updates.name_en?.trim() || dish.name,
-          name_en: updates.name_en?.trim() || dish.name_en,
-          name_ta: updates.name_ta?.trim() || dish.name_ta,
-          category: updates.category?.trim() || dish.category,
+          name: nextEn || nextTa || dish.name,
+          name_en: nextEn || dish.name_en,
+          name_ta: nextTa || dish.name_ta,
+          category: nextCat || dish.category,
           estimatedCost: updates.estimatedCost !== undefined ? updates.estimatedCost : dish.estimatedCost,
           isVegetarian: updates.isVegetarian !== undefined ? updates.isVegetarian : dish.isVegetarian,
         };
@@ -294,12 +318,14 @@ export const updateDishInCatalog = (
   } else {
     const key = buildCatalogKey(category, dishId);
     const existing = state.overrides[key] || {};
+    const nextEn = updates.name_en !== undefined ? updates.name_en.trim() : existing.name_en;
+    const nextTa = updates.name_ta !== undefined ? updates.name_ta.trim() : existing.name_ta;
     const updatedOverrides = {
       ...state.overrides,
       [key]: {
         ...existing,
-        name_en: updates.name_en?.trim() || existing.name_en,
-        name_ta: updates.name_ta?.trim() || existing.name_ta,
+        name_en: nextEn || existing.name_en,
+        name_ta: nextTa || existing.name_ta,
         estimatedCost: updates.estimatedCost !== undefined ? updates.estimatedCost : existing.estimatedCost,
         isVegetarian: updates.isVegetarian !== undefined ? updates.isVegetarian : existing.isVegetarian,
       },

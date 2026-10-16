@@ -1,5 +1,5 @@
 import { getGeminiApiKey, matchDishToCatalog } from "@/services/aiLensService";
-import { getManagedMenuCatalog, addCustomDishToCatalog, buildCatalogKey } from "@/services/localAdminService";
+import { getManagedMenuCatalog, addCustomDishToCatalog, updateDishInCatalog, buildCatalogKey } from "@/services/localAdminService";
 import { registerDishToDictionary, isTamilScript, romanizeTamilToEnglish } from "@/services/tamilTranslationService";
 import type { CatalogDish, Dish } from "@/types/menu";
 
@@ -323,22 +323,45 @@ export const commitVoiceDishesToSession = (
   for (const item of dishes) {
     if (!item.selected || item.isAlreadyInSession) continue;
 
+    const userEn = (item.name_en || "").trim();
+    const userTa = (item.name_ta || "").trim();
+    const userCat = (item.category || "").trim();
+
     if (item.catalogDish) {
-      // Existing catalog match: simply add to session
-      onAddDishToSession(item.catalogDish.category, item.catalogDish.id);
+      const origEn = (item.catalogDish.name_en || item.catalogDish.name || "").trim();
+      const origTa = (item.catalogDish.name_ta || "").trim();
+      const origCat = (item.catalogDish.category || item.category || "").trim();
+      const targetCat = userCat || origCat;
+
+      // If user modified English, Tamil, or Category during review, update the catalog dish!
+      if ((userEn && userEn !== origEn) || (userTa && userTa !== origTa) || (userCat && userCat !== origCat)) {
+        updateDishInCatalog(origCat, item.catalogDish.id, {
+          name_en: userEn || origEn,
+          name_ta: userTa || origTa,
+          category: targetCat,
+        });
+        registerDishToDictionary(userEn || origEn, userTa || origTa, targetCat);
+        newDishesCreated++;
+      }
+
+      onAddDishToSession(targetCat, item.catalogDish.id);
       addedCount++;
     } else {
-      // New custom dish: create in catalog, register in dictionary, then add to session
+      // New custom dish: create in catalog with the user's corrected names
+      const finalEn = userEn || userTa || "Special Dish";
+      const finalTa = userTa || userEn || "சிறப்பு உணவு";
+      const finalCat = userCat || "Special Dishes";
+
       const created = addCustomDishToCatalog({
-        category: item.category,
-        name_en: item.name_en,
-        name_ta: item.name_ta,
+        category: finalCat,
+        name_en: finalEn,
+        name_ta: finalTa,
         isVegetarian: true,
       });
 
-      registerDishToDictionary(item.name_en, item.name_ta, item.category);
+      registerDishToDictionary(finalEn, finalTa, finalCat);
 
-      onAddDishToSession(item.category, created.id);
+      onAddDishToSession(finalCat, created.id);
       addedCount++;
       newDishesCreated++;
     }

@@ -88,6 +88,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
   const [editDishEn, setEditDishEn] = useState("");
   const [editDishTa, setEditDishTa] = useState("");
   const [editDishCategory, setEditDishCategory] = useState("");
+  const [localCatalogVersion, setLocalCatalogVersion] = useState(0);
 
   // Resolve all selected dishes for the session
   const sessionDishes: Array<{ key: string; dish: CatalogDish }> = useMemo(() => {
@@ -97,7 +98,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
         return dish ? { key, dish } : null;
       })
       .filter((item): item is { key: string; dish: CatalogDish } => item !== null);
-  }, [session.selectedDishes]);
+  }, [session.selectedDishes, localCatalogVersion]);
 
   // Group dishes by category
   const filteredDishes = useMemo(() => {
@@ -348,6 +349,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
       registerDishToDictionary(nameEn, nameTa, cat);
 
       onAddDish(cat, created.id);
+      setLocalCatalogVersion((v) => v + 1);
       onCatalogChanged();
 
       toast({
@@ -412,6 +414,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
         onAddDish(newCategory, oldDish.id);
       }
 
+      setLocalCatalogVersion((v) => v + 1);
       onCatalogChanged();
       setEditingDishKey(null);
 
@@ -657,7 +660,17 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-acc">Edit Dish #{index + 1}</span>
-                        <Badge variant="outline" className="text-[10px]">{dish.id}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          {dish.id.startsWith("custom") ? (
+                            <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-semibold">
+                              ✨ Custom Dish
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] text-mute border-line">
+                              Catalog Item
+                            </Badge>
+                          )}
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
