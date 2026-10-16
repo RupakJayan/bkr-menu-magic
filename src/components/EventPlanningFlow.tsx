@@ -11,6 +11,7 @@ interface EventPlanningFlowProps {
   menu: EventMenu;
   onMenuChange: (menu: EventMenu) => void;
   onStartNewEvent?: () => void;
+  onOpenAiLens?: () => void;
 }
 
 const STEPS: { id: PlanningStep; label: string; compactLabel: string }[] = [
@@ -25,6 +26,7 @@ export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({
   menu,
   onMenuChange,
   onStartNewEvent,
+  onOpenAiLens,
 }) => {
   const [currentStep, setCurrentStep] = useState<PlanningStep>('event-details');
 
@@ -100,7 +102,12 @@ export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({
       {/* Step Content */}
       <div className="planner-step-content">
         {currentStep === 'event-details' && (
-          <EventDetailsStep menu={menu} onMenuChange={onMenuChange} onNext={handleNext} />
+          <EventDetailsStep
+            menu={menu}
+            onMenuChange={onMenuChange}
+            onNext={handleNext}
+            onOpenAiLens={onOpenAiLens}
+          />
         )}
         {currentStep === 'session-planning' && (
           <SessionPlanningStep menu={menu} onMenuChange={onMenuChange} onNext={handleNext} onPrevious={handlePrevious} />

@@ -96,9 +96,18 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
   };
 
   const handleSave = () => {
+    const sanitizedDays = days.map((day) => ({
+      ...day,
+      sessions: day.sessions.map((session) => ({
+        ...session,
+        headCount: Math.max(1, Number(session.headCount) || 1),
+        ratePerPerson: Math.max(0, Number(session.ratePerPerson) || 0),
+      })),
+    }));
+
     onMenuChange({
       ...menu,
-      days,
+      days: sanitizedDays,
       updatedAt: new Date(),
     });
     onNext();
@@ -201,9 +210,17 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
                       <Input
                         type="number"
                         min="1"
-                        value={session.headCount}
-                        onChange={(e) => updateSession(dayIndex, sessionIndex, 'headCount', parseInt(e.target.value) || 1)}
-                        placeholder="Number of people"
+                        value={session.headCount === undefined || session.headCount === null ? '' : session.headCount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          updateSession(dayIndex, sessionIndex, 'headCount', val === '' ? ('' as any) : Math.max(0, parseInt(val, 10) || 0));
+                        }}
+                        onBlur={() => {
+                          if (!session.headCount || Number(session.headCount) < 1) {
+                            updateSession(dayIndex, sessionIndex, 'headCount', 1);
+                          }
+                        }}
+                        placeholder="e.g. 50"
                         className="h-12 rounded-lg border-2 border-pink-300"
                       />
                     </div>
@@ -213,9 +230,12 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
                         type="number"
                         min="0"
                         step="1"
-                        value={session.ratePerPerson ?? 0}
-                        onChange={(e) => updateSession(dayIndex, sessionIndex, 'ratePerPerson', Math.max(0, Number(e.target.value) || 0))}
-                        placeholder="Enter quoted rate"
+                        value={session.ratePerPerson === undefined || session.ratePerPerson === null ? '' : session.ratePerPerson}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          updateSession(dayIndex, sessionIndex, 'ratePerPerson', val === '' ? ('' as any) : Math.max(0, parseFloat(val) || 0));
+                        }}
+                        placeholder="0"
                         className="h-12 rounded-lg border-2 border-pink-300"
                       />
                     </div>

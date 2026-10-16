@@ -77,12 +77,12 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
     }
   };
 
-  const updateSessionRate = (dayIndex: number, sessionIndex: number, ratePerPerson: number) => {
+  const updateSessionRate = (dayIndex: number, sessionIndex: number, ratePerPerson: number | string) => {
     const updatedDays = menu.days.map((day, index) => index === dayIndex
       ? {
           ...day,
           sessions: day.sessions.map((session, sessionIndexValue) => sessionIndexValue === sessionIndex
-            ? { ...session, ratePerPerson }
+            ? { ...session, ratePerPerson: ratePerPerson === '' ? ('' as any) : Math.max(0, Number(ratePerPerson) || 0) }
             : session),
         }
       : day);
@@ -91,7 +91,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
 
   const calculateSessionTotal = (dayIndex: number, sessionIndex: number) => {
     const session = menu.days[dayIndex].sessions[sessionIndex];
-    return (session.ratePerPerson ?? 0) * (session.headCount ?? 0);
+    return (Number(session.ratePerPerson) || 0) * (Number(session.headCount) || 0);
   };
 
   const calculateGrandTotal = () => {
@@ -101,7 +101,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
         total += calculateSessionTotal(dayIndex, sessionIndex);
       });
     });
-    return total + (menu.transportCharge ?? 0);
+    return total + (Number(menu.transportCharge) || 0);
   };
 
   const categories = Object.keys(menuData) as Array<keyof typeof menuData>;
@@ -228,8 +228,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                             min="0"
                             step="1"
                             placeholder="0"
-                            value={session.ratePerPerson ?? 0}
-                            onChange={(e) => updateSessionRate(dayIndex, sessionIndex, Math.max(0, Number(e.target.value) || 0))}
+                            value={session.ratePerPerson === undefined || session.ratePerPerson === null ? '' : session.ratePerPerson}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              updateSessionRate(dayIndex, sessionIndex, val === '' ? '' : Math.max(0, parseFloat(val) || 0));
+                            }}
                             className="w-32 pl-7 font-bold text-base h-10 border-2 border-pink-300 focus:border-pink-500 rounded-lg bg-white"
                           />
                         </div>
@@ -239,7 +242,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                         <p className="text-xl font-bold text-pink-700">
                           ₹{sessionTotal.toLocaleString('en-IN')}
                         </p>
-                        <p className="text-[11px] text-gray-500">({session.headCount} × ₹{session.ratePerPerson ?? 0})</p>
+                        <p className="text-[11px] text-gray-500">({session.headCount} × ₹{Number(session.ratePerPerson) || 0})</p>
                       </div>
                     </div>
                   </div>

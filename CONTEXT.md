@@ -20,6 +20,8 @@
 | **PDF Generation** | `jspdf` + Canvas 2D | Multi-page `.pdf` generator with canvas-rendered Tamil font support |
 | **Cloud Auth** | Google Identity Services (GIS) | Client-side OAuth 2.0 popup authentication |
 | **Cloud Storage** | Google Drive REST API v3 | Subfolder organization, 4-document uploads, and Google Sheets |
+| **AI Vision OCR** | Google Gemini 1.5 Flash | Multimodal recognition of handwritten and printed catering menus |
+| **Speech Recognition** | Web Speech API | Dual-language (Tamil & English) voice search and continuous add |
 | **Testing** | Playwright (14 tests) | Unit, integration, and end-to-end browser tests |
 
 ---
@@ -159,6 +161,7 @@ Both Word (`.docx`) and PDF (`.pdf`) are carefully synchronized to present ident
 | **Kitchen Google Maps Link** | [`src/pages/Home.tsx`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/pages/Home.tsx) | `kitchenMapUrl` | Set to `https://maps.app.goo.gl/YXXNzhruoA9XZwn26` |
 | **Business Default Settings** | [`src/services/localAdminService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/localAdminService.ts) | `DEFAULT_SETTINGS` | Default company name, terms and conditions in English & Tamil |
 | **Menu Catalog & Pricing** | [`src/data/menuData.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/data/menuData.ts) | `menuData` | Master dish catalog organized by category |
+| **Gemini AI Vision API Key** | [`.env`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/.env) & [`src/services/aiLensService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/aiLensService.ts) | `VITE_GEMINI_API_KEY` / `DEFAULT_GEMINI_API_KEY` | Google AI Studio API key for multimodal handwritten menu digitizing |
 
 ---
 
@@ -214,3 +217,61 @@ npx playwright test --ui
    - Any tweak to table headers or font styles in PDF must be mirrored in `docxExportService.ts`.
 5. **ALWAYS verify with `npm test` and `npm run build`**:
    - Before committing any changes, run `npm test` to verify all 14 tests pass and `npm run build` to ensure the production rollup succeeds.
+
+---
+
+## 8. AI Menu Lens, Voice Typing & Catalog Extension
+
+### AI Menu Lens Architecture
+- **Service**: [`src/services/aiLensService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/aiLensService.ts)
+- **Component**: [`src/components/ai/AiMenuLensDialog.tsx`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/components/ai/AiMenuLensDialog.tsx)
+- **Model**: `gemini-1.5-flash`
+- **Payload Format**: Base64 image + structured multimodal prompt instructing Gemini to return a strict JSON schema:
+  ```json
+  {
+    "dishes": [
+      {
+        "name": "Ven Pongal",
+        "nameTa": "வெண் பொங்கல்",
+        "category": "Morning Tiffin",
+        "notes": "With ghee & cashews"
+      }
+    ],
+    "estimatedHeadcount": 250,
+    "specialInstructions": "Jain options for 25 pax"
+  }
+  ```
+- **Fallback Resilience**: If the JSON response is wrapped in markdown code blocks or has loose formatting, `aiLensService.ts` executes clean regex stripping and regex line-by-line fallback parsing.
+- **Workflow**:
+  1. User drops or captures a photo.
+  2. Gemini extracts dishes with confidence indicators.
+  3. User reviews and edits any item inline in a structured table.
+  4. One-click adds new dishes to the catalog via `addCustomDishToCatalog` and injects them into the active menu session.
+
+### Bilingual Voice Typing
+- **Service**: [`src/services/voiceTypingService.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/services/voiceTypingService.ts)
+- **Hook**: [`src/hooks/useVoiceTyping.ts`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/hooks/useVoiceTyping.ts)
+- **Component**: [`src/components/steps/MenuSelectionStep.tsx`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/src/components/steps/MenuSelectionStep.tsx)
+- **Modes**:
+  - `single`: Transcribes speech directly into the search bar, unlocking real-time uncapped catalog matching.
+  - `continuous`: Listens continuously during consultation; as dishes are spoken, it identifies matching catalog entries and appends them into the session live.
+
+### Number Input Handling Pattern
+- **Rule**: Never bind numeric inputs directly to immediate number coercions (`parseInt(e.target.value) || 1`).
+- **Pattern**:
+  - Maintain a local string state (`guestCountStr`, `rateStr`).
+  - Allow the field to be completely cleared (`""`) when backspaced.
+  - On `onBlur`, parse and validate the value; if empty or invalid, fall back to safe defaults.
+
+---
+
+## 9. Change Management & Audit Trail
+
+All code modifications, architecture enhancements, and bug resolutions are tracked in:
+👉 [`CHANGE_MANAGEMENT.md`](file:///C:/Users/rupak/.gemini/antigravity/scratch/bkr-menu-magic/CHANGE_MANAGEMENT.md)
+
+Whenever making changes:
+1. Update `CHANGE_MANAGEMENT.md` with version number, problem solved, modified files, and test outcomes.
+2. Ensure theme tokens from Theme Pack 164 (`--tp-acc`, `--tp-surf`, `--tp-line`) are preserved.
+3. Validate with `npx tsc --noEmit` and `npm run build`.
+

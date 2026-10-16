@@ -1,11 +1,19 @@
 # 🚀 BKR Catering - Product Roadmap & Feature Ideas
 
 ## 📋 Current Status
-✅ Multi-step event planning flow
-✅ Kiosk-style menu selection with images
-✅ Review & edit with cost customization
-✅ PDF & DOCX generation (English & Tamil)
-✅ Modern UI with Tamil Nadu traditional theme
+✅ Multi-step event planning flow (Event Details, Sessions, Menu Selection, Review)
+✅ Kiosk-style menu selection with images & categorized view
+✅ Review & edit with financial calculations & cost customization
+✅ PDF & DOCX generation (English & Tamil) with synchronized traditional styling
+✅ Modern UI with Tamil Nadu traditional theme (Theme Pack 164 - Burgundy/Gold/Parchment)
+✅ Automated Google Drive cloud sync (4 documents per event) & Master Google Sheet
+✅ Google Identity Services (GIS) OAuth 2.0 with authorized admin allowlist
+✅ 7-Module Admin Dashboard (Overview, Events, Calendar, Users, Catalog, Analytics, Settings)
+✅ AI Menu Lens (Gemini 1.5 Flash Vision OCR for handwritten and paper menus)
+✅ Bilingual Voice Typing in Search (Tamil & English; Single & Continuous modes)
+✅ Precision Number Input Handling (Backspace clearing support without snapping)
+✅ Uncapped Catalog Search & Inline Bilingual Custom Dish Creation
+✅ Comprehensive Change Management & Tracking ([`CHANGE_MANAGEMENT.md`](CHANGE_MANAGEMENT.md))
 
 ---
 

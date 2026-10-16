@@ -170,8 +170,17 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onMenuChange }) =>
                 id="headcount"
                 type="number"
                 min="1"
-                value={menu.headCount}
-                onChange={(e) => handleHeadCountChange(parseInt(e.target.value) || 1)}
+                placeholder="1"
+                value={menu.headCount === undefined || menu.headCount === null ? '' : menu.headCount}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleHeadCountChange(val === '' ? ('' as any) : Math.max(0, parseInt(val, 10) || 0));
+                }}
+                onBlur={() => {
+                  if (!menu.headCount || Number(menu.headCount) < 1) {
+                    handleHeadCountChange(1);
+                  }
+                }}
               />
             </div>
 
@@ -243,8 +252,17 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onMenuChange }) =>
                 id="quantity"
                 type="number"
                 min="1"
-                value={newItem.quantity}
-                onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                placeholder="1"
+                value={newItem.quantity === undefined || newItem.quantity === null ? '' : newItem.quantity}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewItem({ ...newItem, quantity: val === '' ? ('' as any) : Math.max(0, parseInt(val, 10) || 0) });
+                }}
+                onBlur={() => {
+                  if (!newItem.quantity || Number(newItem.quantity) < 1) {
+                    setNewItem({ ...newItem, quantity: 1 });
+                  }
+                }}
               />
             </div>
 
@@ -286,8 +304,17 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onMenuChange }) =>
                         <Input
                           type="number"
                           min="1"
-                          value={item.quantity}
-                          onChange={(e) => handleUpdateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
+                          placeholder="1"
+                          value={item.quantity === undefined || item.quantity === null ? '' : item.quantity}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleUpdateItem(item.id, 'quantity', val === '' ? ('' as any) : Math.max(0, parseInt(val, 10) || 0));
+                          }}
+                          onBlur={() => {
+                            if (!item.quantity || Number(item.quantity) < 1) {
+                              handleUpdateItem(item.id, 'quantity', 1);
+                            }
+                          }}
                           className="h-8 text-right w-20"
                         />
                       </TableCell>
@@ -296,8 +323,12 @@ export const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onMenuChange }) =>
                           type="number"
                           min="0"
                           step="0.01"
-                          value={item.unitCost}
-                          onChange={(e) => handleUpdateItem(item.id, 'unitCost', parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                          value={item.unitCost === undefined || item.unitCost === null ? '' : item.unitCost}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleUpdateItem(item.id, 'unitCost', val === '' ? ('' as any) : Math.max(0, parseFloat(val) || 0));
+                          }}
                           className="h-8 text-right w-24"
                         />
                       </TableCell>

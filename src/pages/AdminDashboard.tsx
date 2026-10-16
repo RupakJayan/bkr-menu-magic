@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowDownToLine, CalendarDays, Download, FileJson, LogOut, Menu as MenuIcon, Plus, Search, Trash2, Upload, Users } from "lucide-react";
+import { ArrowDownToLine, CalendarDays, Download, FileJson, LogOut, Menu as MenuIcon, Plus, Search, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import type { EventMenu } from "@/types/menu";
+import { AiMenuLensDialog } from "@/components/ai/AiMenuLensDialog";
+import { getGeminiApiKey, setGeminiApiKey } from "@/services/aiLensService";
 import {
   buildCatalogKey,
   deleteContact,
@@ -41,6 +43,7 @@ import {
   getCachedBkrFolderId,
   getOrCreateBkrFolder,
   loadMenusFromGoogleDrive,
+  saveMenuDataToDrive,
   saveMenuToGoogleDrive,
   shareFolderWithAuthorizedAdmins,
   syncAnalyticsSpreadsheetToGoogleDrive,
@@ -126,6 +129,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [contactDraft, setContactDraft] = useState({ name: "", email: "", phone: "", role: "Staff" as LocalContact["role"] });
   const [newDish, setNewDish] = useState({ category: "", name_en: "", name_ta: "", estimatedCost: "0" });
   const [notice, setNotice] = useState("");
+  const [aiLensOpen, setAiLensOpen] = useState(false);
+  const [geminiKey, setGeminiKey] = useState(getGeminiApiKey);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,14 +165,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       });
 
       const currentEvents = getSavedEvents();
-      for (const event of currentEvents) {
-        await saveMenuToGoogleDrive(event.menu, token);
-      }
+      // Fast parallel sync of all local events to Drive
+      await Promise.all(
+        currentEvents.map((event) =>
+          saveMenuDataToDrive(event.menu, token).catch((e) => {
+            console.warn(`Could not sync event ${event.id}:`, e);
+            return null;
+          }),
+        ),
+      );
 
       await syncAnalyticsSpreadsheetToGoogleDrive(currentEvents, token);
 
       setEvents(getSavedEvents());
-      setNotice(`Google Drive synced successfully (${currentEvents.length} events organized into subfolders with 4 files each + Master Analytics Spreadsheet).`);
+      setNotice(`Google Drive synced successfully (${currentEvents.length} events synced).`);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       if (errMsg.includes("403") || errMsg.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT") || errMsg.includes("insufficientPermissions")) {
@@ -272,7 +283,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       if (token) {
         const found = updated.find((e) => e.id === id);
         if (found) {
-          saveMenuToGoogleDrive(found.menu, token)
+          saveMenuDataToDrive(found.menu, token)
             .then(() => syncAnalyticsSpreadsheetToGoogleDrive(updated, token).catch(() => {}))
             .catch(() => {});
         }
@@ -402,6 +413,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             />
             <Button variant="outline" onClick={() => fileInputRef.current?.click()} title="Import menu from .json backup file">
               <Upload className="mr-2 h-4 w-4" />Import menu
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setAiLensOpen(true)}
+              className="border-acc/40 bg-acc/10 hover:bg-acc/15 text-acc dark:text-acc font-semibold shadow-theme-sm"
+              title="Convert photo of handwritten catering notes into a menu"
+            >
+              <Sparkles className="mr-1.5 h-4 w-4 text-acc" />
+              AI Menu Lens
             </Button>
             <Button variant="outline" onClick={() => startBooking()}>Create event</Button>
             <Button variant="outline" onClick={exportBackup}><FileJson className="mr-2 h-4 w-4" />Backup</Button>
@@ -581,11 +601,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               if (custom) updateMenuState({ ...menuState, customDishes: menuState.customDishes.map((item) => item.id === dish.id ? { ...item, name_ta: e.target.value } : item) });
                               else updateMenuState({ ...menuState, overrides: { ...menuState.overrides, [key]: { ...menuState.overrides[key], name_ta: e.target.value } } });
                             }} />
-                            <Input aria-label="Dish estimated cost" type="number" min="0" value={dish.estimatedCost ?? 0} onChange={(e) => {
-                              const estimatedCost = Math.max(0, Number(e.target.value) || 0);
-                              if (custom) updateMenuState({ ...menuState, customDishes: menuState.customDishes.map((item) => item.id === dish.id ? { ...item, estimatedCost } : item) });
-                              else updateMenuState({ ...menuState, overrides: { ...menuState.overrides, [key]: { ...menuState.overrides[key], estimatedCost } } });
-                            }} />
+                            <Input
+                              aria-label="Dish estimated cost"
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={dish.estimatedCost === undefined || dish.estimatedCost === null ? '' : dish.estimatedCost}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const estimatedCost = val === '' ? ('' as any) : Math.max(0, Number(val) || 0);
+                                if (custom) updateMenuState({ ...menuState, customDishes: menuState.customDishes.map((item) => item.id === dish.id ? { ...item, estimatedCost } : item) });
+                                else updateMenuState({ ...menuState, overrides: { ...menuState.overrides, [key]: { ...menuState.overrides[key], estimatedCost } } });
+                              }}
+                            />
                             {custom ? (
                               <Button variant="ghost" size="icon" aria-label={`Delete ${dish.name_en}`} onClick={() => updateMenuState({ ...menuState, customDishes: menuState.customDishes.filter((item) => item.id !== dish.id) })}><Trash2 className="h-4 w-4 text-rose-600" /></Button>
                             ) : (
@@ -696,6 +724,42 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <TermsEditor value={settings.termsTamil} onChange={(termsTamil) => setSettings({ ...settings, termsTamil })} />
               <Button className="mt-3" onClick={saveSettings}>Save Tamil terms</Button>
             </Card>
+            <Card title="Google Gemini Vision AI (AI Menu Lens)">
+              <p className="mb-3 text-sm text-mute">
+                Powers AI Menu Lens to read handwritten Tamil & English catering notes and convert them into digital menus.
+              </p>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-ink">Gemini API Key</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="Paste Gemini API key (AIzaSy...)"
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                  />
+                  <Button
+                    onClick={() => {
+                      setGeminiApiKey(geminiKey);
+                      setNotice("Gemini API key saved.");
+                    }}
+                  >
+                    Save Key
+                  </Button>
+                </div>
+                <p className="text-xs text-mute">
+                  Stored securely in your browser's local storage.
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-acc font-semibold hover:underline inline-flex items-center ml-1"
+                  >
+                    Get a free key from Google AI Studio →
+                  </a>
+                </p>
+              </div>
+            </Card>
+
             <Card title="Local storage and data export">
               <p className="mb-3 text-sm text-mute">This admin keeps events locally for instant load and syncs with Google Drive. Keep regular backups if you clear browser data or change devices.</p>
               <div className="flex flex-wrap gap-2">
@@ -706,6 +770,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
         )}
       </main>
+
+      <AiMenuLensDialog
+        open={aiLensOpen}
+        onOpenChange={setAiLensOpen}
+        onMenuLoaded={(loadedMenu) => {
+          saveEventMenu(loadedMenu);
+          window.localStorage.setItem("currentMenu", JSON.stringify(loadedMenu));
+          navigate("/menu-creator");
+        }}
+      />
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function OpeningLoader({ onComplete }: OpeningLoaderProps) {
   useEffect(() => {
     const timeout = window.setTimeout(
       onComplete,
-      reducedMotion ? 900 : isDark ? 1600 : 6000,
+      reducedMotion ? 900 : isDark ? 1400 : 1800,
     );
 
     if (!reducedMotion && !isDark) {

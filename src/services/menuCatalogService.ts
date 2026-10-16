@@ -11,7 +11,7 @@ import type { CatalogDish, Dish, MenuCatalog } from "@/types/menu";
  * the data file itself completely untouched.
  */
 export const menuCatalog: MenuCatalog = menuData;
-export { getManagedMenuCatalog } from "@/services/localAdminService";
+export { getManagedMenuCatalog, addCustomDishToCatalog, updateDishInCatalog, removeCustomDishFromCatalog } from "@/services/localAdminService";
 
 /** Category names, in the order they appear in the catalog. */
 export const getCategories = (): string[] => Object.keys(getManagedMenuCatalog());

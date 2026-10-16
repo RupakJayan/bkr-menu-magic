@@ -2,19 +2,25 @@
 
 ## ✅ What's Already Implemented
 
-### Current Features (v1.0)
-1. ✅ Multi-step event planning flow
-2. ✅ Event details collection (client, venue, dates)
-3. ✅ Session planning (multiple sessions per day)
-4. ✅ Kiosk-style menu selection with images
-5. ✅ Review & edit with cost customization
-6. ✅ Add/Remove dishes in review
-7. ✅ Custom cost per dish
-8. ✅ Grand total calculation
-9. ✅ PDF generation (English & Tamil)
-10. ✅ DOCX generation (English & Tamil)
-11. ✅ Modern UI with Tamil Nadu theme
-12. ✅ Responsive design (mobile, tablet, desktop)
+### Current Features
+1. ✅ Multi-step event planning flow (Event Details, Sessions, Menu Selection, Review)
+2. ✅ Event details collection (client, venue, dates, Tamil solar date)
+3. ✅ Session planning (multiple sessions per day, time slots, guest headcounts)
+4. ✅ Kiosk-style menu selection with uncapped search & inline custom dish creation
+5. ✅ Review & edit with cost customization & transport calculation
+6. ✅ Add/Remove dishes across all sessions
+7. ✅ Custom cost per dish and session rates
+8. ✅ Grand total calculation & tax handling
+9. ✅ PDF generation (English & Tamil) with Canvas typography
+10. ✅ DOCX generation (English & Tamil) with matching burgundy/cream tables
+11. ✅ Google Drive cloud synchronization & Master Sheets
+12. ✅ Google Identity Services (GIS) OAuth 2.0 & Admin Dashboard
+13. ✅ AI Menu Lens (Gemini 1.5 Flash Vision OCR for handwritten menus)
+14. ✅ Bilingual Voice Typing in Search (Single Search & Continuous Add)
+15. ✅ Precision Number Input Handling (Empty backspace clearing support)
+16. ✅ Modern UI with Tamil Nadu traditional theme (Theme Pack 164)
+17. ✅ Responsive design (mobile, tablet, desktop)
+18. ✅ Comprehensive Change Management ([`CHANGE_MANAGEMENT.md`](CHANGE_MANAGEMENT.md))
 
 ---
 

@@ -143,4 +143,104 @@ test.describe("ST - System / End-to-End Tests", () => {
       expect(darkHeadingColor).toBe("rgb(255, 255, 255)");
     }
   });
+
+  test("ST-06: Day/Session Navigator, Instant Tamil Translation, and Session MERN Dialog", async ({ page }) => {
+    // Authenticate admin session in browser
+    await page.goto("/bkr-menu-magic/#/admin");
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+    });
+
+    // Open Menu Creator
+    await page.goto("/bkr-menu-magic/#/menu-creator");
+    await page.waitForTimeout(600);
+
+    // Step 1: Fill required details to advance (wait for intro to complete)
+    const clientInput = page.locator("#clientName");
+    await clientInput.waitFor({ state: "visible", timeout: 15000 });
+    await clientInput.fill("Rupak Jayan");
+    await page.locator("#clientPhone").fill("9876543210");
+    await page.locator("#venueName").fill("Sri Krishna Mahal");
+    await page.locator("#venueAddress").fill("Anaimalai, Pollachi, Tamil Nadu");
+
+    // Click Save & Continue to Session Planning
+    const saveStep1Btn = page.locator('button:has-text("Continue to Session Planning")');
+    await saveStep1Btn.waitFor({ state: "visible" });
+    await saveStep1Btn.click();
+    await page.waitForTimeout(600);
+
+    // Step 2: Add two sessions to Day 1 so Next Session progression is active
+    const addSessionBtn = page.locator('button:has-text("Add Session to Day 1")');
+    await addSessionBtn.waitFor({ state: "visible" });
+    await addSessionBtn.click();
+    await page.waitForTimeout(300);
+    await addSessionBtn.click();
+    await page.waitForTimeout(300);
+
+    // Click Save & Continue to Menu Selection
+    const saveStep2Btn = page.locator('button:has-text("Continue to Menu Selection")');
+    await saveStep2Btn.waitFor({ state: "visible" });
+    await saveStep2Btn.click();
+    await page.waitForTimeout(800);
+
+    // Step 3: Verify Universal Session Navigator is visible
+    const sessionNav = page.locator('text=Sessions:');
+    await expect(sessionNav).toBeVisible();
+
+    // Verify "Manage Menu" button is present
+    const manageBtn = page.locator('button:has-text("Manage Menu")').first();
+    await expect(manageBtn).toBeVisible();
+    await manageBtn.click();
+    await page.waitForTimeout(300);
+
+    // Verify Dialog opened
+    const dialogTitle = page.locator('[role="dialog"]');
+    await expect(dialogTitle).toBeVisible();
+
+    // Click "Add Custom Dish" in Dialog
+    const addDishBtn = page.locator('button:has-text("Add Custom Dish")').first();
+    await addDishBtn.click();
+    await page.waitForTimeout(200);
+
+    // Type English name and check instant Tamil auto-translation
+    const dishEnInput = page.locator('input[placeholder*="Mushroom Pepper Fry"]').first();
+    await dishEnInput.fill("Pineapple Kesari");
+    await page.waitForTimeout(200);
+
+    const dishTaInput = page.locator('input[placeholder*="காளான்"]').first();
+    const taVal = await dishTaInput.inputValue();
+    expect(taVal).toContain("அன்னாசிப்பழ கேசரி");
+
+    // Add the dish
+    await page.locator('button:has-text("Add & Select for")').first().click();
+    await page.waitForTimeout(400);
+
+    // Verify dish appears in the dialog list
+    const addedDishRow = page.locator('[role="dialog"] :text("Pineapple Kesari")').first();
+    await expect(addedDishRow).toBeVisible();
+
+    // Close Dialog
+    await page.locator('button:has-text("Close & Keep Editing")').first().click();
+    await page.waitForTimeout(300);
+
+    // In Search box, verify instant translation in custom form
+    const searchInput = page.locator('input[placeholder*="Search dishes"]').first();
+    await searchInput.fill("Mushroom Biryani");
+    await page.waitForTimeout(300);
+
+    // Open custom dish form if toggle exists
+    const openFormBtn = page.locator('button:has-text("+ Open custom dish form")').first();
+    if (await openFormBtn.isVisible()) {
+      await openFormBtn.click();
+      await page.waitForTimeout(200);
+    }
+
+    const searchTaInput = page.locator('input[placeholder*="பலாப்பழ"]').first();
+    const searchTaVal = await searchTaInput.inputValue();
+    expect(searchTaVal).toContain("காளான் பிரியாணி");
+
+    // Verify default "Proceed to Next Session" button is visible
+    const nextSessionBtn = page.locator('button:has-text("Proceed to Next Session")').first();
+    await expect(nextSessionBtn).toBeVisible();
+  });
 });

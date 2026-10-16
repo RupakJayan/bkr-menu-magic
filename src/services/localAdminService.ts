@@ -237,6 +237,83 @@ export const getManagedMenuCatalog = (): MenuCatalog => {
   return catalog;
 };
 
+export const addCustomDishToCatalog = (dish: {
+  category: string;
+  name_en: string;
+  name_ta: string;
+  estimatedCost?: number;
+  isVegetarian?: boolean;
+  image?: string;
+}): CustomMenuDish => {
+  const state = getMenuAdminState();
+  const id = `custom-${crypto.randomUUID()}`;
+  const newCustomDish: CustomMenuDish = {
+    id,
+    category: dish.category.trim() || "Special Dishes",
+    name: dish.name_en.trim() || dish.name_ta.trim(),
+    name_en: dish.name_en.trim() || dish.name_ta.trim(),
+    name_ta: dish.name_ta.trim() || dish.name_en.trim(),
+    estimatedCost: Math.max(0, Number(dish.estimatedCost) || 0),
+    isVegetarian: dish.isVegetarian ?? true,
+    image: dish.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+  };
+  const customDishes = [...state.customDishes, newCustomDish];
+  saveMenuAdminState({ ...state, customDishes });
+  return newCustomDish;
+};
+
+export const updateDishInCatalog = (
+  category: string,
+  dishId: string,
+  updates: {
+    name_en?: string;
+    name_ta?: string;
+    category?: string;
+    estimatedCost?: number;
+    isVegetarian?: boolean;
+  }
+): void => {
+  const state = getMenuAdminState();
+  const isCustom = dishId.startsWith("custom-");
+  if (isCustom) {
+    const updatedCustom = state.customDishes.map((dish) => {
+      if (dish.id === dishId) {
+        return {
+          ...dish,
+          name: updates.name_en?.trim() || dish.name,
+          name_en: updates.name_en?.trim() || dish.name_en,
+          name_ta: updates.name_ta?.trim() || dish.name_ta,
+          category: updates.category?.trim() || dish.category,
+          estimatedCost: updates.estimatedCost !== undefined ? updates.estimatedCost : dish.estimatedCost,
+          isVegetarian: updates.isVegetarian !== undefined ? updates.isVegetarian : dish.isVegetarian,
+        };
+      }
+      return dish;
+    });
+    saveMenuAdminState({ ...state, customDishes: updatedCustom });
+  } else {
+    const key = buildCatalogKey(category, dishId);
+    const existing = state.overrides[key] || {};
+    const updatedOverrides = {
+      ...state.overrides,
+      [key]: {
+        ...existing,
+        name_en: updates.name_en?.trim() || existing.name_en,
+        name_ta: updates.name_ta?.trim() || existing.name_ta,
+        estimatedCost: updates.estimatedCost !== undefined ? updates.estimatedCost : existing.estimatedCost,
+        isVegetarian: updates.isVegetarian !== undefined ? updates.isVegetarian : existing.isVegetarian,
+      },
+    };
+    saveMenuAdminState({ ...state, overrides: updatedOverrides });
+  }
+};
+
+export const removeCustomDishFromCatalog = (dishId: string): void => {
+  const state = getMenuAdminState();
+  const updatedCustom = state.customDishes.filter((dish) => dish.id !== dishId);
+  saveMenuAdminState({ ...state, customDishes: updatedCustom });
+};
+
 export const getBusinessSettings = (): BusinessSettings => ({
   ...DEFAULT_SETTINGS,
   ...readStored<Partial<BusinessSettings>>(STORAGE_KEYS.settings, {}),

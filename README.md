@@ -51,8 +51,31 @@
   - **Menu Management**: Catalog editor for dish names (EN & TA), pricing, and custom categories.
   - **Analytics**: Revenue, guest counts, and booking trends.
   - **Settings**: Business branding, default terms and conditions.
-- **🎨 Accessible Light & Dark Themes**: High contrast styling in both modes, ensuring zero unreadable text or light-on-light badges.
+- **📸 AI Menu Lens (Handwritten Menu Digitizer)**:
+  - Powered by **Google Gemini 1.5 Flash Multimodal Vision**.
+  - Upload or capture photos of handwritten paper menus or printed catering sheets.
+  - Automatically recognizes dishes in English and Tamil (`தமிழ்`), assigns catering categories, and provides an interactive verification table before adding to the catalog or active session.
+- **🎙️ Bilingual Voice Typing & Continuous Auto-Add**:
+  - Integrated speech recognition supporting Tamil (`ta-IN`) and English (`en-IN`).
+  - **Single Search Mode**: Transcribes spoken dish names directly into the search bar.
+  - **Continuous Menu Add Mode**: Hands-free voice curation. Spoken dishes are matched with a crisp confirmation tick beep (`playVoiceTickSound()`); repeated items are audibly alerted ("Already in menu") with double-pip sound (`playAlreadyAddedSound()`) and Web Speech Synthesis (`speakVoiceFeedback()`).
+  - **Auto-Dictionary & Catalog Sync**: Unlisted dishes spoken via voice are automatically translated to Tamil, assigned a catering category, added to the session, and registered into the persistent bilingual dictionary both in parallel and post-session!
+  - **Persistent Activity Tray & MERN Actions**: Displays all added dishes in a persistent status tray and review modal allowing coordinators to Create, Read, Update (inline name/category edit), and Delete items before proceeding.
+- **🌐 Instant Tamil Culinary Translation & Transliteration**:
+  - Sub-millisecond synchronous culinary translation engine (`tamilTranslationService.ts`).
+  - Typing in English immediately generates authentic Tamil dish names, and typing in Tamil generates English names with automated category deduction.
+- **🧭 Universal Day & Session Navigator**:
+  - Direct top navigator bar enabling coordinators to jump between **any day and any session at any time**.
+  - Default "Proceed to Next Session" progression button dynamically labeled with the upcoming session name.
+- **🔍 Uncapped Search & Inline Bilingual Dish Creation**:
+  - All matching catalog dishes displayed in a smooth scrollable dropdown without artificial limits.
+  - Direct inline custom dish creation form inside search results with English, Tamil, and category inputs.
+- **🔢 Precision Number Input Handling**:
+  - Full backspace support allowing guest count, rate, and transport input fields to be cleared completely without snapping back to "1".
+- **🎨 Accessible Light & Dark Themes (Theme Pack 164)**:
+  - High-contrast traditional styling with Royal Burgundy (`#762934`), Warm Gold (`#d8b36d`), and Parchment surfaces. Zero unreadable text or light-on-light badges.
 - **📍 Direct Google Maps Kitchen Link**: Quick navigation to BKR Catering's kitchen at [maps.app.goo.gl/YXXNzhruoA9XZwn26](https://maps.app.goo.gl/YXXNzhruoA9XZwn26).
+- **📜 Formal Change Management**: Full audit trail of code modifications, architectural additions, and component matrices in [`CHANGE_MANAGEMENT.md`](CHANGE_MANAGEMENT.md).
 
 ---
 
@@ -77,12 +100,15 @@ flowchart TD
         DocxGen["DOCX Export Service (docx)"]
         PdfGen["PDF Export Service (jsPDF + Canvas)"]
         GoogleAuth["Google Auth GIS Service"]
-        DriveSync["Google Drive v3 REST Service"]
+        DriveSync["Google Drive v3 REST Service (Debounced)"]
+        AiLens["AI Menu Lens (Gemini 1.5 Flash Vision)"]
+        VoiceTyping["Voice Typing Service (Web Speech API)"]
     end
 
     subgraph Storage["Storage & Persistence"]
         LocalStore[("LocalStorage & SessionStorage")]
         GDrive[("Google Drive Cloud Storage")]
+        GeminiAPI[("Google Gemini AI API")]
     end
 
     User --> Landing
@@ -94,15 +120,19 @@ flowchart TD
     Planner --> TamilDate
     Planner --> DocxGen
     Planner --> PdfGen
+    Planner --> AiLens
+    Planner --> VoiceTyping
     Planner --> LocalStore
-    Planner -.->|Auto-sync| DriveSync
+    Planner -.->|Debounced Auto-sync| DriveSync
     
     Dashboard --> DriveSync
     Dashboard --> LocalStore
+    Dashboard --> AiLens
     
     AdminLogin --> GoogleAuth
     GoogleAuth --> DriveSync
     DriveSync --> GDrive
+    AiLens --> GeminiAPI
 ```
 
 ---
@@ -264,7 +294,7 @@ Production assets are output to `dist/`.
 
 ## 🧪 Testing
 
-The repository includes a comprehensive Playwright test suite with **14 automated tests** covering Unit, Integration, and System/E2E levels:
+The repository includes a comprehensive Playwright test suite with **17 automated tests** covering Unit, Integration, and System/E2E levels:
 
 ```bash
 # Run all tests headlessly
@@ -285,6 +315,8 @@ npx playwright test tests/unit.test.ts
 | **UT-04** | Unit | Menu Catalog builds, deduplicates, and normalizes dish keys |
 | **UT-05** | Unit | Google Auth Email Allowlist validates administrator addresses |
 | **UT-06** | Unit | Google Drive subfolder naming follows `date_venueplace_clientname_tamil` |
+| **UT-07** | Unit | Instant Tamil culinary translation matches common catering dishes |
+| **UT-08** | Unit | Category deduction guesses appropriate catering category from keywords |
 | **IT-01** | Integration | Empty menu creation integrates with financial aggregator |
 | **IT-02** | Integration | Multi-session calculations aggregate quoted rates & transport fees |
 | **IT-03** | Integration | Google Client ID getter and setter integration with fallbacks |
@@ -293,6 +325,8 @@ npx playwright test tests/unit.test.ts
 | **ST-03** | System / E2E | Section hashes (`#how-it-works`, `#experience`, etc.) never 404 |
 | **ST-04** | System / E2E | Admin Access page provides Google sign-in and dashboard access |
 | **ST-05** | System / E2E | Menu Creator step banner has high contrast in Light and Dark modes |
+| **ST-06** | System / E2E | Day/Session Navigator, Instant Tamil Translation, and Session MERN Dialog |
+| **UT-09** | Unit | Culinary dictionary auto-registration and voice alias matching |
 
 ---
 

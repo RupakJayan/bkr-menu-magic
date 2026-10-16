@@ -33,15 +33,13 @@ export const DEFAULT_GOOGLE_CLIENT_ID =
   "827617794538-iuu24eotjtmafui7fni969rk6l5n50vv.apps.googleusercontent.com";
 
 let tokenClient: google.accounts.oauth2.TokenClient | null = null;
+let customClientIdOverride: string | null = null;
 
 export const getGoogleClientId = (): string => {
+  if (customClientIdOverride) {
+    return customClientIdOverride;
+  }
   try {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem("bkr-google-client-id");
-    }
-    if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem("bkr-google-client-id");
-    }
     const fromEnv =
       typeof import.meta !== "undefined" && import.meta?.env
         ? import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -52,16 +50,8 @@ export const getGoogleClientId = (): string => {
   }
 };
 
-export const setGoogleClientId = (_clientId: string): void => {
-  // Clear any existing stored client ID to prevent invalid client 401 errors
-  try {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem("bkr-google-client-id");
-    }
-    if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem("bkr-google-client-id");
-    }
-  } catch {}
+export const setGoogleClientId = (clientId: string): void => {
+  customClientIdOverride = clientId && clientId.trim() ? clientId.trim() : null;
 };
 
 export const isGoogleConfigured = (): boolean =>

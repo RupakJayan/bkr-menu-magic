@@ -6,18 +6,20 @@ import { EventPlanningFlow } from '@/components/EventPlanningFlow';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { BrandLogo } from '@/components/BrandLogo';
-import { ArrowLeft, Check, Download, FileText, PlusCircle, Save } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileText, PlusCircle, Save, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
 import { getStoredGoogleToken } from '@/services/googleAuthService';
-import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
+import { saveMenuDataToDrive, saveMenuToGoogleDrive } from '@/services/googleDriveService';
+import { AiMenuLensDialog } from '@/components/ai/AiMenuLensDialog';
 import './planner.css';
 
 const MenuCreator: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isAdmin = hasAdminSession();
+  const [aiLensOpen, setAiLensOpen] = useState(false);
   const [menu, setMenu] = useState<EventMenu>(() => {
     const saved = localStorage.getItem('currentMenu');
     return saved ? JSON.parse(saved) : createEmptyMenu();
@@ -47,6 +49,7 @@ const MenuCreator: React.FC = () => {
   useEffect(() => {
     if (!isAdmin) return;
     localStorage.setItem('currentMenu', JSON.stringify(menu));
+
     // Auto-sync into saved events list if client name, venue, or sessions exist
     if (
       menu.clientDetails.name.trim() ||
@@ -55,12 +58,21 @@ const MenuCreator: React.FC = () => {
     ) {
       saveEventMenu(menu);
       setAutoSaved(true);
-      const token = getStoredGoogleToken();
-      if (token) {
-        saveMenuToGoogleDrive(menu, token).catch(() => {});
-      }
       const timer = setTimeout(() => setAutoSaved(false), 2500);
-      return () => clearTimeout(timer);
+
+      // Debounce fast background Google Drive sync (2.5 seconds idle)
+      const token = getStoredGoogleToken();
+      let driveSyncTimer: ReturnType<typeof setTimeout> | undefined;
+      if (token) {
+        driveSyncTimer = setTimeout(() => {
+          saveMenuDataToDrive(menu, token).catch(() => {});
+        }, 2500);
+      }
+
+      return () => {
+        clearTimeout(timer);
+        if (driveSyncTimer) clearTimeout(driveSyncTimer);
+      };
     }
   }, [isAdmin, menu]);
 
@@ -73,7 +85,7 @@ const MenuCreator: React.FC = () => {
       saveEventMenu(menu);
       const token = getStoredGoogleToken();
       if (token) {
-        saveMenuToGoogleDrive(menu, token).then(() => {
+        saveMenuDataToDrive(menu, token).then(() => {
           toast({
             title: "Menu Synced to Google Drive",
             description: "Saved to 'BKR Catering Events' in Google Drive.",
@@ -110,6 +122,17 @@ const MenuCreator: React.FC = () => {
                 <Check className="h-3 w-3" /> Auto-saved
               </span>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAiLensOpen(true)}
+              className="border-acc/40 bg-acc/10 hover:bg-acc/15 text-acc dark:text-acc font-semibold shadow-theme-sm flex items-center gap-1.5 transition-colors"
+              aria-label="Scan handwritten menu using AI Lens"
+              title="Scan photo of handwritten catering notes with AI"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-acc shrink-0" />
+              <span>AI Menu Lens</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -158,8 +181,18 @@ const MenuCreator: React.FC = () => {
           menu={menu}
           onMenuChange={handleMenuChange}
           onStartNewEvent={handleCreateNew}
+          onOpenAiLens={() => setAiLensOpen(true)}
         />
       </main>
+
+      <AiMenuLensDialog
+        open={aiLensOpen}
+        onOpenChange={setAiLensOpen}
+        onMenuLoaded={(loadedMenu) => {
+          setMenu(loadedMenu);
+        }}
+        currentMenu={menu}
+      />
     </div>
   );
 };

@@ -1,26 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { EventMenu } from '@/types/menu';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getTamilSolarDate } from '@/utils/tamilDate';
 import { differenceInCalendarDays } from '@/utils/istDate';
-import { CalendarDays, Clock3, MapPin, NotebookPen, UserRound } from 'lucide-react';
+import { CalendarDays, Camera, Clock3, MapPin, NotebookPen, Sparkles, UserRound } from 'lucide-react';
 import { VenueLocationPicker } from '@/components/venue/VenueLocationPicker';
 
 interface EventDetailsStepProps {
   menu: EventMenu;
   onMenuChange: (menu: EventMenu) => void;
   onNext: () => void;
+  onOpenAiLens?: () => void;
 }
 
-export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenuChange, onNext }) => {
+export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenuChange, onNext, onOpenAiLens }) => {
   const [clientName, setClientName] = useState(menu.clientDetails.name);
   const [clientPhone, setClientPhone] = useState(menu.clientDetails.phone);
   const [venueName, setVenueName] = useState(menu.venueDetails.name);
   const [venueAddress, setVenueAddress] = useState(menu.venueDetails.address);
-  const [transportCharge, setTransportCharge] = useState(menu.transportCharge ?? 0);
+  const [transportCharge, setTransportCharge] = useState<number | string>(menu.transportCharge ? menu.transportCharge : '');
   const [googleMapsUrl, setGoogleMapsUrl] = useState(menu.venueDetails.googleMapsUrl || '');
   const [startDate, setStartDate] = useState(menu.startDate);
   const [endDate, setEndDate] = useState(menu.endDate);
@@ -31,7 +33,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
     setClientPhone(menu.clientDetails.phone);
     setVenueName(menu.venueDetails.name);
     setVenueAddress(menu.venueDetails.address);
-    setTransportCharge(menu.transportCharge ?? 0);
+    setTransportCharge(menu.transportCharge ? menu.transportCharge : '');
     setGoogleMapsUrl(menu.venueDetails.googleMapsUrl || '');
     setStartDate(menu.startDate);
     setEndDate(menu.endDate);
@@ -62,7 +64,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
         googleMapsUrl: googleMapsUrl || undefined,
       },
       tamilDate: tamilDateTa || undefined,
-      transportCharge: Math.max(0, transportCharge),
+      transportCharge: transportCharge === '' ? 0 : Math.max(0, Number(transportCharge) || 0),
       startDate,
       endDate,
       numberOfDays,
@@ -85,6 +87,36 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
       </div>
 
       <div className="planner-step-body p-8 space-y-8 bg-gradient-to-b from-white to-orange-50">
+        {/* AI Lens Quick Scan Callout */}
+        {onOpenAiLens && (
+          <div className="p-4 rounded-xl border border-line bg-surf shadow-theme-sm flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-acc text-accink flex items-center justify-center shrink-0 shadow-theme-sm">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-bold text-ink text-sm flex items-center gap-2">
+                  Have a handwritten catering order slip or note?
+                  <Badge variant="outline" className="bg-acc/10 text-acc border-acc/30 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full">
+                    AI Lens
+                  </Badge>
+                </p>
+                <p className="text-xs text-mute mt-0.5">
+                  Snap or upload a photo to convert Tamil or English handwriting into an editable menu with 1 click.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              onClick={onOpenAiLens}
+              className="bg-acc text-accink hover:opacity-95 font-semibold text-xs h-10 px-4 rounded-btn shadow-theme-sm shrink-0 flex items-center gap-1.5 tp-pressable transition-all"
+            >
+              <Camera className="h-4 w-4" />
+              Scan with AI Lens
+            </Button>
+          </div>
+        )}
+
         {/* Client Details */}
         <section className="planner-form-section space-y-4">
           <div className="flex items-center gap-3 mb-4">
@@ -199,8 +231,12 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
               id="transportCharge"
               type="number"
               min="0"
+              placeholder="0"
               value={transportCharge}
-              onChange={(e) => setTransportCharge(Math.max(0, Number(e.target.value) || 0))}
+              onChange={(e) => {
+                const val = e.target.value;
+                setTransportCharge(val === '' ? '' : Math.max(0, Number(val) || 0));
+              }}
               className="h-12 rounded-lg border-2 border-red-200 focus:border-red-600"
             />
           </div>
