@@ -186,6 +186,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
   } = useVoiceTyping({
     catalogDishes: allCatalogItems,
     requireConfirmation: requireVoiceConfirmation,
+    isConfirmationPending: !!pendingConfirmationDish,
     onDishRecognizedForConfirmation: (payload) => {
       setPendingConfirmationDish(payload);
     },
@@ -248,21 +249,14 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
             // Non-blocking fallback
           });
 
-        // Select for current session
-        toggleDish(cat, created.id);
         setCatalogVersion((v) => v + 1);
-
-        toast({
-          title: "New Dish Added via Voice! 🎙️✨",
-          description: `"${nameEn}" (${nameTa}) added to dictionary & selected for ${currentSession?.name || "session"}.`,
-        });
 
         return {
           ...created,
           category: cat,
         };
       } catch (err: any) {
-        console.error("Error auto-adding spoken dish:", err);
+        console.error("Error creating spoken custom dish:", err);
         return null;
       }
     },
@@ -278,12 +272,14 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
     },
   });
 
-  // Automatically clear voice activity & pending voice confirmation on day or session switch
+  // Automatically clear voice activity, stop mic & reset pending confirmation on day or session switch
   // (Solves: "after adding to menu and switch to next session, it is still showing me the voice activity")
   useEffect(() => {
+    stopListening();
     clearRecentResults();
     setPendingConfirmationDish(null);
-  }, [currentDayIndex, currentSessionIndex, clearRecentResults]);
+    setIsSearchFocused(false);
+  }, [currentDayIndex, currentSessionIndex, stopListening, clearRecentResults]);
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 

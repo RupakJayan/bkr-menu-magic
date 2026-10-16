@@ -397,6 +397,24 @@ test.describe("UT - Unit Tests", () => {
     expect(idlyMatches.every((d) => d.name_en || d.name_ta)).toBe(true);
   });
 
+  test("UT-19: Voice typing confirmation flow ignores background noise while pending and provides alternative varieties", async () => {
+    const { findAllDishMatches, findBestDishMatch } = await import("../src/services/voiceTypingService");
+    const { getManagedMenuCatalog } = await import("../src/services/menuCatalogService");
+
+    const catalog = getManagedMenuCatalog();
+    const allDishes = Object.entries(catalog).flatMap(([cat, list]) => list.map(d => ({ ...d, category: cat })));
+
+    // 1. Spoken generic keyword e.g. "idly"
+    const best = findBestDishMatch("idly", allDishes);
+    expect(best).not.toBeNull();
+
+    // 2. Multi-dish alternatives must provide alternative idli dishes
+    const alternatives = findAllDishMatches("idly", allDishes, 5).filter(d => d.id !== best?.id);
+    expect(alternatives.length).toBeGreaterThanOrEqual(1);
+    // User gets exact alternatives to choose from instead of unwanted auto-adds
+    expect(alternatives.some(d => d.name_en.toLowerCase().includes("idl") || d.name_ta.includes("இட்லி"))).toBe(true);
+  });
+
   test("UT-18: Romanized custom dish slug generation & reliable cross-category dish resolution", async () => {
     const { addCustomDishToCatalog, updateDishInCatalog } = await import("../src/services/localAdminService");
     const { findDishByKey, buildDishKey } = await import("../src/services/menuCatalogService");

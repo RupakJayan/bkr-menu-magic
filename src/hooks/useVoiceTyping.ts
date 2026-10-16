@@ -22,6 +22,7 @@ interface UseVoiceTypingOptions {
   onListeningStopped?: () => void;
   isDishAlreadySelected?: (dish: CatalogDish) => boolean;
   requireConfirmation?: boolean;
+  isConfirmationPending?: boolean;
   onDishRecognizedForConfirmation?: (payload: {
     dish: CatalogDish;
     phrase: string;
@@ -38,6 +39,7 @@ export const useVoiceTyping = ({
   onListeningStopped,
   isDishAlreadySelected,
   requireConfirmation = true,
+  isConfirmationPending = false,
   onDishRecognizedForConfirmation,
 }: UseVoiceTypingOptions) => {
   const [isListening, setIsListening] = useState(false);
@@ -54,6 +56,29 @@ export const useVoiceTyping = ({
   // Track recently processed phrases with timestamps to debounce rapid speech duplicates (within 1.5s)
   const recentSpokenTimestampsRef = useRef<Map<string, number>>(new Map());
 
+  // Store latest callbacks and dishes in refs to avoid re-triggering effects and breaking keyboard typing
+  const callbacksRef = useRef({
+    onDishAdded,
+    onDishAlreadyAdded,
+    onCustomDishSpoken,
+    onSearchQueryChange,
+    onListeningStopped,
+    isDishAlreadySelected,
+    onDishRecognizedForConfirmation,
+  });
+  callbacksRef.current = {
+    onDishAdded,
+    onDishAlreadyAdded,
+    onCustomDishSpoken,
+    onSearchQueryChange,
+    onListeningStopped,
+    isDishAlreadySelected,
+    onDishRecognizedForConfirmation,
+  };
+
+  const catalogDishesRef = useRef(catalogDishes);
+  catalogDishesRef.current = catalogDishes;
+
   isListeningRef.current = isListening;
   voiceModeRef.current = voiceMode;
 
@@ -62,9 +87,11 @@ export const useVoiceTyping = ({
   // Helper to confirm and add a dish explicitly (via user confirmation card or direct action)
   const confirmAddDish = useCallback(
     (dish: CatalogDish, phrase?: string) => {
-      const alreadyAdded = isDishAlreadySelected ? isDishAlreadySelected(dish) : false;
+      const alreadyAdded = callbacksRef.current.isDishAlreadySelected
+        ? callbacksRef.current.isDishAlreadySelected(dish)
+        : false;
       if (!alreadyAdded) {
-        onDishAdded?.(dish);
+        callbacksRef.current.onDishAdded?.(dish);
         playVoiceTickSound();
         setRecentResults((prev) => [
           { phrase: phrase || dish.name_en, matchedDish: dish, status: "added" },
@@ -72,15 +99,22 @@ export const useVoiceTyping = ({
         ].slice(0, 15));
       } else {
         playAlreadyAddedSound();
-        onDishAlreadyAdded?.(dish);
+        callbacksRef.current.onDishAlreadyAdded?.(dish);
         setRecentResults((prev) => [
           { phrase: phrase || dish.name_en, matchedDish: dish, status: "already-added" },
           ...prev,
         ].slice(0, 15));
       }
     },
-    [onDishAdded, onDishAlreadyAdded, isDishAlreadySelected]
+    []
   );
+
+  const clearRecentResults = useCallback(() => {
+    setRecentResults([]);
+  }, []);
+
+  const isConfirmationPendingRef = useRef(isConfirmationPending);
+  isConfirmationPendingRef.current = isConfirmationPending;
 
   // Process a finalized spoken phrase
   const handleFinalPhrase = useCallback(
@@ -88,9 +122,12 @@ export const useVoiceTyping = ({
       const trimmed = text.trim();
       if (!trimmed) return;
 
+      // If a confirmation is currently pending on screen, ignore incoming background noise/speech
+      if (isConfirmationPendingRef.current) return;
+
       if (voiceModeRef.current === "single") {
         // Single mode: updates the search query and closes
-        onSearchQueryChange?.(trimmed);
+        callbacksRef.current.onSearchQueryChange?.(trimmed);
         return;
       }
 
@@ -98,47 +135,59 @@ export const useVoiceTyping = ({
       const phrases = splitContinuousSpeech(trimmed);
       const newResults: RecognizedItemResult[] = [];
       const now = Date.now();
+      const currentDishes = catalogDishesRef.current;
 
       for (const phrase of phrases) {
         const lower = phrase.toLowerCase().trim();
         if (!lower) continue;
 
-        // Debounce rapid identical repeats from speech API interim bursts (< 1.2s)
+        // Debounce rapid identical repeats from speech API interim bursts (< 1.5s)
         const lastSpoken = recentSpokenTimestampsRef.current.get(lower) || 0;
-        if (now - lastSpoken < 1200) {
+        if (now - lastSpoken < 1500) {
           continue;
         }
         recentSpokenTimestampsRef.current.set(lower, now);
 
-        const matched = findBestDishMatch(phrase, catalogDishes);
+        const matched = findBestDishMatch(phrase, currentDishes);
         if (matched) {
-          const alreadyAdded = isDishAlreadySelected ? isDishAlreadySelected(matched) : false;
+          const alreadyAdded = callbacksRef.current.isDishAlreadySelected
+            ? callbacksRef.current.isDishAlreadySelected(matched)
+            : false;
           if (alreadyAdded) {
-            // Item is repeated / already in menu: play warning pip, tell user, record status
             playAlreadyAddedSound();
             speakVoiceFeedback(`${matched.name_en} already in menu`);
-            onDishAlreadyAdded?.(matched);
+            callbacksRef.current.onDishAlreadyAdded?.(matched);
             newResults.push({ phrase, matchedDish: matched, status: "already-added" });
-          } else if (requireConfirmation && onDishRecognizedForConfirmation) {
-            // Optimal User Control: Ask user to confirm what they spoke before adding to menu
-            const alternatives = findAllDishMatches(phrase, catalogDishes, 4).filter((d) => d.id !== matched.id);
-            onDishRecognizedForConfirmation({
+          } else if (requireConfirmation && callbacksRef.current.onDishRecognizedForConfirmation) {
+            // Confirm with user: provide exact match and alternative varieties (e.g. Sambar Idli, Podi Idli, Mini Idli)
+            const alternatives = findAllDishMatches(phrase, currentDishes, 5).filter((d) => d.id !== matched.id);
+            callbacksRef.current.onDishRecognizedForConfirmation({
               dish: matched,
               phrase,
               alternatives,
             });
             playVoiceTickSound();
           } else {
-            onDishAdded?.(matched);
+            callbacksRef.current.onDishAdded?.(matched);
             playVoiceTickSound();
             newResults.push({ phrase, matchedDish: matched, status: "added" });
           }
-        } else if (onCustomDishSpoken) {
-          // Auto-add not found items directly to catalog, session, and dictionary
-          const created = onCustomDishSpoken(phrase);
+        } else if (callbacksRef.current.onCustomDishSpoken) {
+          // If confirmation is required, do NOT auto-add custom dishes into the session without asking!
+          const created = callbacksRef.current.onCustomDishSpoken(phrase);
           if (created) {
-            playVoiceTickSound();
-            newResults.push({ phrase, matchedDish: created, status: "added" });
+            if (requireConfirmation && callbacksRef.current.onDishRecognizedForConfirmation) {
+              callbacksRef.current.onDishRecognizedForConfirmation({
+                dish: created,
+                phrase,
+                alternatives: [],
+              });
+              playVoiceTickSound();
+            } else {
+              callbacksRef.current.onDishAdded?.(created);
+              playVoiceTickSound();
+              newResults.push({ phrase, matchedDish: created, status: "added" });
+            }
           } else {
             newResults.push({ phrase, matchedDish: null, status: "not-found" });
           }
@@ -151,16 +200,7 @@ export const useVoiceTyping = ({
         setRecentResults((prev) => [...newResults, ...prev].slice(0, 15));
       }
     },
-    [
-      catalogDishes,
-      onDishAdded,
-      onDishAlreadyAdded,
-      onCustomDishSpoken,
-      onSearchQueryChange,
-      isDishAlreadySelected,
-      requireConfirmation,
-      onDishRecognizedForConfirmation,
-    ]
+    [requireConfirmation]
   );
 
   const stopListening = useCallback(() => {
@@ -277,26 +317,6 @@ export const useVoiceTyping = ({
     }
   }, [isListening, startListening, stopListening]);
 
-  // Automatically pause/stop microphone when user touches or focuses any input field or dialog
-  useEffect(() => {
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable)
-      ) {
-        if (isListeningRef.current) {
-          stopListening();
-        }
-      }
-    };
-
-    window.addEventListener("focusin", handleFocusIn);
-    return () => window.removeEventListener("focusin", handleFocusIn);
-  }, [stopListening]);
-
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -319,7 +339,7 @@ export const useVoiceTyping = ({
     transcript,
     interimTranscript,
     recentResults,
-    clearRecentResults: () => setRecentResults([]),
+    clearRecentResults,
     confirmAddDish,
     errorMessage,
     startListening,

@@ -13,11 +13,11 @@ export interface RecognizedItemResult {
  * Common South Indian catering colloquial aliases mapping spoken phrases to standard catalog names.
  */
 const COMMON_ALIASES: Record<string, string[]> = {
-  "idli": ["idli", "இட்லி", "mini idli", "sambar idli", "தட்டு இட்லி"],
-  "vada": ["vada", "vadai", "medu vada", "மெது வடை", "வடை", "medu vadai"],
+  "idli": ["idli", "idly", "idlee", "iddly", "இட்லி", "mini idli", "sambar idli", "தட்டு இட்லி", "rava idli", "podi idli", "kanchipuram idli"],
+  "vada": ["vada", "vadai", "vade", "wada", "medu vada", "மெது வடை", "வடை", "medu vadai"],
   "pongal": ["pongal", "ven pongal", "ghee pongal", "பொங்கல்", "வெண் பொங்கல்"],
   "poori": ["poori", "puri", "பூரி", "mini poori"],
-  "dosa": ["dosa", "dosai", "தோசை", "ghee roast", "masala dosa", "ரவா தோசை"],
+  "dosa": ["dosa", "dosai", "dhosa", "தோசை", "ghee roast", "masala dosa", "ரவா தோசை"],
   "kesari": ["kesari", "கேசரி", "rava kesari", "pineapple kesari"],
   "sambar": ["sambar", "சாம்பார்", "arachuvitta sambar"],
   "rasam": ["rasam", "ரசம்", "tomato rasam", "pepper rasam"],
