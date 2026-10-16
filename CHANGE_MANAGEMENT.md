@@ -9,6 +9,7 @@
 1. [Change Management Philosophy & Governance](#1-change-management-philosophy--governance)
 2. [Version History & Release Matrix](#2-version-history--release-matrix)
 3. [Comprehensive Change Log](#3-comprehensive-change-log)
+   - [v1.5.5 — Session Dish Serving Sequence Arrangement & Traditional South Indian Catering Course Sorting](#v155--session-dish-serving-sequence-arrangement--traditional-south-indian-catering-course-sorting)
    - [v1.5.4 — AI Catering Voice Assistant (Gemini 2.5 Flash), Mic Echo Guard, and Unlocked Mobile Keyboard Inputs](#v154--ai-catering-voice-assistant-gemini-25-flash-mic-echo-guard-and-unlocked-mobile-keyboard-inputs)
    - [v1.5.3 — Elimination of Letter-by-Letter Transliteration & Tamil Voiced-to-English Romanization](#v153--elimination-of-letter-by-letter-transliteration--tamil-voiced-to-english-romanization)
    - [v1.5.2 — Gemini 3.6 Flash Authentic Tamil Translation, Proactive Debounced AI Translate & Catering Culinary Dictionary Overhaul](#v152--gemini-36-flash-authentic-tamil-translation-proactive-debounced-ai-translate--catering-culinary-dictionary-overhaul)
@@ -44,6 +45,7 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 | Version | Release Date | Summary of Core Deliverables | Verification Status |
 |---|---|---|---|
+| **v1.5.5** | October 2026 | Session Dish Serving Sequence Arrangement (Move Up/Down, Drag-and-Drop, Sequence numbering #1, #2...), 1-Click Traditional South Indian Catering Course Sequence (Starters → Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts), Alphabetical & Category Sorting, Live Serving Order Strip on Main Planner, Unit Test UT-13 | ✅ Verified (22/22 Tests & Clean Build Pass) |
 | **v1.5.4** | October 2026 | World-Class AI Catering Voice Assistant powered by Gemini 2.5 Flash, Zero Audio Reflection & Mic Echo Guard (Muted synthetic TTS, auto-pause on input focus), Mobile Virtual Keyboard Lock Elimination (Non-overwriting inputs, `autoComplete="off"`, `autoCorrect="off"`, `spellCheck={false}`), Unit Test UT-12 | ✅ Verified (21/21 Tests & Clean Build Pass) |
 | **v1.5.3** | October 2026 | Elimination of Letter-by-Letter Consonant Pulli Transliteration, Pure English Reverse Translation (`romanizeTamilToEnglish` + `TAMIL_CULINARY_WORDS`), Input Field Keystroke Protection (No Tamil Wipeout), Gemini AI Timeout & AbortSignal (3000ms), Unit Test UT-11 | ✅ Verified (20/20 Tests & Clean Build Pass) |
 | **v1.5.2** | October 2026 | Gemini 3.6 Flash Authentic Tamil Translation, API Model Migration (`gemini-3.6-flash`), Proactive Debounced AI Translation, Interactive `✨ Gemini AI Translate` buttons, Catering Dictionary Overhaul (150+ authentic South Indian items), Elimination of Phonetic Garbling, Cross-Environment Key Resolver, Unit Test UT-10 | ✅ Verified (19/19 Tests & Clean Build Pass) |
@@ -59,7 +61,40 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 ## 3. Comprehensive Change Log
 
-### v1.5.4 — AI Catering Voice Assistant (Gemini 2.5 Flash), Mic Echo Guard, and Unlocked Mobile Keyboard Inputs
+### v1.5.5 — Session Dish Serving Sequence Arrangement & Traditional South Indian Catering Course Sorting
+
+#### 1. Background & Problem Statement
+Caterers require specific serving sequences for wedding leaf services and buffet setups (e.g. Sweets before Mains, Sambar before Rasam, Curd Rice towards the end). Previously, dishes were appended in the order selected with no mechanism to reorder or structure them.
+
+#### 2. Key Engineering Solutions Implemented
+- **Arrangement Toolbar in `SessionMenuManageDialog.tsx`**:
+  - **Traditional Course Order (1-Click)**: Heuristic algorithm classifying dishes into authentic South Indian wedding courses:
+    1. Welcome Drinks, Soups & Juices
+    2. Starters & Deep-Fried Vadai
+    3. Sweets (Traditional first: Kesari, Payasam, Laddu, Halwa)
+    4. Breakfast / Tiffin (Pongal → Vada → Idli → Poori → Dosa)
+    5. Variety Rice & Breads (Parotta, Chappathi, Biryani, Pulao, White Rice)
+    6. Sambar, Kuzhambu, Kurma & Gravies
+    7. Poriyal, Varuval, Kootu & Avial
+    8. Rasam (Tomato, Pepper, Mysore)
+    9. Curd Rice & More (Thayir Sadham, Mor, Pachadi)
+    10. Accompaniments (Appalam, Pickle, Chutney, Thuvaiyal, Vadam)
+    11. Desserts, Ice Cream, Fruits, Coffee, Beeda / Paan
+  - **Category Grouping**: Clustered by catering category.
+  - **Alphabetical (A → Z)**: Sorted by English dish title.
+  - **Reverse Order**: Instant inversion of the serving sequence.
+- **Granular Manual Reordering Controls**:
+  - Added dedicated `ChevronUp` and `ChevronDown` buttons on every dish card for quick single-step adjustments.
+  - Integrated native HTML5 drag-and-drop (`GripVertical`) allowing caterers to drag items into their exact desired leaf position.
+  - Sequence badges (`#1`, `#2`, `#3`...) displaying exact serving ranks.
+- **Live Serving Sequence Strip on Main Planner**:
+  - Horizontal scrollable sequence strip in `MenuSelectionStep.tsx` rendering all current dishes with sequence tags (`#1 Pineapple Kesari`, `#2 Medu Vada`...).
+  - One-click "Arrange Serving Order" button opening the arrangement studio.
+- **Downstream Synchronization**:
+  - Arranged order directly propagates to `session.selectedDishes`, ensuring PDF menus, Word DOCX contracts, Kitchen printouts, and Review screens output dishes in the exact arranged order.
+- **Automated Verification**:
+  - Added Unit Test `UT-13` in `tests/unit.test.ts`. All 22 Playwright integration and unit tests passing green.
+
 
 #### 1. Background & Problem Statement
 Users testing voice typing on mobile phones and tablets encountered two critical pain points:

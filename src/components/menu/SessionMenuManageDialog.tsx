@@ -27,6 +27,11 @@ import {
 import {
   Check,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown,
+  GripVertical,
+  ListOrdered,
   Edit2,
   Leaf,
   Plus,
@@ -48,6 +53,7 @@ interface SessionMenuManageDialogProps {
   categories: string[];
   onRemoveDish: (dishKey: string) => void;
   onAddDish: (category: string, dishId: string) => void;
+  onReorderDishes: (newOrderKeys: string[]) => void;
   onNextSession: () => void;
   isLastSession: boolean;
   nextSessionName?: string;
@@ -62,6 +68,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
   categories,
   onRemoveDish,
   onAddDish,
+  onReorderDishes,
   onNextSession,
   isLastSession,
   nextSessionName,
@@ -103,6 +110,148 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
       return nameEn.includes(q) || nameTa.includes(q) || cat.includes(q);
     });
   }, [sessionDishes, filterText]);
+
+  // -------------------------------------------------------------
+  // REORDERING & SERVING SEQUENCE MANAGEMENT
+  // -------------------------------------------------------------
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const handleMoveUp = (index: number) => {
+    if (index <= 0) return;
+    const currentKeys = [...session.selectedDishes];
+    const temp = currentKeys[index - 1];
+    currentKeys[index - 1] = currentKeys[index];
+    currentKeys[index] = temp;
+    onReorderDishes(currentKeys);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index >= session.selectedDishes.length - 1) return;
+    const currentKeys = [...session.selectedDishes];
+    const temp = currentKeys[index + 1];
+    currentKeys[index + 1] = currentKeys[index];
+    currentKeys[index] = temp;
+    onReorderDishes(currentKeys);
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+    const currentKeys = [...session.selectedDishes];
+    const [moved] = currentKeys.splice(draggedIndex, 1);
+    currentKeys.splice(targetIndex, 0, moved);
+    setDraggedIndex(null);
+    onReorderDishes(currentKeys);
+    toast({
+      title: "Dishes Reordered ✨",
+      description: "Serving sequence updated successfully.",
+    });
+  };
+
+  // Traditional South Indian Wedding / Catering Sequence
+  const handleArrangeTraditional = () => {
+    const rankDish = (dish: CatalogDish): number => {
+      const name = (dish.name_en || dish.name || "").toLowerCase();
+      const cat = (dish.category || "").toLowerCase();
+
+      // 1. Welcome Drinks & Soups
+      if (name.includes("welcome") || name.includes("juice") || name.includes("soup") || cat.includes("beverage") || cat.includes("drink")) {
+        if (name.includes("soup") || name.includes("juice")) return 10;
+      }
+      // 2. Starters & Appetizers
+      if (name.includes("starter") || name.includes("manchurian") || name.includes("roll") || name.includes("cutlet") || name.includes("chilli")) return 20;
+
+      // 3. Sweets (Traditional first: Kesari, Payasam, Laddu, Halwa, Mysore Pak)
+      if (cat.includes("sweet") || name.includes("payasam") || name.includes("kesari") || name.includes("laddu") || name.includes("halwa") || name.includes("sweet") || name.includes("poli") || name.includes("jangri") || name.includes("jamun")) return 30;
+
+      // 4. Breakfast / Tiffin (Pongal -> Vada -> Idli -> Poori -> Dosa)
+      if (name.includes("pongal")) return 40;
+      if (name.includes("vada") || name.includes("vadai")) return 42;
+      if (name.includes("idli")) return 44;
+      if (name.includes("poori") || name.includes("puri")) return 46;
+      if (name.includes("dosa") || name.includes("dosai") || name.includes("oothappam")) return 48;
+      if (cat.includes("tiffin") || cat.includes("breakfast")) return 50;
+
+      // 5. Variety Rice & Breads (Parotta, Chappathi, Biryani, Pulao, Fried Rice, White Rice)
+      if (name.includes("parotta") || name.includes("chappathi") || name.includes("naan") || name.includes("roti") || cat.includes("bread")) return 60;
+      if (name.includes("biryani") || name.includes("briyani") || name.includes("pulao") || name.includes("fried rice")) return 62;
+      if (name.includes("white rice") || name.includes("plain rice") || name.includes("sadham") || name.includes("rice")) return 64;
+
+      // 6. Sambar, Kurma, Gravies
+      if (name.includes("sambar") || name.includes("kurma") || name.includes("kuzhambu") || name.includes("gravy")) return 70;
+
+      // 7. Poriyal, Varuval, Kootu, Avial
+      if (name.includes("kootu") || name.includes("avial")) return 80;
+      if (name.includes("poriyal") || name.includes("varuval") || name.includes("roast") || name.includes("fry")) return 82;
+
+      // 8. Rasam
+      if (name.includes("rasam")) return 90;
+
+      // 9. Curd Rice & More (Thayir sadham)
+      if (name.includes("curd") || name.includes("thayir") || name.includes("mor") || name.includes("buttermilk") || name.includes("raita") || name.includes("pachadi")) return 100;
+
+      // 10. Accompaniments (Appalam, Pickle, Chutney, Thuvaiyal, Vadam)
+      if (name.includes("appalam") || name.includes("pappad") || name.includes("pickle") || name.includes("oorugai") || name.includes("chutney") || name.includes("thuvaiyal") || name.includes("vadam")) return 110;
+
+      // 11. Desserts, Ice Cream, Fruits, Coffee, Beeda
+      if (name.includes("ice cream") || name.includes("fruit") || name.includes("dessert")) return 120;
+      if (name.includes("coffee") || name.includes("tea")) return 130;
+      if (name.includes("beeda") || name.includes("paan")) return 140;
+
+      return 150;
+    };
+
+    const sorted = [...sessionDishes].sort((a, b) => rankDish(a.dish) - rankDish(b.dish));
+    onReorderDishes(sorted.map((item) => item.key));
+    toast({
+      title: "Arranged in Traditional Course Order! 🍲✨",
+      description: "Organized: Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts.",
+    });
+  };
+
+  // Alphabetical Sort (A to Z)
+  const handleSortAlphabetical = () => {
+    const sorted = [...sessionDishes].sort((a, b) => {
+      const nameA = (a.dish.name_en || a.dish.name || "").toLowerCase();
+      const nameB = (b.dish.name_en || b.dish.name || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    onReorderDishes(sorted.map((item) => item.key));
+    toast({
+      title: "Arranged Alphabetically (A → Z) 🔤",
+      description: "Sorted dishes from A to Z.",
+    });
+  };
+
+  // Group by Category
+  const handleSortByCategory = () => {
+    const sorted = [...sessionDishes].sort((a, b) => a.dish.category.localeCompare(b.dish.category));
+    onReorderDishes(sorted.map((item) => item.key));
+    toast({
+      title: "Grouped by Category 🏷️",
+      description: "Dishes grouped by catering categories.",
+    });
+  };
+
+  // Reverse Order
+  const handleReverseOrder = () => {
+    const reversed = [...session.selectedDishes].reverse();
+    onReorderDishes(reversed);
+    toast({
+      title: "Serving Sequence Inverted 🔄",
+      description: "Reversed order of selected dishes.",
+    });
+  };
 
   const [isAiTranslating, setIsAiTranslating] = useState(false);
   const aiDebounceRef = useRef<any>(null);
@@ -427,6 +576,63 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
             </span>
           </div>
 
+          {/* Quick Arrange Toolbar */}
+          {sessionDishes.length > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-surf-2 border border-line">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-ink">
+                <ArrowUpDown className="h-4 w-4 text-acc" />
+                <span>Arrange Serving Sequence ({sessionDishes.length} items):</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleArrangeTraditional}
+                  className="h-7 px-2.5 text-[11px] font-semibold text-acc hover:bg-acc/10 border-acc/40 rounded-lg flex items-center gap-1"
+                  title="Organize into authentic South Indian wedding course order: Starters → Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Traditional Course Order
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSortByCategory}
+                  className="h-7 px-2 text-[11px] font-medium border-line hover:bg-surf text-ink rounded-lg"
+                  title="Group dishes by category"
+                >
+                  By Category
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSortAlphabetical}
+                  className="h-7 px-2 text-[11px] font-medium border-line hover:bg-surf text-ink rounded-lg"
+                  title="Sort dishes A to Z"
+                >
+                  A → Z
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleReverseOrder}
+                  className="h-7 px-2 text-[11px] font-medium border-line hover:bg-surf text-ink rounded-lg"
+                  title="Reverse current sequence"
+                >
+                  Reverse
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Dish List */}
           {filteredDishes.length === 0 ? (
             <div className="text-center py-12 px-4 rounded-xl border border-dashed border-line bg-surf-2">
@@ -541,9 +747,26 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                 return (
                   <div
                     key={key}
-                    className="flex items-center justify-between p-3 rounded-xl border border-line bg-surf-2 hover:bg-surf transition-colors gap-3"
+                    draggable={!filterText}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`flex items-center justify-between p-3 rounded-xl border border-line bg-surf-2 hover:bg-surf transition-all gap-3 ${
+                      draggedIndex === index ? "opacity-40 border-acc border-dashed" : ""
+                    }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {/* Sequence Number & Drag Handle */}
+                      <div
+                        className="flex items-center gap-1 text-ink/40 hover:text-ink cursor-grab active:cursor-grabbing p-1 rounded shrink-0"
+                        title="Drag to rearrange serving sequence"
+                      >
+                        <GripVertical className="h-4 w-4" />
+                        <span className="text-[11px] font-bold text-acc w-5 text-center">
+                          #{index + 1}
+                        </span>
+                      </div>
+
                       {/* Image Thumbnail */}
                       <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-line relative bg-gray-100">
                         <img
@@ -581,8 +804,28 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       </div>
                     </div>
 
-                    {/* Actions: Edit & Remove */}
+                    {/* Actions: Move Up, Move Down, Edit & Remove */}
                     <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={index === 0 || !!filterText}
+                        onClick={() => handleMoveUp(index)}
+                        className="h-8 w-8 p-0 text-ink/60 hover:text-ink hover:bg-acc/10 rounded-lg disabled:opacity-20"
+                        title="Move dish up in serving sequence"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={index === session.selectedDishes.length - 1 || !!filterText}
+                        onClick={() => handleMoveDown(index)}
+                        className="h-8 w-8 p-0 text-ink/60 hover:text-ink hover:bg-acc/10 rounded-lg disabled:opacity-20"
+                        title="Move dish down in serving sequence"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"

@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { EventMenu } from "@/types/menu";
-import { buildDishKey, getManagedMenuCatalog, normalizeDishKeys, addCustomDishToCatalog } from "@/services/menuCatalogService";
+import { buildDishKey, findDishByKey, getManagedMenuCatalog, normalizeDishKeys, addCustomDishToCatalog } from "@/services/menuCatalogService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronLeft, ChevronRight, Leaf, Mic, MicOff, Plus, Search, Sparkles, TrendingUp, Utensils, Volume2, X, Calendar, Layers } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Leaf, Mic, MicOff, Plus, Search, Sparkles, TrendingUp, Utensils, Volume2, X, Calendar, Layers, ArrowUpDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoiceTyping } from "@/hooks/useVoiceTyping";
 import { useToast } from "@/hooks/use-toast";
@@ -503,6 +503,21 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
     });
   }, [currentSession, menu, currentDayIndex, currentSessionIndex, onMenuChange]);
 
+  const reorderDishesInSession = useCallback(
+    (newOrderKeys: string[]) => {
+      if (!currentSession) return;
+      const updatedDays = [...menu.days];
+      const session = updatedDays[currentDayIndex].sessions[currentSessionIndex];
+      session.selectedDishes = newOrderKeys;
+      onMenuChange({
+        ...menu,
+        days: updatedDays,
+        updatedAt: new Date(),
+      });
+    },
+    [currentSession, menu, currentDayIndex, currentSessionIndex, onMenuChange]
+  );
+
   if (!currentSession) {
     return (
       <Card>
@@ -631,6 +646,50 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
             </Button>
           </div>
         </div>
+
+        {/* Selected Dishes Serving Order Strip */}
+        {currentSession.selectedDishes.length > 0 && (
+          <div className="pt-2.5 border-t border-line/60 space-y-2 animate-fade-in">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-ink">
+                <Utensils className="h-3.5 w-3.5 text-acc" />
+                <span>Serving Sequence ({currentSession.selectedDishes.length} dishes):</span>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setIsSessionManageOpen(true)}
+                className="h-6 px-2.5 text-[11px] font-semibold text-acc hover:bg-acc/10 border-acc/40 rounded-lg flex items-center gap-1 transition-transform hover:scale-105"
+                title="Arrange or reorder dishes for this session"
+              >
+                <ArrowUpDown className="h-3 w-3" />
+                Arrange Serving Order
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+              {currentSession.selectedDishes.map((key, idx) => {
+                const dish = findDishByKey(key);
+                if (!dish) return null;
+                return (
+                  <div
+                    key={key}
+                    onClick={() => setIsSessionManageOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surf-2 border border-line hover:border-acc/40 hover:bg-surf transition-all shrink-0 cursor-pointer text-xs"
+                    title={`#${idx + 1}: ${dish.name_en} (${dish.name_ta}) - Click to rearrange`}
+                  >
+                    <span className="text-[10px] font-bold text-acc">#{idx + 1}</span>
+                    <span className="font-semibold text-ink truncate max-w-[140px]">{dish.name_en}</span>
+                    {dish.name_ta && (
+                      <span className="text-[10px] text-mute font-tamil truncate max-w-[120px]">({dish.name_ta})</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search Bar & Category Tabs */}
@@ -1458,7 +1517,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         </div>
       </div>
 
-      {/* Session Menu Management Dialog (MERN Actions on Added Dishes) */}
+      {/* Session Menu Management Dialog (MERN Actions on Added Dishes & Serving Sequence Arrangement) */}
       <SessionMenuManageDialog
         open={isSessionManageOpen}
         onOpenChange={setIsSessionManageOpen}
@@ -1467,6 +1526,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         categories={categories as string[]}
         onRemoveDish={removeDishFromSession}
         onAddDish={(cat, dishId) => toggleDish(cat, dishId)}
+        onReorderDishes={reorderDishesInSession}
         onNextSession={handleNext}
         isLastSession={nextSessionInfo.isLast}
         nextSessionName={nextSessionInfo.name}

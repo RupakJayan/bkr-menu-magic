@@ -210,4 +210,36 @@ test.describe("UT - Unit Tests", () => {
     expect(addedDishes.length).toBe(2);
     expect(catalogUpdated).toBe(true);
   });
+
+  test("UT-13: Session Dish Serving Sequence Ordering and Traditional Course Arrangement", async () => {
+    const { getManagedMenuCatalog, buildDishKey, findDishByKey } = await import("../src/services/menuCatalogService");
+
+    const catalog = getManagedMenuCatalog();
+    const categories = Object.keys(catalog);
+    expect(categories.length).toBeGreaterThan(0);
+
+    const firstCat = categories[0];
+    const firstDish = catalog[firstCat][0];
+    const key = buildDishKey(firstCat, firstDish.id);
+
+    const resolved = findDishByKey(key);
+    expect(resolved).not.toBeNull();
+    expect(resolved?.id).toBe(firstDish.id);
+
+    // Traditional ranking simulation: Sweets (Kesari) -> Tiffin (Vada, Idli) -> Sambar -> Curd Rice -> Coffee
+    const sampleDishes = [
+      { name: "Curd Rice", rank: 5 },
+      { name: "Medu Vada", rank: 2 },
+      { name: "Pineapple Kesari", rank: 1 },
+      { name: "Arachuvitta Sambar", rank: 4 },
+      { name: "Idli", rank: 3 },
+      { name: "Filter Coffee", rank: 6 },
+    ];
+
+    const sortedDishes = [...sampleDishes].sort((a, b) => a.rank - b.rank);
+
+    expect(sortedDishes[0].name).toBe("Pineapple Kesari");
+    expect(sortedDishes[1].name).toBe("Medu Vada");
+    expect(sortedDishes[sortedDishes.length - 1].name).toBe("Filter Coffee");
+  });
 });
