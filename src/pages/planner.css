@@ -998,3 +998,93 @@
     font-size: 8px;
   }
 }
+
+/* ============================================================================
+   Theme-aware styles for Google search predictive recommendations & buttons
+   ============================================================================ */
+.planner-page .planner-search-dropdown {
+  background-color: var(--planner-card) !important;
+  border: 1px solid var(--planner-line) !important;
+  color: var(--planner-ink) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25) !important;
+}
+
+.planner-page .planner-search-dropdown-header,
+.planner-page .planner-search-dropdown-footer {
+  background-color: var(--planner-soft) !important;
+  border-color: var(--planner-line) !important;
+  color: var(--planner-muted) !important;
+}
+
+.planner-page .planner-search-item {
+  border-bottom: 1px solid var(--planner-line) !important;
+  color: var(--planner-ink) !important;
+}
+
+.planner-page .planner-search-item:last-child {
+  border-bottom: 0 !important;
+}
+
+.planner-page .planner-search-item:hover,
+.planner-page .planner-search-item.is-highlighted {
+  background-color: var(--planner-soft) !important;
+}
+
+.planner-page .planner-search-kbd {
+  background-color: var(--planner-card) !important;
+  color: var(--planner-muted) !important;
+  border: 1px solid var(--planner-line) !important;
+}
+
+.planner-page .planner-search-add-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  border: 1px solid #d1d5db !important;
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+  cursor: pointer !important;
+  transition: all 150ms ease !important;
+}
+
+.planner-page .planner-search-add-btn:hover {
+  background-color: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+}
+
+.dark .planner-page .planner-search-add-btn {
+  border-color: #52474b !important;
+  background-color: #383236 !important;
+  color: #f5f0e9 !important;
+}
+
+.dark .planner-page .planner-search-add-btn:hover {
+  border-color: var(--planner-acc, #d8b36d) !important;
+  background-color: #484045 !important;
+  color: #ffffff !important;
+}
+
+.planner-page .planner-search-added-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  border: 1px solid #059669 !important;
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+}
+
+.dark .planner-page .planner-search-added-btn {
+  border-color: #059669 !important;
+  background-color: #047857 !important;
+  color: #ffffff !important;
+}

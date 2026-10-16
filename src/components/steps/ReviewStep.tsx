@@ -23,8 +23,6 @@ interface ReviewStepProps {
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNext, onPrevious, onStartNewEvent }) => {
   const { toast } = useToast();
-  const [editingSession, setEditingSession] = useState<{ dayIndex: number; sessionIndex: number } | null>(null);
-  const [customCosts, setCustomCosts] = useState<Record<string, number>>({});
   const menuData = getManagedMenuCatalog();
 
   const handleManualSave = () => {
@@ -79,13 +77,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
     }
   };
 
-  const updateCustomCost = (dishKey: string, cost: number) => {
-    setCustomCosts(prev => ({
-      ...prev,
-      [dishKey]: cost,
-    }));
-  };
-
   const updateSessionRate = (dayIndex: number, sessionIndex: number, ratePerPerson: number) => {
     const updatedDays = menu.days.map((day, index) => index === dayIndex
       ? {
@@ -100,17 +91,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
 
   const calculateSessionTotal = (dayIndex: number, sessionIndex: number) => {
     const session = menu.days[dayIndex].sessions[sessionIndex];
-    let total = 0;
-
-    session.selectedDishes.forEach(dishKey => {
-      const dish = findDishByKey(dishKey);
-      if (dish) {
-        const cost = customCosts[dishKey] ?? dish.estimatedCost ?? 0;
-        total += cost * session.headCount;
-      }
-    });
-
-    return total;
+    return (session.ratePerPerson ?? 0) * (session.headCount ?? 0);
   };
 
   const calculateGrandTotal = () => {
@@ -120,7 +101,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
         total += calculateSessionTotal(dayIndex, sessionIndex);
       });
     });
-    return total;
+    return total + (menu.transportCharge ?? 0);
   };
 
   const categories = Object.keys(menuData) as Array<keyof typeof menuData>;
@@ -216,82 +197,88 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
               const sessionTotal = calculateSessionTotal(dayIndex, sessionIndex);
 
               return (
-                <div key={session.id} className="p-5 border-2 border-pink-200 rounded-lg bg-gradient-to-br from-white to-pink-50">
-                  <div className="flex justify-between items-start mb-4">
+                <div key={session.id} className="p-5 border-2 border-pink-200 rounded-lg bg-gradient-to-br from-white to-pink-50 space-y-4">
+                  {/* Session Header with Pricing per Head */}
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 p-4 bg-white rounded-xl border border-pink-200 shadow-sm">
                     <div>
-                      <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <Utensils className="h-5 w-5" aria-hidden="true" />
-                        {session.name}
-                      </h4>
-                      <p className="text-base text-gray-600 mt-1">
-                        {session.startTime} - {session.endTime} | {session.headCount} people
+                      <div className="flex items-center gap-2">
+                        <Utensils className="h-5 w-5 text-pink-600" aria-hidden="true" />
+                        <h4 className="text-xl font-bold text-gray-800">
+                          {session.name}
+                        </h4>
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 border border-pink-200">
+                          {selectedDishes.length} items confirmed
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {session.startTime} – {session.endTime} | <b className="text-gray-800">{session.headCount} guests</b>
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-600">Dishes Selected</p>
-                      <p className="text-3xl font-bold text-pink-600">{selectedDishes.length}</p>
-                      <p className="text-sm text-green-600 font-semibold mt-1">Catalog estimate: ₹{sessionTotal.toLocaleString()}</p>
-                      <Label className="text-xs text-gray-600">Quoted rate per person (₹)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={session.ratePerPerson ?? 0}
-                        onChange={(e) => updateSessionRate(dayIndex, sessionIndex, Math.max(0, Number(e.target.value) || 0))}
-                        className="mt-1 w-36"
-                      />
-                      <p className="text-sm font-semibold text-gray-700 mt-1">
-                        Quoted total: ₹{((session.ratePerPerson ?? 0) * session.headCount).toLocaleString()}
-                      </p>
+
+                    {/* Pricing Per Head Editor */}
+                    <div className="flex items-center gap-3 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 p-3 rounded-xl border-2 border-pink-300">
+                      <div>
+                        <Label className="text-xs font-bold text-gray-700 block">
+                          Pricing per Head (₹ / plate)
+                        </Label>
+                        <div className="relative mt-1">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-gray-500">₹</span>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="0"
+                            value={session.ratePerPerson ?? 0}
+                            onChange={(e) => updateSessionRate(dayIndex, sessionIndex, Math.max(0, Number(e.target.value) || 0))}
+                            className="w-32 pl-7 font-bold text-base h-10 border-2 border-pink-300 focus:border-pink-500 rounded-lg bg-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="text-right pl-3 border-l border-pink-200 min-w-[130px]">
+                        <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500">Session Quote</p>
+                        <p className="text-xl font-bold text-pink-700">
+                          ₹{sessionTotal.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[11px] text-gray-500">({session.headCount} × ₹{session.ratePerPerson ?? 0})</p>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Confirmed Selected Dishes List */}
                   {selectedDishes.length > 0 ? (
-                    <div className="space-y-4">
-                      {selectedDishes.map((dish) => (
-                        <div key={dish.selectionKey} className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-pink-200 hover:border-pink-400 transition-all">
-                          <div className="flex items-center gap-4 flex-1">
-                            <img
-                              src={dish.image}
-                              alt={dish.name_en}
-                              className="w-16 h-16 rounded-lg object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
-                              }}
-                            />
-                            <div className="flex-1">
-                              <p className="font-bold text-gray-800">{dish.name_en || dish.name}</p>
-                              <p className="text-sm text-pink-600">{dish.name_ta}</p>
-                              <p className="text-xs text-gray-500">{dish.category}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-600">Cost per unit</Label>
-                              <Input
-                                type="number"
-                                min="0"
-                                value={customCosts[dish.selectionKey] ?? dish.estimatedCost ?? 0}
-                                onChange={(e) => updateCustomCost(dish.selectionKey, parseFloat(e.target.value) || 0)}
-                                className="w-24 h-10 rounded-lg border-2 border-green-200"
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedDishes.map((dish) => (
+                          <div key={dish.selectionKey} className="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-200 hover:border-pink-400 shadow-sm transition-all">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <img
+                                src={dish.image}
+                                alt={dish.name_en}
+                                className="w-14 h-14 rounded-lg object-cover shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
+                                }}
                               />
-                            </div>
-                            <div className="text-right min-w-[100px]">
-                              <p className="text-xs text-gray-600">Total</p>
-                              <p className="text-lg font-bold text-green-600">
-                                ₹{((customCosts[dish.selectionKey] ?? dish.estimatedCost ?? 0) * session.headCount).toLocaleString()}
-                              </p>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-gray-800 text-sm truncate">{dish.name_en || dish.name}</p>
+                                <p className="text-xs text-pink-600 truncate font-medium">{dish.name_ta}</p>
+                                <span className="inline-block mt-0.5 text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                  {dish.category}
+                                </span>
+                              </div>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeDish(dayIndex, sessionIndex, dish.selectionKey)}
-                              className="hover:bg-red-100 rounded-lg"
+                              className="hover:bg-red-50 text-red-500 hover:text-red-700 rounded-lg p-2 ml-2"
+                              aria-label={`Remove ${dish.name_en || dish.name}`}
                             >
-                              <Trash2 className="h-5 w-5 text-red-500" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
 
                       {/* Add More Dishes Dialog */}
                       <Dialog>
@@ -301,7 +288,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                             className="w-full h-11 rounded-lg border-2 border-dashed border-pink-300 hover:bg-pink-50 text-pink-600 font-semibold"
                           >
                             <Plus className="h-4 w-4 mr-2" />
-                            Add More Dishes to This Session
+                            Add More Dishes to {session.name}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -329,9 +316,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                                       >
                                         <p className="font-semibold text-sm">{item.name_en || item.name}</p>
                                         <p className="text-xs text-gray-600">{item.name_ta}</p>
-                                        <p className="text-xs text-green-600 mt-1">₹{item.estimatedCost || 0}</p>
                                         {isAlreadySelected && (
-                                          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                          <p className="text-xs text-green-600 mt-1 flex items-center gap-1 font-medium">
                                             <Check className="h-3 w-3" aria-hidden="true" />
                                             Already added
                                           </p>

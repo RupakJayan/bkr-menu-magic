@@ -1,7 +1,6 @@
 import React from "react";
 import { Check, Leaf } from "lucide-react";
 import type { Dish } from "@/types/menu";
-import { formatCurrency } from "@/utils/formatters";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400";
@@ -46,11 +45,6 @@ export const DishCard: React.FC<DishCardProps> = ({
         </span>
       )}
 
-      {typeof dish.estimatedCost === "number" && (
-        <span className="absolute top-2 left-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-2 py-1 rounded-lg text-sm font-bold shadow-lg">
-          {formatCurrency(dish.estimatedCost)}
-        </span>
-      )}
 
       {dish.isVegetarian && (
         <span
