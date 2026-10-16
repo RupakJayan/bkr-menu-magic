@@ -9,6 +9,7 @@
 1. [Change Management Philosophy & Governance](#1-change-management-philosophy--governance)
 2. [Version History & Release Matrix](#2-version-history--release-matrix)
 3. [Comprehensive Change Log](#3-comprehensive-change-log)
+   - [v1.5.9 — Custom Announcement / Live Counter Mention Banner & Chef's Kitchen Production Sheet PDF in Tamil](#v159--custom-announcement--live-counter-mention-banner--chefs-kitchen-production-sheet-pdf-in-tamil)
    - [v1.5.8 — Multimodal Gemini Audio Model Fallback, 1-Click Free Voice Typing Switch, Search Bar Mic Wiring & E2E Test Suite (25/25 Green)](#v158--multimodal-gemini-audio-model-fallback-1-click-free-voice-typing-switch-search-bar-mic-wiring--e2e-test-suite-2525-green)
    - [v1.5.7 — Live Bilingual Update Reflection in Session Review, Friendly Custom Dish Badging & Human-Readable IDs](#v157--live-bilingual-update-reflection-in-session-review-friendly-custom-dish-badging--human-readable-ids)
    - [v1.5.6 — Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback for AI Voice Assistant](#v156--inline-gemini-api-key-setup--multi-tier-browser-storage-fallback-for-ai-voice-assistant)
@@ -48,6 +49,7 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 | Version | Release Date | Summary of Core Deliverables | Verification Status |
 |---|---|---|---|
+| **v1.5.9** | October 2026 | Custom Announcement / Live Counter Mention Banner ("Live tea/coffee starts from Day 1 to next day..."), Dedicated Chef's Kitchen Production Sheet (PDF in Tamil) with Headcount & Timings and ZERO Pricing details, Client Quotation PDF/DOCX Header Integration, Unit Test UT-15 & E2E Test ST-09 (27/27 Tests Green) | ✅ Verified (27/27 Tests & Clean Build Pass) |
 | **v1.5.8** | October 2026 | Multimodal Gemini Audio Model Fallback (`gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-2.5-flash`), 1-Click Free Browser Voice Typing Switch, Search Bar Mic Direct Wiring, Unlocked Mobile Keyboard InputMode, E2E Test Suite Pass (25/25 Tests Green) | ✅ Verified (25/25 Tests & Clean Build Pass) |
 | **v1.5.7** | October 2026 | Live Bilingual Update Reflection in Session Review (`SessionMenuManageDialog`), Friendly Custom Dish Badging (`✨ Custom Dish`), Human-Readable Custom IDs (`custom_slug_suffix`), Voice Review Edit Persistence (`commitVoiceDishesToSession`), Headless Resilient Storage, Unit Test UT-14 | ✅ Verified (23/23 Tests & Clean Build Pass) |
 | **v1.5.6** | October 2026 | Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback (`localStorage`, `sessionStorage`, `window`, `.env`), 1-Click Key Persist, Friendly Guidance, Uninterrupted Speech Recording | ✅ Verified (22/22 Tests & Clean Build Pass) |
@@ -66,6 +68,36 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 ---
 
 ## 3. Comprehensive Change Log
+
+### v1.5.9 — Custom Announcement / Live Counter Mention Banner & Chef's Kitchen Production Sheet PDF in Tamil
+
+#### 1. Background & Problem Statement
+1. **Prominent Live Counter & Service Announcements**: Caterers frequently need a dedicated banner or note prominently positioned right after the client details (e.g. *"Live Tea & Filter Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM"* or *"Live Jalebi & Dosa counter during reception"*). Previously, notes had to be buried in general remarks or session notes, where clients and staff could easily miss them.
+2. **Dedicated Head Chef Kitchen Production Sheet (PDF in Tamil)**:
+   - Head cooks and kitchen execution crews only need a clean, authoritative list of sessions, meal timings, guest headcounts, and authentic Tamil dish names.
+   - **Critical Commercial Constraint**: Kitchen teams must **NEVER** see pricing details (rates per person, dish costs, GST percentages, or grand financial totals).
+   - Previously, only full client quotations containing commercial pricing and financial summaries could be downloaded.
+
+#### 2. Key Engineering Solutions Implemented
+- **Custom Announcement / Live Counter Field (`customMention`)**:
+  - Added `customMention?: string;` to `EventMenu` type in `src/types/menu.ts` and initialized it in `createEmptyMenu()` (`src/services/menuCalculationService.ts`).
+  - Added dedicated input section in `src/components/steps/EventDetailsStep.tsx` right after Venue Details with quick presets (e.g., Live Tea/Coffee Counter, Live Chaat Counter, Continuous Welcome Drink Service).
+  - Added real-time synced callout in `src/components/steps/ReviewStep.tsx` with an inline quick-editor for on-the-fly corrections.
+  - Added Live Counter Notice banner card in `src/components/steps/DocumentGenerationStep.tsx`.
+- **Integrated Client Quotation Exports (PDF & DOCX)**:
+  - In `src/services/pdfExportService.ts` (`buildEventMenuPDFBlob`), rendered the custom announcement callout box directly below client/venue details.
+  - In `src/services/docxExportService.ts`, inserted an amber-highlighted callout box with a coffee/bell icon and bilingual header immediately following the metadata table.
+- **Dedicated Chef's Kitchen Production Sheet (Tamil PDF)**:
+  - Created `buildChefKitchenPDFBlob` and `generateChefKitchenPDF` in `src/services/pdfExportService.ts`.
+  - **Zero Pricing Details**: Completely omits rates per person, subtotal, GST, transport charges, and grand totals.
+  - **Chef-Focused Information Architecture**: Features client/event details, event dates, Tamil solar date, guest headcount per session, meal timings, category-wise authentic Tamil dish names, and kitchen preparation reminders.
+  - Added dedicated export card with download button and print options in `src/components/steps/DocumentGenerationStep.tsx` (`pdf-chef-ta`).
+- **Playwright Test Suite Integration (27/27 Tests Green)**:
+  - Added `UT-15` in `tests/unit.test.ts` verifying `customMention` persistence and `buildChefKitchenPDFBlob` generation.
+  - Added `ST-09` in `tests/system.spec.ts` verifying end-to-end flow from Event Details input to Review display and Chef's Sheet generation.
+  - Ensured safe cross-platform compatibility for `jsPDF` constructors and canvas/image fallbacks in both browser and headless test environments.
+
+---
 
 ### v1.5.8 — Multimodal Gemini Audio Model Fallback, 1-Click Free Voice Typing Switch, Search Bar Mic Wiring & E2E Test Suite (25/25 Green)
 

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getTamilSolarDate } from '@/utils/tamilDate';
 import { differenceInCalendarDays } from '@/utils/istDate';
-import { CalendarDays, Camera, Clock3, MapPin, NotebookPen, Sparkles, UserRound } from 'lucide-react';
+import { CalendarDays, Camera, Clock3, Coffee, MapPin, NotebookPen, Sparkles, UserRound } from 'lucide-react';
 import { VenueLocationPicker } from '@/components/venue/VenueLocationPicker';
 
 interface EventDetailsStepProps {
@@ -22,6 +22,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
   const [clientPhone, setClientPhone] = useState(menu.clientDetails.phone);
   const [venueName, setVenueName] = useState(menu.venueDetails.name);
   const [venueAddress, setVenueAddress] = useState(menu.venueDetails.address);
+  const [customMention, setCustomMention] = useState(menu.customMention || '');
   const [transportCharge, setTransportCharge] = useState<number | string>(menu.transportCharge ? menu.transportCharge : '');
   const [googleMapsUrl, setGoogleMapsUrl] = useState(menu.venueDetails.googleMapsUrl || '');
   const [startDate, setStartDate] = useState(menu.startDate);
@@ -33,6 +34,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
     setClientPhone(menu.clientDetails.phone);
     setVenueName(menu.venueDetails.name);
     setVenueAddress(menu.venueDetails.address);
+    setCustomMention(menu.customMention || '');
     setTransportCharge(menu.transportCharge ? menu.transportCharge : '');
     setGoogleMapsUrl(menu.venueDetails.googleMapsUrl || '');
     setStartDate(menu.startDate);
@@ -63,6 +65,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
         address: venueAddress,
         googleMapsUrl: googleMapsUrl || undefined,
       },
+      customMention: customMention.trim() || undefined,
       tamilDate: tamilDateTa || undefined,
       transportCharge: transportCharge === '' ? 0 : Math.max(0, Number(transportCharge) || 0),
       startDate,
@@ -171,6 +174,35 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
             onVenueAddressChange={setVenueAddress}
             onGoogleMapsUrlChange={setGoogleMapsUrl}
           />
+        </section>
+
+        {/* Special Service Announcement / Live Counter Custom Mention */}
+        <section className="planner-form-section space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="planner-icon-badge w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg text-white">
+              <Coffee className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">Live Counter & Service Notice (Optional)</h3>
+              <p className="text-sm text-gray-500">e.g. Live tea/coffee timings or special counter schedules shown at the top of all menus.</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="customMention" className="text-base font-semibold text-gray-700 flex items-center justify-between">
+              <span>Custom Mention / Service Announcement</span>
+              <span className="text-xs font-normal text-gray-500">நேரடி கவுண்டர் மற்றும் சிறப்பு அறிவிப்பு</span>
+            </Label>
+            <Input
+              id="customMention"
+              value={customMention}
+              onChange={(e) => setCustomMention(e.target.value)}
+              placeholder="e.g. Live Tea & Filter Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM"
+              className="h-12 text-base rounded-lg border-2 border-amber-200 focus:border-amber-600 focus:ring-amber-600"
+            />
+            <p className="text-xs text-gray-500">
+              This notice appears prominently at the top of client quotations, Word documents, and the Chef's kitchen preparation sheet.
+            </p>
+          </div>
         </section>
 
         {/* Event Dates */}

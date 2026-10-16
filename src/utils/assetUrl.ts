@@ -6,7 +6,7 @@
  * for any asset referenced as a string literal in JS/TS.
  */
 export function assetUrl(path: string): string {
-  const base = import.meta.env.BASE_URL ?? "/";
+  const base = (typeof import.meta !== "undefined" && (import.meta as any).env?.BASE_URL) ?? "/";
   // Avoid double slashes when path already starts with `/`
   return `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }

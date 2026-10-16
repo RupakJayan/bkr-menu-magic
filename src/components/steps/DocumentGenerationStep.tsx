@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { EventMenu } from '@/types/menu';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CalendarDays, CheckCircle, Download, FileText, Globe2, MapPin, Palette, Utensils, ClipboardList } from 'lucide-react';
-import { generateEventMenuPDF } from '@/services/pdfExportService';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, CalendarDays, CheckCircle, Coffee, Download, FileText, Globe2, MapPin, Palette, Utensils, ClipboardList } from 'lucide-react';
+import { generateEventMenuPDF, generateChefKitchenPDF } from '@/services/pdfExportService';
 import { generateEventMenuDOCX } from '@/services/docxExportService';
 import { saveEventMenu } from '@/services/localAdminService';
 
-type DocumentType = 'pdf-en' | 'pdf-ta' | 'docx-en' | 'docx-ta';
+type DocumentType = 'pdf-en' | 'pdf-ta' | 'pdf-chef-ta' | 'docx-en' | 'docx-ta';
 
 interface DocumentGenerationStepProps {
   menu: EventMenu;
@@ -29,6 +30,8 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
         await generateEventMenuPDF(menu, 'en');
       } else if (type === 'pdf-ta') {
         await generateEventMenuPDF(menu, 'ta');
+      } else if (type === 'pdf-chef-ta') {
+        await generateChefKitchenPDF(menu);
       } else if (type === 'docx-en') {
         await generateEventMenuDOCX(menu, 'en');
       } else if (type === 'docx-ta') {
@@ -45,10 +48,51 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
   };
 
   const documents = [
-    { id: 'pdf-en', label: 'English PDF Menu', labelTa: 'ஆங்கில PDF', icon: FileText, gradient: 'from-pink-500 to-rose-500' },
-    { id: 'pdf-ta', label: 'Tamil PDF Menu', labelTa: 'தமிழ் PDF', icon: FileText, gradient: 'from-rose-500 to-pink-600' },
-    { id: 'docx-en', label: 'English Word Document', labelTa: 'ஆங்கில Word', icon: FileText, gradient: 'from-pink-400 to-rose-400' },
-    { id: 'docx-ta', label: 'Tamil Word Document', labelTa: 'தமிழ் Word', icon: FileText, gradient: 'from-rose-400 to-pink-500' },
+    {
+      id: 'pdf-chef-ta' as DocumentType,
+      label: "Chef's Kitchen Sheet (Tamil PDF)",
+      labelTa: "சமையல் தயாரிப்பு பட்டியல் (விலை விவரங்கள் இன்றி)",
+      description: "Dedicated preparation sheet in authentic Tamil for cooks & kitchen staff with exact headcounts & timings. Completely excludes pricing.",
+      icon: Utensils,
+      gradient: 'from-amber-600 via-orange-600 to-amber-700',
+      badge: "Chef Special · Zero Pricing",
+    },
+    {
+      id: 'pdf-ta' as DocumentType,
+      label: 'Tamil PDF Client Menu',
+      labelTa: 'தமிழ் PDF மேற்கோள்',
+      description: "Formal catering quotation in Tamil with rates, counts and financial summary.",
+      icon: FileText,
+      gradient: 'from-rose-500 to-pink-600',
+      badge: "Client Quotation",
+    },
+    {
+      id: 'pdf-en' as DocumentType,
+      label: 'English PDF Client Menu',
+      labelTa: 'ஆங்கில PDF மேற்கோள்',
+      description: "Formal catering quotation in English with rates and terms.",
+      icon: FileText,
+      gradient: 'from-pink-500 to-rose-500',
+      badge: "Client Quotation",
+    },
+    {
+      id: 'docx-ta' as DocumentType,
+      label: 'Tamil Word Document',
+      labelTa: 'தமிழ் Word ஆவணம்',
+      description: "Fully editable Word document with authentic Latha Tamil font.",
+      icon: FileText,
+      gradient: 'from-rose-400 to-pink-500',
+      badge: "Editable DOCX",
+    },
+    {
+      id: 'docx-en' as DocumentType,
+      label: 'English Word Document',
+      labelTa: 'ஆங்கில Word ஆவணம்',
+      description: "Fully editable Word document with standard BKR layout.",
+      icon: FileText,
+      gradient: 'from-pink-400 to-rose-400',
+      badge: "Editable DOCX",
+    },
   ];
 
   return (
@@ -74,6 +118,28 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
         </div>
       )}
 
+      {/* Live Counter & Custom Service Announcement Pill */}
+      {menu.customMention && (
+        <div className="p-4 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm flex items-start gap-3">
+          <div className="p-2.5 rounded-lg bg-amber-600 text-white shrink-0 shadow-sm">
+            <Coffee className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
+                Live Counter & Service Notice / நேரடி கவுண்டர் அறிவிப்பு
+              </span>
+              <Badge className="bg-amber-200 text-amber-900 border-amber-300 text-[10px] px-1.5 py-0 font-bold">
+                Printed on Top of All Menus & Chef Sheet
+              </Badge>
+            </div>
+            <p className="text-sm font-semibold text-gray-900 mt-1">
+              &ldquo;{menu.customMention}&rdquo;
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Document Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {documents.map((doc) => {
@@ -81,16 +147,26 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
           const isGenerating = generating === doc.id;
 
           return (
-            <div key={doc.id} className="planner-document-card bg-white rounded-xl shadow-lg border-2 border-pink-200 overflow-hidden hover:border-pink-400 transition-all">
+            <div key={doc.id} className="planner-document-card bg-white rounded-xl shadow-lg border-2 border-pink-200 overflow-hidden hover:border-pink-400 transition-all flex flex-col justify-between">
               <div className={`bg-gradient-to-r ${doc.gradient} p-5 text-white`}>
-                <div className="flex items-center gap-3">
-                  <div className="planner-document-icon"><doc.icon className="h-7 w-7" aria-hidden="true" /></div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold">{doc.label}</h3>
-                    <p className="text-base opacity-90">{doc.labelTa}</p>
+                <div className="flex items-start gap-3">
+                  <div className="planner-document-icon p-2 bg-white/10 rounded-lg shrink-0">
+                    <doc.icon className="h-7 w-7" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="text-xl font-bold leading-tight">{doc.label}</h3>
+                      {doc.badge && (
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white">
+                          {doc.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm opacity-95 font-medium">{doc.labelTa}</p>
+                    <p className="text-xs opacity-85 mt-1.5 leading-relaxed">{doc.description}</p>
                   </div>
                   {isGenerated && (
-                    <div className="planner-generated-mark bg-white/20 backdrop-blur-sm rounded-full p-2">
+                    <div className="planner-generated-mark bg-white/20 backdrop-blur-sm rounded-full p-2 shrink-0">
                       <CheckCircle className="h-6 w-6" />
                     </div>
                   )}
@@ -103,8 +179,8 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
                   disabled={isGenerating}
                   className={`w-full h-12 text-base font-semibold rounded-lg shadow-md transition-all ${
                     isGenerated
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-                      : `bg-gradient-to-r ${doc.gradient} hover:opacity-90`
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
+                      : `bg-gradient-to-r ${doc.gradient} hover:opacity-90 text-white`
                   }`}
                 >
                   <Download className="h-5 w-5 mr-2" />

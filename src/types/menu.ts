@@ -62,6 +62,7 @@ export interface EventMenu {
   id: string;
   clientDetails: ClientDetails;
   venueDetails: VenueDetails;
+  customMention?: string; // e.g. "Live Tea & Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM" / "நேரடி தேநீர் கவுண்டர் நாள் 1 முதல் நாள் 2 வரை தொடர்ந்து இயங்கும்"
   tamilDate?: string;
   transportCharge?: number;
   startDate: string;

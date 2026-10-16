@@ -73,6 +73,7 @@ export const createEmptyMenu = (): EventMenu => {
       name: "",
       address: "",
     },
+    customMention: "",
     startDate: today,
     endDate: today,
     numberOfDays: 1,

@@ -466,6 +466,33 @@ export const buildEventMenuDOCXBlob = async (
     }),
     heading(localized(language, "EVENT DETAILS", "நிகழ்வு விவரங்கள்"), HeadingLevel.HEADING_2),
     metaTable(infoRows, language),
+    ...(menu.customMention
+      ? [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: localized(
+                  language,
+                  "LIVE COUNTER & SERVICE NOTICE: ",
+                  "நேரடி கவுண்டர் மற்றும் சிறப்பு அறிவிப்பு: "
+                ),
+                bold: true,
+                color: BRAND_BROWN,
+                size: 24,
+                font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
+              }),
+              new TextRun({
+                text: menu.customMention,
+                bold: true,
+                color: INK,
+                size: 24,
+                font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
+              }),
+            ],
+            spacing: { before: 140, after: 120 },
+          }),
+        ]
+      : []),
     ...createSessionRows(menu, language, settings),
   ];
 

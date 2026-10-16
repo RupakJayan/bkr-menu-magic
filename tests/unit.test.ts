@@ -303,4 +303,50 @@ test.describe("UT - Unit Tests", () => {
     expect(updatedExisting?.name_en).toBe("Corrected Royal Pongal");
     expect(updatedExisting?.name_ta).toBe("ராயல் பொங்கல்");
   });
+
+  test("UT-15: Custom Mention / Live Counter Notice & Chef's Production Sheet PDF (No Pricing)", async () => {
+    const { buildChefKitchenPDFBlob, buildEventMenuPDFBlob } = await import("../src/services/pdfExportService");
+    const { createEmptyMenu } = await import("../src/services/menuCalculationService");
+
+    const sampleMenu = createEmptyMenu();
+    sampleMenu.clientDetails.name = "Rupak & Meena Wedding";
+    sampleMenu.clientDetails.phone = "9876543210";
+    sampleMenu.venueDetails.name = "Sri Krishna Kalyana Mandapam";
+    sampleMenu.venueDetails.address = "Pollachi, Coimbatore";
+    sampleMenu.customMention = "Live Tea & Filter Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM continuously";
+    sampleMenu.days = [
+      {
+        dayNumber: 1,
+        date: "2026-10-20",
+        sessions: [
+          {
+            id: "sess_1",
+            name: "காலை உணவு (Breakfast)",
+            type: "breakfast",
+            startTime: "07:30",
+            endTime: "10:00",
+            headCount: 350,
+            ratePerPerson: 180,
+            selectedDishes: ["breakfast_idli", "breakfast_vada"],
+          },
+        ],
+      },
+    ];
+
+    // Verify customMention is retained on menu
+    expect(sampleMenu.customMention).toContain("Live Tea & Filter Coffee counter");
+
+    // Generate Chef's Kitchen Sheet PDF Blob
+    const chefResult = await buildChefKitchenPDFBlob(sampleMenu);
+    expect(chefResult).toBeDefined();
+    expect(chefResult.fileName).toContain("BKR_Chefs_Kitchen_Sheet");
+    expect(chefResult.fileName).toContain("Tamil.pdf");
+    expect(chefResult.blob.size).toBeGreaterThan(1000);
+
+    // Generate Client Quotation PDF Blob
+    const clientResult = await buildEventMenuPDFBlob(sampleMenu, "ta");
+    expect(clientResult).toBeDefined();
+    expect(clientResult.fileName).toContain("BKR_Event_Menu");
+    expect(clientResult.blob.size).toBeGreaterThan(1000);
+  });
 });

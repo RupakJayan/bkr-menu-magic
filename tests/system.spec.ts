@@ -368,4 +368,60 @@ test.describe("ST - System / End-to-End Tests", () => {
     }
     await page.waitForTimeout(300);
   });
+
+  test("ST-09: Live Counter Custom Mention and Chef Kitchen Sheet Tamil PDF Generation", async ({ page }) => {
+    // Authenticate admin session
+    await page.goto("/bkr-menu-magic/#/admin");
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+    });
+
+    // Open Menu Creator Step 1
+    await page.goto("/bkr-menu-magic/#/menu-creator");
+    await page.waitForTimeout(600);
+
+    const clientInput = page.locator("#clientName");
+    await clientInput.waitFor({ state: "visible", timeout: 15000 });
+    await clientInput.fill("Senthil & Deepa Reception");
+    await page.locator("#clientPhone").fill("9842123456");
+    await page.locator("#venueName").fill("Madurai Meenakshi Mahal");
+    await page.locator("#venueAddress").fill("Madurai, Tamil Nadu");
+
+    // Fill Custom Mention / Live Counter Notice
+    const mentionInput = page.locator("#customMention");
+    await expect(mentionInput).toBeVisible();
+    await mentionInput.fill("Live Tea & Filter Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM");
+
+    // Advance to Step 2 Session Planning
+    await page.locator('button:has-text("Continue to Session Planning")').click();
+    await page.waitForTimeout(600);
+
+    // Add session to Day 1
+    await page.locator('button:has-text("Add Session to Day 1")').click();
+    await page.waitForTimeout(300);
+
+    // Advance to Step 3 Menu Selection
+    await page.locator('button:has-text("Continue to Menu Selection")').click();
+    await page.waitForTimeout(800);
+
+    // Advance to Step 4 Review & Pricing
+    await page.locator('button:has-text("Proceed to Next Session"), button:has-text("Continue to Review & Pricing")').first().click();
+    await page.waitForTimeout(600);
+
+    // Verify Custom Mention callout is visible in Review
+    const reviewNotice = page.locator('text=Live Tea & Filter Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM').first();
+    await expect(reviewNotice).toBeVisible();
+
+    // Advance to Step 5 Document Generation
+    await page.locator('button:has-text("Continue to Generate Documents"), button:has-text("Generate Documents"), button:has-text("Continue to Document Generation")').first().click();
+    await page.waitForTimeout(600);
+
+    // Verify Chef's Kitchen Sheet (Tamil PDF) card is visible
+    const chefCard = page.locator('text=Chef\'s Kitchen Sheet (Tamil PDF)').first();
+    await expect(chefCard).toBeVisible();
+
+    // Verify Custom Mention notice banner is visible in Document Generation
+    const docNotice = page.locator('text=Live Counter & Service Notice / நேரடி கவுண்டர் அறிவிப்பு').first();
+    await expect(docNotice).toBeVisible();
+  });
 });

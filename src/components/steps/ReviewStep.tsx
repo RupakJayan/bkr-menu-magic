@@ -4,7 +4,7 @@ import { buildDishKey, findDishByKey, getManagedMenuCatalog, normalizeDishKeys }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
+import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
@@ -24,6 +24,8 @@ interface ReviewStepProps {
 export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNext, onPrevious, onStartNewEvent }) => {
   const { toast } = useToast();
   const menuData = getManagedMenuCatalog();
+  const [isEditingMention, setIsEditingMention] = useState(false);
+  const [mentionInput, setMentionInput] = useState(menu.customMention || '');
 
   const handleManualSave = () => {
     try {
@@ -173,6 +175,79 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                 </p>
                 <p className="text-sm text-gray-600">{menu.numberOfDays} day(s)</p>
               </div>
+            </div>
+
+            {/* Live Counter & Special Service Notice Callout */}
+            <div className="md:col-span-2 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Coffee className="h-5 w-5 text-amber-700 shrink-0" />
+                  <span className="text-sm font-bold text-amber-900 uppercase tracking-wide">
+                    Live Counter & Special Service Notice | நேரடி கவுண்டர் அறிவிப்பு
+                  </span>
+                </div>
+                {!isEditingMention && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMentionInput(menu.customMention || '');
+                      setIsEditingMention(true);
+                    }}
+                    className="text-xs text-amber-800 hover:text-amber-950 font-semibold flex items-center gap-1 underline"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                    {menu.customMention ? 'Edit Notice' : 'Add Notice'}
+                  </button>
+                )}
+              </div>
+
+              {isEditingMention ? (
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <Input
+                    value={mentionInput}
+                    onChange={(e) => setMentionInput(e.target.value)}
+                    placeholder="e.g. Live Tea & Filter Coffee counter starts from Day 1 06:00 AM to Day 2 10:00 PM"
+                    className="h-10 text-sm bg-white border-amber-300"
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        onMenuChange({
+                          ...menu,
+                          customMention: mentionInput.trim() || undefined,
+                          updatedAt: new Date(),
+                        });
+                        setIsEditingMention(false);
+                      }}
+                      className="h-10 px-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs"
+                    >
+                      <Save className="h-3.5 w-3.5 mr-1" />
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsEditingMention(false)}
+                      className="h-10 px-3 border-amber-300 text-xs"
+                    >
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-gray-800 italic">
+                  {menu.customMention ? (
+                    `"${menu.customMention}"`
+                  ) : (
+                    <span className="text-gray-400 not-italic">
+                      No custom live counter mention added. Click &quot;Add Notice&quot; to specify live tea/coffee timings or chef arrangements.
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
         </div>
