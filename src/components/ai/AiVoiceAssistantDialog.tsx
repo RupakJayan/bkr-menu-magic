@@ -46,6 +46,7 @@ interface AiVoiceAssistantDialogProps {
   categories: string[];
   onAddDishToSession: (category: string, dishId: string) => void;
   onCatalogUpdated: () => void;
+  onFallbackToBrowserVoice?: () => void;
 }
 
 type AssistantStep = "idle" | "recording" | "analyzing" | "review";
@@ -59,6 +60,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   categories,
   onAddDishToSession,
   onCatalogUpdated,
+  onFallbackToBrowserVoice,
 }) => {
   const { toast } = useToast();
   const [step, setStep] = useState<AssistantStep>("idle");
@@ -140,7 +142,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
     const activeKey = apiKey.trim() || getGeminiApiKey();
     if (!activeKey) {
       setShowKeyEditor(true);
-      setErrorMessage("Please enter and save your Gemini API key below to use the AI Voice Assistant.");
+      setErrorMessage("Please enter and save your Gemini API key below to use the AI Voice Assistant, or switch to Free Browser Voice Typing.");
       return;
     }
 
@@ -184,7 +186,11 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
       playVoiceTickSound();
     } catch (err: any) {
       console.error("Gemini voice assistant processing error:", err);
-      setErrorMessage(err.message || "Failed to analyze speech. Please check your network or Gemini API key.");
+      const msg = err?.message || "Failed to analyze speech. Please check your network or Gemini API key.";
+      setErrorMessage(msg);
+      if (msg.toLowerCase().includes("key") || msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("http 40")) {
+        setShowKeyEditor(true);
+      }
       setStep("idle");
     }
   };
@@ -350,12 +356,30 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
 
           {/* Error Banner */}
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-xs text-danger flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <span className="font-semibold">Speech Error: </span>
-                {errorMessage}
+            <div className="p-3.5 rounded-xl bg-danger/10 border border-danger/30 text-xs text-danger space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span className="font-semibold">Speech Error: </span>
+                  {errorMessage}
+                </div>
               </div>
+              {onFallbackToBrowserVoice && (
+                <div className="pt-1 flex items-center justify-end">
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      onOpenChange(false);
+                      onFallbackToBrowserVoice();
+                    }}
+                    className="h-7 text-xs bg-surf border-danger/40 text-danger hover:bg-danger/10 font-semibold rounded-lg shadow-sm"
+                  >
+                    🎙️ Switch to Free Browser Voice Typing (No Key Required)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -573,6 +597,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                             <Input
                               value={dish.name_en}
                               onChange={(e) => handleUpdateDishNameEn(idx, e.target.value)}
+                              inputMode="text"
                               autoComplete="off"
                               autoCorrect="off"
                               spellCheck={false}
@@ -587,6 +612,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                             <Input
                               value={dish.name_ta}
                               onChange={(e) => handleUpdateDishNameTa(idx, e.target.value)}
+                              inputMode="text"
                               autoComplete="off"
                               autoCorrect="off"
                               spellCheck={false}

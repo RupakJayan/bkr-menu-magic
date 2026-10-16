@@ -243,4 +243,129 @@ test.describe("ST - System / End-to-End Tests", () => {
     const nextSessionBtn = page.locator('button:has-text("Proceed to Next Session")').first();
     await expect(nextSessionBtn).toBeVisible();
   });
+
+  test("ST-07: Serving Sequence Order Arrangement, Reordering, and Sorting", async ({ page }) => {
+    // Authenticate admin session
+    await page.goto("/bkr-menu-magic/#/admin");
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+    });
+
+    // Open Menu Creator
+    await page.goto("/bkr-menu-magic/#/menu-creator");
+    await page.waitForTimeout(600);
+
+    const clientInput = page.locator("#clientName");
+    await clientInput.waitFor({ state: "visible", timeout: 15000 });
+    await clientInput.fill("Rupak Jayan");
+    await page.locator("#clientPhone").fill("9876543210");
+    await page.locator("#venueName").fill("Sri Krishna Mahal");
+    await page.locator("#venueAddress").fill("Anaimalai, Pollachi, Tamil Nadu");
+
+    // Advance to Step 2
+    await page.locator('button:has-text("Continue to Session Planning")').click();
+    await page.waitForTimeout(600);
+
+    // Add session to Day 1
+    await page.locator('button:has-text("Add Session to Day 1")').click();
+    await page.waitForTimeout(300);
+
+    // Advance to Step 3 Menu Selection
+    await page.locator('button:has-text("Continue to Menu Selection")').click();
+    await page.waitForTimeout(800);
+
+    // Open Manage Menu dialog
+    await page.locator('button:has-text("Manage Menu")').first().click();
+    await page.waitForTimeout(400);
+
+    // Add first dish: Pineapple Kesari
+    await page.locator('button:has-text("Add Custom Dish")').first().click();
+    await page.waitForTimeout(200);
+    const dishEnInput = page.locator('input[placeholder*="Mushroom Pepper Fry"]').first();
+    await dishEnInput.fill("Pineapple Kesari");
+    await page.locator('button:has-text("Add & Select for")').first().click();
+    await page.waitForTimeout(400);
+
+    // Add second dish: Medu Vada
+    await page.locator('button:has-text("Add Custom Dish")').first().click();
+    await page.waitForTimeout(200);
+    await dishEnInput.fill("Medu Vada");
+    await page.locator('button:has-text("Add & Select for")').first().click();
+    await page.waitForTimeout(400);
+
+    // Verify Serving Sequence Arrangement toolbar buttons exist
+    const traditionalBtn = page.locator('button:has-text("Traditional")').first();
+    await expect(traditionalBtn).toBeVisible();
+
+    const alphaBtn = page.locator('button:has-text("A → Z"), button:has-text("Alphabetical")').first();
+    await expect(alphaBtn).toBeVisible();
+
+    const catBtn = page.locator('button:has-text("By Category"), button:has-text("Category")').first();
+    await expect(catBtn).toBeVisible();
+
+    const reverseBtn = page.locator('button:has-text("Reverse")').first();
+    await expect(reverseBtn).toBeVisible();
+
+    // Verify live sequence numbers
+    const seqNum = page.locator('[role="dialog"] :text("#1")').first();
+    await expect(seqNum).toBeVisible();
+
+    // Close Dialog
+    await page.locator('button:has-text("Close & Keep Editing")').first().click();
+    await page.waitForTimeout(300);
+  });
+
+  test("ST-08: AI Voice Assistant Dialog, Inline Key Setup, and Zero Echo Guard", async ({ page }) => {
+    // Authenticate admin session
+    await page.goto("/bkr-menu-magic/#/admin");
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+    });
+
+    // Open Menu Creator
+    await page.goto("/bkr-menu-magic/#/menu-creator");
+    await page.waitForTimeout(600);
+
+    const clientInput = page.locator("#clientName");
+    await clientInput.waitFor({ state: "visible", timeout: 15000 });
+    await clientInput.fill("Rupak Jayan");
+    await page.locator("#clientPhone").fill("9876543210");
+    await page.locator("#venueName").fill("Sri Krishna Mahal");
+    await page.locator("#venueAddress").fill("Anaimalai, Pollachi, Tamil Nadu");
+
+    await page.locator('button:has-text("Continue to Session Planning")').click();
+    await page.waitForTimeout(600);
+
+    await page.locator('button:has-text("Add Session to Day 1")').click();
+    await page.waitForTimeout(300);
+
+    await page.locator('button:has-text("Continue to Menu Selection")').click();
+    await page.waitForTimeout(800);
+
+    // Open AI Voice Assistant Dialog
+    const voiceBtn = page.locator('button:has-text("AI Voice Assistant")').first();
+    await expect(voiceBtn).toBeVisible();
+    await voiceBtn.click();
+    await page.waitForTimeout(500);
+
+    // Verify AI Voice Assistant Dialog Header & Badges
+    const voiceDialog = page.locator('[role="dialog"]');
+    await expect(voiceDialog).toBeVisible();
+    await expect(voiceDialog.locator('text=AI Voice Assistant').first()).toBeVisible();
+    await expect(voiceDialog.locator('text=Gemini').first()).toBeVisible();
+    await expect(voiceDialog.locator('text=Zero Audio Reflection').first()).toBeVisible();
+
+    // Verify Inline Gemini Key setup banner exists
+    const keyBanner = voiceDialog.getByText(/Google Gemini API Key Setup|Gemini.*Voice Connected/).first();
+    await expect(keyBanner).toBeVisible();
+
+    // Close Dialog
+    const closeBtn = voiceDialog.locator('button:has-text("Close"), button[aria-label="Close"]').first();
+    if (await closeBtn.isVisible()) {
+      await closeBtn.click();
+    } else {
+      await page.keyboard.press("Escape");
+    }
+    await page.waitForTimeout(300);
+  });
 });

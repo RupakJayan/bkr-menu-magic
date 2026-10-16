@@ -779,18 +779,23 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                 </button>
               )}
 
-              {/* Quick AI Voice Assistant Button */}
+              {/* Instant Free Voice Typing Mic */}
               <button
                 type="button"
-                onClick={() => {
-                  if (isListening) stopListening();
-                  setIsAiVoiceAssistantOpen(true);
-                }}
-                className="p-2 rounded-lg text-acc hover:bg-acc/10 transition-all flex items-center justify-center"
-                title="Open AI Voice Assistant (Gemini Flash)"
-                aria-label="Open AI Voice Assistant"
+                onClick={toggleListening}
+                className={`p-2 rounded-lg transition-all flex items-center justify-center ${
+                  isListening
+                    ? "bg-acc text-accink shadow-sm animate-pulse"
+                    : "text-acc hover:bg-acc/10"
+                }`}
+                title={
+                  isListening
+                    ? "Stop Voice Typing"
+                    : "Start Voice Typing (Instant continuous voice entry with beep)"
+                }
+                aria-label={isListening ? "Stop Voice Typing" : "Start Voice Typing"}
               >
-                <Mic className="h-5 w-5 text-acc" />
+                <Mic className={`h-5 w-5 ${isListening ? "text-accink" : "text-acc"}`} />
               </button>
             </div>
           </div>
@@ -1548,6 +1553,10 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         onCatalogUpdated={() => {
           setCatalogVersion((v) => v + 1);
           onMenuChange({ ...menu, updatedAt: new Date() });
+        }}
+        onFallbackToBrowserVoice={() => {
+          setVoiceMode("continuous");
+          startListening();
         }}
       />
     </div>

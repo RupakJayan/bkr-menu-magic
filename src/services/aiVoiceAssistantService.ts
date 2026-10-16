@@ -218,7 +218,12 @@ Respond ONLY with a valid JSON array:
 ]
 `;
 
-  const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+  const modelsToTry = [
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
+    "gemini-flash-latest",
+  ];
   let lastError: Error | null = null;
 
   // Clean mimeType for Gemini (strip codecs parameter like "audio/webm;codecs=opus" -> "audio/webm")
@@ -257,7 +262,11 @@ Respond ONLY with a valid JSON array:
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        const rawMsg = errorData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        if (response.status === 400 || response.status === 401 || response.status === 403 || rawMsg.includes("API_KEY_INVALID") || rawMsg.includes("API key not valid")) {
+          throw new Error("Invalid or expired Gemini API key. Please verify your Google AI Studio API key.");
+        }
+        throw new Error(rawMsg);
       }
 
       const data = await response.json();

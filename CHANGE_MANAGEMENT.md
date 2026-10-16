@@ -9,6 +9,7 @@
 1. [Change Management Philosophy & Governance](#1-change-management-philosophy--governance)
 2. [Version History & Release Matrix](#2-version-history--release-matrix)
 3. [Comprehensive Change Log](#3-comprehensive-change-log)
+   - [v1.5.8 — Multimodal Gemini Audio Model Fallback, 1-Click Free Voice Typing Switch, Search Bar Mic Wiring & E2E Test Suite (25/25 Green)](#v158--multimodal-gemini-audio-model-fallback-1-click-free-voice-typing-switch-search-bar-mic-wiring--e2e-test-suite-2525-green)
    - [v1.5.7 — Live Bilingual Update Reflection in Session Review, Friendly Custom Dish Badging & Human-Readable IDs](#v157--live-bilingual-update-reflection-in-session-review-friendly-custom-dish-badging--human-readable-ids)
    - [v1.5.6 — Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback for AI Voice Assistant](#v156--inline-gemini-api-key-setup--multi-tier-browser-storage-fallback-for-ai-voice-assistant)
    - [v1.5.5 — Session Dish Serving Sequence Arrangement & Traditional South Indian Catering Course Sorting](#v155--session-dish-serving-sequence-arrangement--traditional-south-indian-catering-course-sorting)
@@ -47,6 +48,7 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 | Version | Release Date | Summary of Core Deliverables | Verification Status |
 |---|---|---|---|
+| **v1.5.8** | October 2026 | Multimodal Gemini Audio Model Fallback (`gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-2.5-flash`), 1-Click Free Browser Voice Typing Switch, Search Bar Mic Direct Wiring, Unlocked Mobile Keyboard InputMode, E2E Test Suite Pass (25/25 Tests Green) | ✅ Verified (25/25 Tests & Clean Build Pass) |
 | **v1.5.7** | October 2026 | Live Bilingual Update Reflection in Session Review (`SessionMenuManageDialog`), Friendly Custom Dish Badging (`✨ Custom Dish`), Human-Readable Custom IDs (`custom_slug_suffix`), Voice Review Edit Persistence (`commitVoiceDishesToSession`), Headless Resilient Storage, Unit Test UT-14 | ✅ Verified (23/23 Tests & Clean Build Pass) |
 | **v1.5.6** | October 2026 | Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback (`localStorage`, `sessionStorage`, `window`, `.env`), 1-Click Key Persist, Friendly Guidance, Uninterrupted Speech Recording | ✅ Verified (22/22 Tests & Clean Build Pass) |
 | **v1.5.5** | October 2026 | Session Dish Serving Sequence Arrangement (Move Up/Down, Drag-and-Drop, Sequence numbering #1, #2...), 1-Click Traditional South Indian Catering Course Sequence (Starters → Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts), Alphabetical & Category Sorting, Live Serving Order Strip on Main Planner, Unit Test UT-13 | ✅ Verified (22/22 Tests & Clean Build Pass) |
@@ -64,6 +66,32 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 ---
 
 ## 3. Comprehensive Change Log
+
+### v1.5.8 — Multimodal Gemini Audio Model Fallback, 1-Click Free Voice Typing Switch, Search Bar Mic Wiring & E2E Test Suite (25/25 Green)
+
+#### 1. Background & Problem Statement
+1. **Gemini Speech Error on Voice Recognition**: When speaking dishes in `AiVoiceAssistantDialog.tsx`, an error message occurred ("Speech error: Please set VITE_GEMINI_API_KEY" / "API_KEY_INVALID"). The service was prioritizing `"gemini-2.5-flash"` (a restricted preview model) over standard globally available multimodal audio models (`"gemini-1.5-flash"`, `"gemini-2.0-flash"`). Additionally, when an invalid key was in environment storage, the dialog showed a raw error without auto-expanding the key editor.
+2. **Missing Instant Free Voice Typing in Search Bar**: Clicking the mic icon in the main search input was previously routing to the full AI modal dialog rather than toggling the lightweight, instant continuous browser speech recognition that caters liked (with sound feedback and zero API key requirement).
+3. **Mobile Keyboard Switching Barrier**: Virtual keyboard switching on certain mobile browser input fields was hindered when explicit `inputMode="text"` attributes were missing.
+4. **End-to-End Test Suite Flakiness in ST-07 & ST-08**: Playwright tests ST-07 (Serving Sequence Arrangement) and ST-08 (AI Voice Assistant) failed due to selector variations (`Traditional Course Order` vs `Traditional Order`, and compound text locators).
+
+#### 2. Key Engineering Solutions Implemented
+- **Universal Multimodal Audio Model Array**:
+  - In `src/services/aiVoiceAssistantService.ts`, reordered `modelsToTry` to prioritize standard globally available multimodal audio models: `["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-latest"]`.
+  - Added clean error interception for HTTP 400/401/403 and `API_KEY_INVALID` to provide clean, actionable guidance.
+- **Auto-Expanding Key Editor & 1-Click Browser Voice Fallback**:
+  - In `src/components/ai/AiVoiceAssistantDialog.tsx`, whenever an API key error occurs, `showKeyEditor` is automatically set to `true`.
+  - Added a 1-click fallback button directly on the error banner: `"🎙️ Switch to Free Browser Voice Typing (No Key Required)"`, which seamlessly closes the dialog and activates continuous browser voice typing.
+- **Search Bar Mic Direct Wiring**:
+  - In `src/components/steps/MenuSelectionStep.tsx`, wired the search bar microphone icon directly to `toggleListening`. Users get instant continuous voice entry with the audible confirmation tick beep and activity tray without requiring an API key.
+- **Mobile Keyboard Unlocked**:
+  - Explicitly added `inputMode="text"` on English and Tamil dish editing inputs in `AiVoiceAssistantDialog.tsx` to ensure seamless mobile virtual keyboard switching.
+- **Robust Playwright E2E Tests (100% Green)**:
+  - Fixed ST-07 to robustly match sequence toolbar buttons (`Traditional`, `A → Z`, `By Category`, `Reverse`).
+  - Fixed ST-08 to cleanly assert voice dialog badges and banners.
+  - Full test suite passes 100% green: **25 passed (42.8s)**.
+
+---
 
 ### v1.5.7 — Live Bilingual Update Reflection in Session Review, Friendly Custom Dish Badging & Human-Readable IDs
 
