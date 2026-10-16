@@ -60,6 +60,14 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
   const [isAiTranslatingCustom, setIsAiTranslatingCustom] = useState(false);
   const customAiTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Spoken Dish Confirmation State (Solves: "when i say something 'idly' it adds all relevant items ... optimize to confirm what i ask and proceed")
+  const [pendingConfirmationDish, setPendingConfirmationDish] = useState<{
+    dish: CatalogDish;
+    phrase: string;
+    alternatives: CatalogDish[];
+  } | null>(null);
+  const [requireVoiceConfirmation, setRequireVoiceConfirmation] = useState(true);
+
   const currentDay = menu.days[currentDayIndex];
   const currentSession = currentDay?.sessions[currentSessionIndex];
 
@@ -169,6 +177,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
     interimTranscript,
     recentResults,
     clearRecentResults,
+    confirmAddDish,
     startListening,
     stopListening,
     toggleListening,
@@ -176,6 +185,10 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
     errorMessage: voiceError,
   } = useVoiceTyping({
     catalogDishes: allCatalogItems,
+    requireConfirmation: requireVoiceConfirmation,
+    onDishRecognizedForConfirmation: (payload) => {
+      setPendingConfirmationDish(payload);
+    },
     onDishAdded: (dish) => {
       toggleDish(dish.category, dish.id);
     },
@@ -264,6 +277,13 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
       return currentSession.selectedDishes.includes(key);
     },
   });
+
+  // Automatically clear voice activity & pending voice confirmation on day or session switch
+  // (Solves: "after adding to menu and switch to next session, it is still showing me the voice activity")
+  useEffect(() => {
+    clearRecentResults();
+    setPendingConfirmationDish(null);
+  }, [currentDayIndex, currentSessionIndex, clearRecentResults]);
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -747,6 +767,8 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                 setHighlightedIndex(-1);
               }}
               onKeyDown={handleKeyDown}
+              inputMode="text"
+              lang="en"
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -910,6 +932,85 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
             </div>
           )}
 
+          {/* Spoken Dish Confirmation Card (Solves: "when i say something 'idly' it adds all relevant items ... optimize to confirm what i ask and proceed") */}
+          {pendingConfirmationDish && (
+            <div className="p-3.5 rounded-2xl border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 shadow-lg space-y-2.5 animate-fade-in">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 shadow-sm">
+                    <Mic className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                        Voice Recognized: &ldquo;{pendingConfirmationDish.phrase}&rdquo;
+                      </span>
+                      <span className="text-xs text-mute">→ Add to {currentSession?.name || "Session"}?</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                      <span className="text-base font-extrabold text-emerald-950 dark:text-emerald-100">
+                        {pendingConfirmationDish.dish.name_en}
+                      </span>
+                      <span className="font-tamil font-semibold text-xs text-emerald-700 dark:text-emerald-300">
+                        ({pendingConfirmationDish.dish.name_ta})
+                      </span>
+                      <Badge variant="outline" className="text-[10px] bg-white/70 dark:bg-black/30 border-emerald-300 text-emerald-800 dark:text-emerald-200">
+                        {pendingConfirmationDish.dish.category}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      confirmAddDish(pendingConfirmationDish.dish, pendingConfirmationDish.phrase);
+                      setPendingConfirmationDish(null);
+                    }}
+                    className="h-8 px-4 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-md transition-transform hover:scale-105"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    Confirm & Add
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPendingConfirmationDish(null)}
+                    className="h-8 px-2.5 text-xs border-emerald-300 bg-white/80 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 rounded-xl hover:bg-emerald-100"
+                  >
+                    <X className="h-3.5 w-3.5 mr-1" />
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+
+              {/* Alternative matches if multiple (e.g. Sambar Idli, Mini Idli, Kanchipuram Idli when user said idli) */}
+              {pendingConfirmationDish.alternatives.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-emerald-200 dark:border-emerald-800/60 text-xs">
+                  <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">
+                    Or select specific dish:
+                  </span>
+                  {pendingConfirmationDish.alternatives.map((alt) => (
+                    <button
+                      key={alt.id}
+                      type="button"
+                      onClick={() => {
+                        confirmAddDish(alt, pendingConfirmationDish.phrase);
+                        setPendingConfirmationDish(null);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-emerald-900/60 hover:bg-emerald-100 dark:hover:bg-emerald-800 text-emerald-900 dark:text-emerald-100 text-xs font-semibold border border-emerald-300 transition-colors shadow-2xs flex items-center gap-1"
+                    >
+                      <Plus className="h-3 w-3 text-emerald-600" />
+                      <span>{alt.name_en}</span>
+                      <span className="font-tamil font-normal text-[10px] opacity-80">({alt.name_ta})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Voice Added Items Activity Tray — Persists so user sees what was added and repeated */}
           {recentResults.length > 0 && (
             <div className="p-3 rounded-xl border border-line/80 bg-surf shadow-sm space-y-2 animate-fade-in">
@@ -1044,6 +1145,8 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                               if (guessed) setCustomDishCategory(guessed);
                             }}
                             placeholder="e.g. Jackfruit Payasam"
+                            inputMode="text"
+                            lang="en"
                             autoComplete="off"
                             autoCorrect="off"
                             spellCheck={false}
@@ -1091,6 +1194,8 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                               }
                             }}
                             placeholder="e.g. பலாப்பழ பாயாசம்"
+                            inputMode="text"
+                            lang="ta"
                             autoComplete="off"
                             autoCorrect="off"
                             spellCheck={false}

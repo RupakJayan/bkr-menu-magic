@@ -9,6 +9,7 @@
 1. [Change Management Philosophy & Governance](#1-change-management-philosophy--governance)
 2. [Version History & Release Matrix](#2-version-history--release-matrix)
 3. [Comprehensive Change Log](#3-comprehensive-change-log)
+   - [v1.6.0 — Voice Confirmation Flow, Session-Isolated Voice Activity, Review Step Dish Editing & Human-Readable Slugs (31/31 QA Tests Green)](#v160--voice-confirmation-flow-session-isolated-voice-activity-review-step-dish-editing--human-readable-slugs-3131-qa-tests-green)
    - [v1.5.9 — Custom Announcement / Live Counter Mention Banner & Chef's Kitchen Production Sheet PDF in Tamil](#v159--custom-announcement--live-counter-mention-banner--chefs-kitchen-production-sheet-pdf-in-tamil)
    - [v1.5.8 — Multimodal Gemini Audio Model Fallback, 1-Click Free Voice Typing Switch, Search Bar Mic Wiring & E2E Test Suite (25/25 Green)](#v158--multimodal-gemini-audio-model-fallback-1-click-free-voice-typing-switch-search-bar-mic-wiring--e2e-test-suite-2525-green)
    - [v1.5.7 — Live Bilingual Update Reflection in Session Review, Friendly Custom Dish Badging & Human-Readable IDs](#v157--live-bilingual-update-reflection-in-session-review-friendly-custom-dish-badging--human-readable-ids)
@@ -49,6 +50,7 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 | Version | Release Date | Summary of Core Deliverables | Verification Status |
 |---|---|---|---|
+| **v1.6.0** | October 2026 | Voice Typing Confirmation Flow & Alternative Dish Selector (no accidental auto-adds on generic words like "idly"), Session-Isolated Voice Activity (auto-clears on session/day switch), Inline Bilingual Dish Name Editing in Review Step, Romanized Custom Dish Slugs (`custom_slug_hash`), Cross-Category Dish Lookup Resilience, Unlocked Mobile Textbox `inputMode`, Unit Tests UT-17/UT-18 & System Test ST-10 (31/31 Tests Green) | ✅ Verified (31/31 Tests & Clean Build Pass) |
 | **v1.5.9** | October 2026 | Custom Announcement / Live Counter Mention Banner ("Live tea/coffee starts from Day 1 to next day..."), Dedicated Chef's Kitchen Production Sheet (PDF in Tamil) with Headcount & Timings and ZERO Pricing details, Client Quotation PDF/DOCX Header Integration, Unit Test UT-15 & E2E Test ST-09 (27/27 Tests Green) | ✅ Verified (27/27 Tests & Clean Build Pass) |
 | **v1.5.8** | October 2026 | Multimodal Gemini Audio Model Fallback (`gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-2.5-flash`), 1-Click Free Browser Voice Typing Switch, Search Bar Mic Direct Wiring, Unlocked Mobile Keyboard InputMode, E2E Test Suite Pass (25/25 Tests Green) | ✅ Verified (25/25 Tests & Clean Build Pass) |
 | **v1.5.7** | October 2026 | Live Bilingual Update Reflection in Session Review (`SessionMenuManageDialog`), Friendly Custom Dish Badging (`✨ Custom Dish`), Human-Readable Custom IDs (`custom_slug_suffix`), Voice Review Edit Persistence (`commitVoiceDishesToSession`), Headless Resilient Storage, Unit Test UT-14 | ✅ Verified (23/23 Tests & Clean Build Pass) |
@@ -68,6 +70,39 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 ---
 
 ## 3. Comprehensive Change Log
+
+### v1.6.0 — Voice Confirmation Flow, Session-Isolated Voice Activity, Review Step Dish Editing & Human-Readable Slugs (31/31 QA Tests Green)
+
+#### 1. Background & Problem Statement
+1. **Accidental Auto-Add on Generic Spoken Words**: When catering managers spoke generic base terms like "idly" or "dosa", continuous voice typing previously matched and instantly auto-added whatever candidate returned first (often adding variants without user intent). Caterers needed an intuitive confirmation step with alternative dish choices (e.g. Plain Idli, Podi Idli, Mini Sambar Idli, Kanchipuram Idli) before appending to the active session.
+2. **Keyboard Textbox Input Friction**: Input fields across search, custom dish creation, and session management dialogs previously experienced keyboard lockups or premature re-renders on mobile devices without explicit `inputMode="text"` and proper `lang` attributes.
+3. **Voice Activity Leakage Across Sessions**: Moving between session tabs (e.g. Breakfast → Lunch) or switching event days left previous voice activity logs displayed in the persistent tray, leading to confusion regarding which session dishes had been assigned to.
+4. **Bilingual Corrections in Review Step Not Reflecting**: When reviewing a multi-session menu before finalizing, caterers needed to directly correct dish names in English and Tamil without having to navigate back to the planner. Custom dishes entered in Tamil also generated unreadable random hash IDs (e.g. `customxnkkds`) due to non-Latin stripping.
+5. **Cross-Category Lookups**: If a dish category was edited or reclassified, catalog lookup would fail if the category prefix in the dish key diverged from the catalog's assigned category.
+
+#### 2. Key Engineering Solutions Implemented
+- **Voice Typing Confirmation Banner & Alternative Match Chips**:
+  - Implemented `findAllDishMatches(spokenPhrase, catalogDishes, limit)` in `src/services/voiceTypingService.ts` to return ranked multi-dish matches and specific variants.
+  - Added `pendingConfirmationDish` state in `src/components/steps/MenuSelectionStep.tsx` rendering an interactive floating confirmation banner with `[✓ Confirm & Add]` and `[✕ Dismiss]`.
+  - Displayed quick-select alternative chips (e.g. `Or select specific dish: [+ Sambar Idli] [+ Podi Idli]`) allowing 1-click addition of exact variants.
+- **Session-Isolated Voice Activity Auto-Clear**:
+  - Attached a reactive `useEffect` watching `[currentDayIndex, currentSessionIndex]` in `src/components/steps/MenuSelectionStep.tsx`.
+  - Switching session tabs or event days immediately calls `clearRecentResults()` and clears `pendingConfirmationDish`, ensuring zero voice history leakage between meals.
+- **Inline Bilingual Dish Editor in Review Step**:
+  - Added an interactive `Edit2` button on confirmed dish cards in `src/components/steps/ReviewStep.tsx`.
+  - Modal editor supports direct editing of English Name, Tamil Name (with `✨ Gemini AI Translate`), and Category.
+  - Updates propagate synchronously to `updateDishInCatalog`, re-index into the live culinary dictionary, and trigger `onMenuChange`, immediately refreshing Review summaries, PDF, and DOCX exports.
+- **Romanized Custom Dish Slugs (`romanizeTamilToEnglish`)**:
+  - In `src/services/localAdminService.ts`, added romanization fallback for Tamil dish names so that pure Tamil inputs produce readable slugs like `custom_idli_upma_a1b2` instead of random character hashes.
+- **Resilient Cross-Category Key Fallback**:
+  - In `src/services/menuCatalogService.ts` (`findDishByKey`), added a cross-category search fallback if a dish key's parsed category does not match its current catalog category.
+- **Full QA Playwright Suite Expansion (31/31 Tests Green)**:
+  - Added `UT-17` (Voice confirmation multi-dish candidate matching).
+  - Added `UT-18` (Romanized slug generation and cross-category key resolution).
+  - Added `ST-10` (Session switch clears voice activity and Review step bilingual dish editing).
+  - Entire test suite (`tests/integration.test.ts`, `tests/unit.test.ts`, `tests/system.spec.ts`) passes 100% green: **31 passed in 1.1m**.
+
+---
 
 ### v1.5.9 — Custom Announcement / Live Counter Mention Banner & Chef's Kitchen Production Sheet PDF in Tamil
 

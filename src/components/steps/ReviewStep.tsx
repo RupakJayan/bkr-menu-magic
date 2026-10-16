@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { EventMenu } from '@/types/menu';
+import { EventMenu, CatalogDish } from '@/types/menu';
 import { buildDishKey, findDishByKey, getManagedMenuCatalog, normalizeDishKeys } from '@/services/menuCatalogService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
+import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
-import { saveEventMenu } from '@/services/localAdminService';
+import { saveEventMenu, updateDishInCatalog } from '@/services/localAdminService';
+import { registerDishToDictionary, fetchAiTamilTranslation } from '@/services/tamilTranslationService';
 import { getStoredGoogleToken } from '@/services/googleAuthService';
 import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +27,95 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
   const menuData = getManagedMenuCatalog();
   const [isEditingMention, setIsEditingMention] = useState(false);
   const [mentionInput, setMentionInput] = useState(menu.customMention || '');
+
+  // Dish Editing State in Review Step (Solves: "saving of item list changes while reviewing session doesnt even update after my correction in tamil or english")
+  const [editingDish, setEditingDish] = useState<{
+    dish: CatalogDish;
+    selectionKey: string;
+    dayIndex: number;
+    sessionIndex: number;
+  } | null>(null);
+  const [editDishEn, setEditDishEn] = useState('');
+  const [editDishTa, setEditDishTa] = useState('');
+  const [editDishCategory, setEditDishCategory] = useState('');
+  const [isAiTranslatingDish, setIsAiTranslatingDish] = useState(false);
+
+  const startEditingDish = (dish: CatalogDish, selectionKey: string, dayIndex: number, sessionIndex: number) => {
+    setEditingDish({ dish, selectionKey, dayIndex, sessionIndex });
+    setEditDishEn(dish.name_en || dish.name || '');
+    setEditDishTa(dish.name_ta || '');
+    setEditDishCategory(dish.category);
+  };
+
+  const handleTranslateDishAi = async () => {
+    const clean = editDishEn.trim();
+    if (!clean) return;
+    setIsAiTranslatingDish(true);
+    try {
+      const res = await fetchAiTamilTranslation(clean);
+      if (res.name_ta) {
+        setEditDishTa(res.name_ta);
+      }
+      if (res.category && categories.includes(res.category as any)) {
+        setEditDishCategory(res.category);
+      }
+    } finally {
+      setIsAiTranslatingDish(false);
+    }
+  };
+
+  const handleSaveEditedDish = () => {
+    if (!editingDish) return;
+    const nameEn = editDishEn.trim() || editDishTa.trim();
+    const nameTa = editDishTa.trim() || editDishEn.trim();
+    const newCategory = editDishCategory.trim() || editingDish.dish.category;
+
+    if (!nameEn && !nameTa) {
+      toast({
+        title: "Name Required",
+        description: "Dish name cannot be blank.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      updateDishInCatalog(editingDish.dish.category, editingDish.dish.id, {
+        name_en: nameEn,
+        name_ta: nameTa,
+        category: newCategory,
+      });
+
+      registerDishToDictionary(nameEn, nameTa, newCategory);
+
+      // If category changed, update key in session
+      const updatedDays = [...menu.days];
+      const session = updatedDays[editingDish.dayIndex].sessions[editingDish.sessionIndex];
+      if (newCategory !== editingDish.dish.category) {
+        const newKey = buildDishKey(newCategory, editingDish.dish.id);
+        session.selectedDishes = session.selectedDishes.map((k) => k === editingDish.selectionKey ? newKey : k);
+      }
+
+      onMenuChange({
+        ...menu,
+        days: updatedDays,
+        updatedAt: new Date(),
+      });
+
+      setEditingDish(null);
+
+      toast({
+        title: "Dish Updated! ✏️",
+        description: `Updated to "${nameEn}" (${nameTa}).`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Update failed",
+        description: err?.message || "Could not save edits.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleManualSave = () => {
     try {
@@ -345,15 +435,28 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                                 </span>
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeDish(dayIndex, sessionIndex, dish.selectionKey)}
-                              className="hover:bg-red-50 text-red-500 hover:text-red-700 rounded-lg p-2 ml-2"
-                              aria-label={`Remove ${dish.name_en || dish.name}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-1 shrink-0 ml-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => startEditingDish(dish, dish.selectionKey, dayIndex, sessionIndex)}
+                                className="hover:bg-pink-100 text-pink-600 hover:text-pink-800 rounded-lg p-2"
+                                aria-label={`Edit ${dish.name_en || dish.name}`}
+                                title="Edit dish name in Tamil or English"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeDish(dayIndex, sessionIndex, dish.selectionKey)}
+                                className="hover:bg-red-50 text-red-500 hover:text-red-700 rounded-lg p-2"
+                                aria-label={`Remove ${dish.name_en || dish.name}`}
+                                title="Remove dish"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -469,6 +572,99 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
           </Button>
         </div>
       </div>
+
+      {/* Edit Dish Modal in Review Step */}
+      {editingDish && (
+        <Dialog open={!!editingDish} onOpenChange={(open) => !open && setEditingDish(null)}>
+          <DialogContent className="max-w-md p-5 bg-white rounded-2xl shadow-2xl border-2 border-pink-200">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-pink-600" />
+                Edit Dish Details | உணவை திருத்தவும்
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label className="text-xs font-bold text-gray-700 block mb-1">English Dish Name</Label>
+                <Input
+                  value={editDishEn}
+                  onChange={(e) => setEditDishEn(e.target.value)}
+                  inputMode="text"
+                  lang="en"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoCapitalize="words"
+                  placeholder="e.g. Special Ghee Pongal"
+                  className="h-10 text-sm border-2 border-pink-200 focus:border-pink-500 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-xs font-bold text-gray-700">Tamil Dish Name (தமிழ்)</Label>
+                  <button
+                    type="button"
+                    onClick={handleTranslateDishAi}
+                    disabled={isAiTranslatingDish || !editDishEn.trim()}
+                    className="text-xs text-pink-600 hover:text-pink-800 font-bold flex items-center gap-1 disabled:opacity-40"
+                    title="Translate with Gemini AI"
+                  >
+                    <Sparkles className={`h-3 w-3 ${isAiTranslatingDish ? "animate-spin text-amber-500" : ""}`} />
+                    <span>{isAiTranslatingDish ? "Translating..." : "✨ Gemini AI"}</span>
+                  </button>
+                </div>
+                <Input
+                  value={editDishTa}
+                  onChange={(e) => setEditDishTa(e.target.value)}
+                  inputMode="text"
+                  lang="ta"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="எ.கா. சிறப்பு நெய் பொங்கல்"
+                  className="h-10 text-sm font-tamil border-2 border-pink-200 focus:border-pink-500 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-gray-700 block mb-1">Category</Label>
+                <select
+                  value={editDishCategory}
+                  onChange={(e) => setEditDishCategory(e.target.value)}
+                  className="w-full h-10 px-3 text-sm rounded-lg border-2 border-pink-200 focus:border-pink-500 bg-white"
+                >
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingDish(null)}
+                  className="h-9 px-4 rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveEditedDish}
+                  className="h-9 px-5 font-bold rounded-lg bg-pink-600 hover:bg-pink-700 text-white"
+                >
+                  <Save className="h-4 w-4 mr-1.5" />
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

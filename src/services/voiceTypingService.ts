@@ -113,6 +113,67 @@ export const findBestDishMatch = (
 };
 
 /**
+ * Find all potential dish matches for a spoken phrase, sorted by match relevance.
+ * Used for voice confirmation so user can confirm or pick their intended dish.
+ */
+export const findAllDishMatches = (
+  spokenPhrase: string,
+  catalogDishes: CatalogDish[],
+  limit = 5
+): CatalogDish[] => {
+  const query = cleanSpokenPhrase(spokenPhrase).toLowerCase();
+  if (!query || query.length < 2) return [];
+
+  const matches: CatalogDish[] = [];
+  const seenIds = new Set<string>();
+
+  const addMatch = (dish: CatalogDish) => {
+    if (!seenIds.has(dish.id)) {
+      seenIds.add(dish.id);
+      matches.push(dish);
+    }
+  };
+
+  // 1. Exact / best match first
+  const exact = findBestDishMatch(spokenPhrase, catalogDishes);
+  if (exact) addMatch(exact);
+
+  // 2. Starts with query
+  for (const d of catalogDishes) {
+    if (matches.length >= limit) break;
+    const en = d.name_en.toLowerCase();
+    if (en.startsWith(query) || d.name_ta.startsWith(query)) {
+      addMatch(d);
+    }
+  }
+
+  // 3. Includes query
+  for (const d of catalogDishes) {
+    if (matches.length >= limit) break;
+    const en = d.name_en.toLowerCase();
+    if (en.includes(query) || d.name_ta.includes(query)) {
+      addMatch(d);
+    }
+  }
+
+  // 4. Check aliases
+  for (const [key, aliasList] of Object.entries(COMMON_ALIASES)) {
+    if (matches.length >= limit) break;
+    if (aliasList.some((alias) => query.includes(alias) || alias.includes(query))) {
+      for (const d of catalogDishes) {
+        if (matches.length >= limit) break;
+        const en = d.name_en.toLowerCase();
+        if (en.includes(key) || aliasList.some((a) => en.includes(a) || d.name_ta.includes(a))) {
+          addMatch(d);
+        }
+      }
+    }
+  }
+
+  return matches.slice(0, limit);
+};
+
+/**
  * Dynamically register a new alias or custom dish into the voice alias dictionary.
  */
 export const registerVoiceAlias = (key: string, aliases: string[]): void => {

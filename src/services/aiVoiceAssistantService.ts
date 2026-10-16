@@ -1,6 +1,7 @@
 import { getGeminiApiKey, matchDishToCatalog } from "@/services/aiLensService";
 import { getManagedMenuCatalog, addCustomDishToCatalog, updateDishInCatalog, buildCatalogKey } from "@/services/localAdminService";
-import { registerDishToDictionary, isTamilScript, romanizeTamilToEnglish } from "@/services/tamilTranslationService";
+import { registerDishToDictionary, isTamilScript, romanizeTamilToEnglish, getInstantEnglishName, getInstantTamilName, guessCategoryForDish, toTitleCase } from "@/services/tamilTranslationService";
+import { splitContinuousSpeech } from "@/services/voiceTypingService";
 import type { CatalogDish, Dish } from "@/types/menu";
 
 export interface RecognizedVoiceDish {
@@ -381,4 +382,77 @@ export const commitVoiceDishesToSession = (
   }
 
   return { addedCount, newDishesCreated };
+};
+
+/**
+ * Parse a raw spoken speech transcript (Tamil, English, Tanglish) into candidate dishes for review.
+ * 100% client-side, zero Gemini API key required.
+ */
+export const parseSpokenDishesToReview = (
+  transcript: string,
+  sessionDishKeys: string[] = [],
+  selectedCategory?: string
+): RecognizedVoiceDish[] => {
+  if (!transcript || !transcript.trim()) return [];
+
+  // Split transcript into discrete food phrases
+  const phrases = splitContinuousSpeech(transcript.trim());
+  const dishes: RecognizedVoiceDish[] = [];
+  const seenNames = new Set<string>();
+
+  for (const phrase of phrases) {
+    const trimmed = phrase.trim();
+    if (!trimmed || trimmed.length < 2) continue;
+
+    // Check catalog or dictionary match
+    const match = matchDishToCatalog(trimmed, trimmed, selectedCategory);
+    let name_en = "";
+    let name_ta = "";
+    let category = selectedCategory || "Special Dishes";
+    let isExistingMatch = false;
+    let catalogDish: CatalogDish | undefined;
+    let isAlreadyInSession = false;
+
+    if (match.matchedDish && match.category) {
+      name_en = match.matchedDish.name_en || match.matchedDish.name;
+      name_ta = match.matchedDish.name_ta || "";
+      category = match.category;
+      isExistingMatch = true;
+      catalogDish = {
+        ...match.matchedDish,
+        category: match.category,
+      };
+      const key = match.catalogKey || buildCatalogKey(match.category, match.matchedDish.id);
+      isAlreadyInSession = sessionDishKeys.includes(key);
+    } else {
+      // Custom dish translation & deduction
+      const isTa = isTamilScript(trimmed);
+      if (isTa) {
+        name_ta = trimmed;
+        const lookedUp = getInstantEnglishName(trimmed);
+        name_en = (!lookedUp || isTamilScript(lookedUp)) ? romanizeTamilToEnglish(trimmed) : lookedUp;
+      } else {
+        name_en = toTitleCase(trimmed);
+        name_ta = getInstantTamilName(trimmed) || "";
+      }
+      category = guessCategoryForDish(trimmed) || selectedCategory || "Special Dishes";
+    }
+
+    // Deduplicate within the same voice batch
+    const dedupeKey = `${name_en.toLowerCase()}|${name_ta.toLowerCase()}`;
+    if (seenNames.has(dedupeKey)) continue;
+    seenNames.add(dedupeKey);
+
+    dishes.push({
+      name_en,
+      name_ta,
+      category,
+      catalogDish,
+      isExistingMatch,
+      isAlreadyInSession,
+      selected: !isAlreadyInSession,
+    });
+  }
+
+  return dishes;
 };

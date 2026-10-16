@@ -487,6 +487,8 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                     placeholder="e.g. Mushroom Pepper Fry"
                     value={newDishEn}
                     onChange={(e) => handleNewDishEnChange(e.target.value)}
+                    inputMode="text"
+                    lang="en"
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
@@ -512,6 +514,8 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       placeholder="எ.கா. காளான் மிளகு வறுவல்"
                       value={newDishTa}
                       onChange={(e) => handleNewDishTaChange(e.target.value)}
+                      inputMode="text"
+                      lang="ta"
                       autoComplete="off"
                       autoCorrect="off"
                       spellCheck={false}
@@ -679,6 +683,8 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                           <Input
                             value={editDishEn}
                             onChange={(e) => setEditDishEn(e.target.value)}
+                            inputMode="text"
+                            lang="en"
                             autoComplete="off"
                             autoCorrect="off"
                             spellCheck={false}
@@ -704,6 +710,8 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                             <Input
                               value={editDishTa}
                               onChange={(e) => setEditDishTa(e.target.value)}
+                              inputMode="text"
+                              lang="ta"
                               autoComplete="off"
                               autoCorrect="off"
                               spellCheck={false}

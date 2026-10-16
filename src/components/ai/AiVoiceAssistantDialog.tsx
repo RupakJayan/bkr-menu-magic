@@ -32,9 +32,10 @@ import {
   processVoiceWithGemini,
   commitVoiceDishesToSession,
   isMediaRecorderSupported,
+  parseSpokenDishesToReview,
   RecognizedVoiceDish,
 } from "@/services/aiVoiceAssistantService";
-import { playVoiceTickSound, playAlreadyAddedSound } from "@/services/voiceTypingService";
+import { playVoiceTickSound, playAlreadyAddedSound, isSpeechRecognitionSupported } from "@/services/voiceTypingService";
 import { getGeminiApiKey, setGeminiApiKey, hasGeminiApiKey } from "@/services/aiLensService";
 
 interface AiVoiceAssistantDialogProps {
@@ -64,6 +65,9 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [step, setStep] = useState<AssistantStep>("idle");
+  const [engine, setEngine] = useState<"browser" | "gemini">("browser");
+  const [speechLang, setSpeechLang] = useState<"ta-IN" | "en-IN">("ta-IN");
+  const [liveTranscript, setLiveTranscript] = useState<string>("");
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recognizedDishes, setRecognizedDishes] = useState<RecognizedVoiceDish[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -71,9 +75,12 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   const [showKeyEditor, setShowKeyEditor] = useState<boolean>(!hasGeminiApiKey());
 
   const controllerRef = useRef<AudioRecordingController | null>(null);
+  const speechRecRef = useRef<any>(null);
+  const isRecordingRef = useRef<boolean>(false);
   const timerRef = useRef<any>(null);
 
-  const isSupported = isMediaRecorderSupported();
+  const isMediaSupported = isMediaRecorderSupported();
+  const isBrowserSpeechSupported = isSpeechRecognitionSupported();
 
   // Reset state when dialog closes or sync API key when opened
   useEffect(() => {
@@ -83,7 +90,13 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
       if (!current) {
         setShowKeyEditor(true);
       }
+      setLiveTranscript("");
     } else {
+      isRecordingRef.current = false;
+      if (speechRecRef.current) {
+        try { speechRecRef.current.abort(); } catch {}
+        speechRecRef.current = null;
+      }
       if (controllerRef.current) {
         controllerRef.current.cancel();
       }
@@ -93,6 +106,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
       setStep("idle");
       setRecordingSeconds(0);
       setErrorMessage(null);
+      setLiveTranscript("");
     }
   }, [open]);
 
@@ -102,8 +116,8 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
       setRecordingSeconds(0);
       timerRef.current = setInterval(() => {
         setRecordingSeconds((s) => {
-          if (s >= 35) {
-            // Auto-stop at 35 seconds to prevent unbounded audio
+          if (s >= 45) {
+            // Auto-stop at 45 seconds to prevent unbounded audio
             handleStopRecording();
             return s;
           }
@@ -139,19 +153,77 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   };
 
   const handleStartRecording = async () => {
-    const activeKey = apiKey.trim() || getGeminiApiKey();
-    if (!activeKey) {
-      setShowKeyEditor(true);
-      setErrorMessage("Please enter and save your Gemini API key below to use the AI Voice Assistant, or switch to Free Browser Voice Typing.");
+    setErrorMessage(null);
+    setLiveTranscript("");
+
+    // MODE 1: Free Browser Speech Recognition (100% Free, Zero Key Needed)
+    if (engine === "browser") {
+      const SpeechRec = typeof window !== "undefined" && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+      if (!SpeechRec) {
+        setErrorMessage("Free browser voice recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari, or switch to Gemini Cloud AI.");
+        return;
+      }
+      try {
+        const rec = new SpeechRec();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = speechLang;
+
+        rec.onresult = (event: any) => {
+          let full = "";
+          for (let i = 0; i < event.results.length; i++) {
+            full += event.results[i][0].transcript + " ";
+          }
+          setLiveTranscript(full.trim());
+        };
+
+        rec.onerror = (event: any) => {
+          console.warn("Speech recognition error:", event.error);
+          if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            setErrorMessage("Microphone access was denied. Please allow microphone permissions in your browser.");
+          }
+        };
+
+        rec.onend = () => {
+          if (isRecordingRef.current && speechRecRef.current) {
+            try { speechRecRef.current.start(); } catch {}
+          }
+        };
+
+        rec.start();
+        speechRecRef.current = rec;
+        isRecordingRef.current = true;
+        setStep("recording");
+      } catch (err: any) {
+        console.error("Failed to start speech recognition:", err);
+        setErrorMessage(err.message || "Could not access microphone.");
+        setStep("idle");
+      }
       return;
     }
 
-    setErrorMessage(null);
+    // MODE 2: Gemini Cloud Multimodal Audio
+    const activeKey = apiKey.trim() || getGeminiApiKey();
+    if (!activeKey) {
+      // Seamlessly switch to Free Browser Voice rather than blocking user with an error
+      setEngine("browser");
+      toast({
+        title: "Using Free Voice Engine 🎙️",
+        description: "No Gemini API key detected. Switched to Free Browser Voice automatically.",
+      });
+      // Start free recording directly
+      setTimeout(() => {
+        handleStartRecording();
+      }, 100);
+      return;
+    }
+
     try {
       if (!controllerRef.current) {
         controllerRef.current = new AudioRecordingController();
       }
       await controllerRef.current.start();
+      isRecordingRef.current = true;
       setStep("recording");
     } catch (err: any) {
       console.error("Failed to start voice assistant recording:", err);
@@ -161,11 +233,43 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   };
 
   const handleStopRecording = async () => {
-    if (!controllerRef.current) return;
+    isRecordingRef.current = false;
     setStep("analyzing");
 
+    // Process Free Browser Voice Transcript
+    if (engine === "browser") {
+      if (speechRecRef.current) {
+        try { speechRecRef.current.stop(); } catch {}
+        speechRecRef.current = null;
+      }
+
+      // Small delay to allow any pending speech recognition result to finalize
+      setTimeout(() => {
+        const textToParse = liveTranscript.trim();
+        if (!textToParse) {
+          setErrorMessage("No voice input was heard. Please check your microphone, speak clearly, and try again.");
+          setStep("idle");
+          return;
+        }
+
+        const dishes = parseSpokenDishesToReview(textToParse, sessionDishKeys);
+        if (!dishes || dishes.length === 0) {
+          setErrorMessage(`Heard: "${textToParse}", but could not find matching dishes. Try speaking catering items like 'இட்லி, மெது வடை, பொங்கல்' or 'Medu Vada, Sambar, Kesari'.`);
+          setStep("idle");
+          return;
+        }
+
+        setRecognizedDishes(dishes);
+        setStep("review");
+        playVoiceTickSound();
+      }, 350);
+      return;
+    }
+
+    // Process Gemini Cloud Recording
+    if (!controllerRef.current) return;
     try {
-      const { blob, mimeType, durationSeconds } = await controllerRef.current.stop();
+      const { blob, mimeType } = await controllerRef.current.stop();
       const activeKey = apiKey.trim() || getGeminiApiKey();
 
       const dishes = await processVoiceWithGemini(
@@ -196,11 +300,17 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   };
 
   const handleCancelRecording = () => {
+    isRecordingRef.current = false;
+    if (speechRecRef.current) {
+      try { speechRecRef.current.abort(); } catch {}
+      speechRecRef.current = null;
+    }
     if (controllerRef.current) {
       controllerRef.current.cancel();
     }
     setStep("idle");
     setRecordingSeconds(0);
+    setLiveTranscript("");
   };
 
   const handleToggleDishSelected = (index: number) => {
@@ -297,61 +407,127 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
         </DialogHeader>
 
         <div className="p-5 space-y-4">
-          {/* Gemini API Key Configuration Banner */}
-          {showKeyEditor ? (
-            <div className="p-3.5 rounded-xl border border-line bg-surf-2 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                  <Key className="h-4 w-4 text-acc" />
-                  Google Gemini API Key Setup
-                </span>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-acc hover:underline flex items-center gap-1 font-semibold"
-                >
-                  Get Free Key from Google AI Studio <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-              <p className="text-[11px] text-mute leading-relaxed">
-                AI Voice Assistant uses Gemini 2.5 Flash to understand spoken Tamil and South Indian dishes. Your key is stored securely in your browser.
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  type="password"
-                  placeholder="Paste Gemini API key (AIzaSy...)"
-                  value={apiKey}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  className="h-9 text-xs bg-surf border-line text-ink placeholder:text-mute rounded-lg font-mono"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSaveApiKey}
-                  className="bg-acc text-accink hover:opacity-95 font-semibold px-3.5 rounded-lg shrink-0 h-9 shadow-theme-sm"
-                >
-                  Save Key
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between px-3.5 py-2 bg-surf-2 rounded-lg text-xs text-ink border border-line">
-              <span className="flex items-center gap-2 text-xs">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-medium">Gemini 2.5 Flash Voice Connected</span>
+          {/* Dual-Engine Mode Switcher */}
+          <div className="flex items-center justify-between p-1 bg-surf-2 border border-line rounded-xl gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setEngine("browser");
+                setErrorMessage(null);
+              }}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                engine === "browser"
+                  ? "bg-acc text-accink shadow-sm"
+                  : "text-mute hover:text-ink"
+              }`}
+            >
+              <Mic className="h-3.5 w-3.5" />
+              <span>Free Voice Engine (No Key Required)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEngine("gemini");
+                setShowKeyEditor(!hasGeminiApiKey());
+                setErrorMessage(null);
+              }}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                engine === "gemini"
+                  ? "bg-acc text-accink shadow-sm"
+                  : "text-mute hover:text-ink"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Gemini Cloud AI</span>
+            </button>
+          </div>
+
+          {/* Banner for Free Browser Voice (Default Mode - 100% Free) */}
+          {engine === "browser" && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="font-semibold">Free Speech Recognition Active · 100% Free · No API Key Needed</span>
               </span>
-              <button
-                type="button"
-                onClick={() => setShowKeyEditor(true)}
-                className="text-acc text-xs hover:underline font-semibold"
-              >
-                Change API Key
-              </button>
+              <div className="flex items-center gap-1.5 text-[11px] self-end sm:self-auto">
+                <span className="text-emerald-700/80 dark:text-emerald-300/80 font-medium">Voice Language:</span>
+                <button
+                  type="button"
+                  onClick={() => setSpeechLang(speechLang === "ta-IN" ? "en-IN" : "ta-IN")}
+                  className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 font-bold hover:shadow-sm transition-all"
+                >
+                  {speechLang === "ta-IN" ? "தமிழ் (Tamil)" : "English (IN)"}
+                </button>
+              </div>
             </div>
+          )}
+
+          {/* Gemini API Key Configuration Banner (Only when in Gemini mode) */}
+          {engine === "gemini" && (
+            showKeyEditor ? (
+              <div className="p-3.5 rounded-xl border border-line bg-surf-2 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+                    <Key className="h-4 w-4 text-acc" />
+                    Google Gemini API Key Setup
+                  </span>
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-acc hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    Get Free Key from Google AI Studio <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <p className="text-[11px] text-mute leading-relaxed">
+                  AI Voice Assistant uses Gemini 2.5 Flash to understand spoken Tamil and South Indian dishes. Your key is stored securely in your browser.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="Paste Gemini API key (AIzaSy...)"
+                    value={apiKey}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                    className="h-9 text-xs bg-surf border-line text-ink placeholder:text-mute rounded-lg font-mono"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSaveApiKey}
+                    className="bg-acc text-accink hover:opacity-95 font-semibold px-3.5 rounded-lg shrink-0 h-9 shadow-theme-sm"
+                  >
+                    Save Key
+                  </Button>
+                </div>
+                <div className="pt-1 flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setEngine("browser")}
+                    className="text-xs text-acc font-semibold hover:underline"
+                  >
+                    ← Switch back to Free Voice Mode (No Key Required)
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between px-3.5 py-2 bg-surf-2 rounded-lg text-xs text-ink border border-line">
+                <span className="flex items-center gap-2 text-xs">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="font-medium">Gemini 2.5 Flash Voice Connected</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowKeyEditor(true)}
+                  className="text-acc text-xs hover:underline font-semibold"
+                >
+                  Change API Key
+                </button>
+              </div>
+            )
           )}
 
           {/* Error Banner */}
@@ -391,7 +567,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                 <button
                   type="button"
                   onClick={handleStartRecording}
-                  disabled={!isSupported}
+                  disabled={engine === "browser" ? !isBrowserSpeechSupported : !isMediaSupported}
                   className="relative p-6 rounded-full bg-gradient-to-tr from-[#762934] to-[#a03646] dark:from-[#d8b36d] dark:to-[#f3d99d] text-white dark:text-[#2a1708] shadow-xl hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
                   title="Click to start speaking dishes"
                 >
@@ -473,6 +649,17 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                   All speaker output is muted to protect against echo loops.
                 </p>
               </div>
+
+              {liveTranscript && (
+                <div className="p-3 rounded-xl bg-surf border border-acc/40 text-left max-w-lg mx-auto shadow-sm animate-fade-in">
+                  <span className="text-[10px] uppercase font-bold text-acc tracking-wider block mb-1">
+                    Heard Live:
+                  </span>
+                  <p className="text-sm font-semibold text-ink leading-relaxed font-tamil">
+                    &ldquo;{liveTranscript}&rdquo;
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-center justify-center gap-3">
                 <Button

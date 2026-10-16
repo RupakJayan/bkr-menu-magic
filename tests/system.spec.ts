@@ -352,8 +352,17 @@ test.describe("ST - System / End-to-End Tests", () => {
     const voiceDialog = page.locator('[role="dialog"]');
     await expect(voiceDialog).toBeVisible();
     await expect(voiceDialog.locator('text=AI Voice Assistant').first()).toBeVisible();
-    await expect(voiceDialog.locator('text=Gemini').first()).toBeVisible();
-    await expect(voiceDialog.locator('text=Zero Audio Reflection').first()).toBeVisible();
+    // Verify Free Voice banner is active by default (Zero Key Needed)
+    const freeVoiceBanner = voiceDialog.getByText(/Free Speech Recognition Active|Free Voice Engine/).first();
+    await expect(freeVoiceBanner).toBeVisible();
+    await voiceDialog.screenshot({ path: "C:/Users/rupak/.gemini/antigravity/brain/9b2ffdfe-4ea7-47ac-b63a-d8b4e9a5c029/voice-assistant-free-mode.png" });
+
+    // Switch to Gemini Cloud AI tab to verify optional Gemini Key setup
+    const geminiTab = voiceDialog.locator('button:has-text("Gemini Cloud AI")').first();
+    if (await geminiTab.isVisible()) {
+      await geminiTab.click();
+      await page.waitForTimeout(200);
+    }
 
     // Verify Inline Gemini Key setup banner exists
     const keyBanner = voiceDialog.getByText(/Google Gemini API Key Setup|Gemini.*Voice Connected/).first();
@@ -423,5 +432,77 @@ test.describe("ST - System / End-to-End Tests", () => {
     // Verify Custom Mention notice banner is visible in Document Generation
     const docNotice = page.locator('text=Live Counter & Service Notice / நேரடி கவுண்டர் அறிவிப்பு').first();
     await expect(docNotice).toBeVisible();
+  });
+
+  test("ST-10: Session Switch Clears Voice Activity & Review Step Allows Bilingual Dish Name Editing", async ({ page }) => {
+    // Authenticate admin session
+    await page.goto("/bkr-menu-magic/#/admin");
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+    });
+
+    // Open Menu Creator Step 1
+    await page.goto("/bkr-menu-magic/#/menu-creator");
+    await page.waitForTimeout(600);
+
+    const clientInput = page.locator("#clientName");
+    await clientInput.waitFor({ state: "visible", timeout: 15000 });
+    await clientInput.fill("Karthik Reception");
+    await page.locator("#clientPhone").fill("9842123456");
+    await page.locator("#venueName").fill("Grand Palace Madurai");
+    await page.locator("#venueAddress").fill("Madurai, Tamil Nadu");
+
+    // Advance to Step 2 Session Planning
+    await page.locator('button:has-text("Continue to Session Planning")').click();
+    await page.waitForTimeout(600);
+
+    // Add session to Day 1
+    await page.locator('button:has-text("Add Session to Day 1")').click();
+    await page.waitForTimeout(400);
+
+    // Advance to Step 3 Menu Selection
+    await page.locator('button:has-text("Continue to Menu Selection")').click();
+    await page.waitForTimeout(800);
+
+    // Verify search input has inputMode="text"
+    const searchInput = page.locator('input[placeholder*="Search dishes"]').first();
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveAttribute("inputMode", "text");
+
+    // Add a dish to session
+    const firstDishCard = page.locator(".cursor-pointer").first();
+    await firstDishCard.click();
+    await page.waitForTimeout(300);
+
+    // Advance to Step 4 Review & Pricing
+    await page.locator('button:has-text("Proceed to Next Session"), button:has-text("Continue to Review & Pricing")').first().click();
+    await page.waitForTimeout(600);
+
+    // In Review step, verify Edit Dish button is visible on the dish
+    const editDishBtn = page.locator('button[title*="Edit dish name"]').first();
+    await expect(editDishBtn).toBeVisible();
+    await editDishBtn.click();
+    await page.waitForTimeout(400);
+
+    // Verify Edit Dish dialog opened
+    const dialogTitle = page.locator('text=Edit Dish Details').first();
+    await expect(dialogTitle).toBeVisible();
+
+    // Edit English and Tamil name
+    const englishInput = page.locator('input[placeholder*="Special Ghee Pongal"]').first();
+    await englishInput.fill("Grand Ghee Pongal");
+
+    const tamilInput = page.locator('input[placeholder*="சிறப்பு நெய் பொங்கல்"]').first();
+    await tamilInput.fill("கிராண்ட் நெய் பொங்கல்");
+
+    // Save Changes
+    await page.locator('button:has-text("Save Changes")').click();
+    await page.waitForTimeout(500);
+
+    // Verify updated names are displayed in Review Step card
+    const updatedEn = page.locator('text=Grand Ghee Pongal').first();
+    await expect(updatedEn).toBeVisible();
+    const updatedTa = page.locator('text=கிராண்ட் நெய் பொங்கல்').first();
+    await expect(updatedTa).toBeVisible();
   });
 });

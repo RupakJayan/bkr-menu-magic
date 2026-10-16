@@ -349,4 +349,82 @@ test.describe("UT - Unit Tests", () => {
     expect(clientResult.fileName).toContain("BKR_Event_Menu");
     expect(clientResult.blob.size).toBeGreaterThan(1000);
   });
+
+  test("UT-16: Free Browser Voice Transcript Parsing (Zero Gemini Key Required)", async () => {
+    const { parseSpokenDishesToReview } = await import("../src/services/aiVoiceAssistantService");
+
+    // 1. Spoken Tamil culinary phrase
+    const tamilTranscript = "ரெண்டு இட்லி, மெது வடை, நெய் பொங்கல், பில்டர் காபி, ரவா கேசரி";
+    const dishesTa = parseSpokenDishesToReview(tamilTranscript, ["breakfast_idli"]);
+    expect(dishesTa.length).toBeGreaterThanOrEqual(4);
+    // idli was recognized
+    const idli = dishesTa.find((d) => d.name_ta.includes("இட்லி") || d.name_en.toLowerCase().includes("idl"));
+    expect(idli).toBeDefined();
+    expect(idli?.name_ta).toContain("இட்லி");
+
+    const vada = dishesTa.find((d) => d.name_en.toLowerCase().includes("vada"));
+    expect(vada).toBeDefined();
+    expect(vada?.name_ta).toContain("வடை");
+    expect(vada?.selected).toBe(true);
+
+    // 2. Spoken English / Tanglish catering phrase
+    const englishTranscript = "Add Medu Vada, Arachuvitta Sambar, Pineapple Kesari, and Curd Rice";
+    const dishesEn = parseSpokenDishesToReview(englishTranscript, []);
+
+    expect(dishesEn.length).toBeGreaterThanOrEqual(3);
+    const kesari = dishesEn.find((d) => d.name_en.toLowerCase().includes("kesari"));
+    expect(kesari).toBeDefined();
+    expect(kesari?.name_ta).toContain("கேசரி");
+    expect(kesari?.selected).toBe(true);
+  });
+
+  test("UT-17: Voice confirmation matching & multi-dish alternatives for spoken keywords (e.g. 'idly')", async () => {
+    const { findAllDishMatches } = await import("../src/services/voiceTypingService");
+    const { getManagedMenuCatalog } = await import("../src/services/menuCatalogService");
+
+    const catalog = getManagedMenuCatalog();
+    const allDishes = Object.entries(catalog).flatMap(([cat, list]) => list.map(d => ({ ...d, category: cat })));
+
+    // When a user says "idly"
+    const idlyMatches = findAllDishMatches("idly", allDishes, 5);
+    expect(idlyMatches.length).toBeGreaterThanOrEqual(1);
+
+    // Primary match should be idli related
+    const first = idlyMatches[0];
+    expect(first.name_en.toLowerCase().includes("idli") || first.name_ta.includes("இட்லி")).toBe(true);
+
+    // Should provide multiple options so user can confirm or pick specific dish
+    expect(idlyMatches.every((d) => d.name_en || d.name_ta)).toBe(true);
+  });
+
+  test("UT-18: Romanized custom dish slug generation & reliable cross-category dish resolution", async () => {
+    const { addCustomDishToCatalog, updateDishInCatalog } = await import("../src/services/localAdminService");
+    const { findDishByKey, buildDishKey } = await import("../src/services/menuCatalogService");
+
+    // 1. Create dish with Tamil name only - verify human-readable slug rather than raw random junk
+    const dish = addCustomDishToCatalog({
+      category: "Special Dishes",
+      name_en: "",
+      name_ta: "இட்லி உப்புமா",
+      isVegetarian: true,
+    });
+
+    expect(dish.id.startsWith("custom_")).toBe(true);
+    expect(dish.id).toMatch(/custom_[a-z0-9_-]+/);
+
+    // 2. Update dish's category
+    updateDishInCatalog("Special Dishes", dish.id, {
+      name_en: "Special Idli Upma",
+      name_ta: "சிறப்பு இட்லி உப்புமா",
+      category: "Breakfast (Tiffin)",
+    });
+
+    // 3. findDishByKey should find the dish even if queried with older category
+    const oldKey = buildDishKey("Special Dishes", dish.id);
+    const resolved = findDishByKey(oldKey);
+    expect(resolved).not.toBeNull();
+    expect(resolved?.name_en).toBe("Special Idli Upma");
+    expect(resolved?.name_ta).toBe("சிறப்பு இட்லி உப்புமா");
+  });
 });
+

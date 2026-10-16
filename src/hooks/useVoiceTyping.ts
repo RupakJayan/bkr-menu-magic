@@ -5,6 +5,7 @@ import {
   RecognizedItemResult,
   splitContinuousSpeech,
   findBestDishMatch,
+  findAllDishMatches,
   isSpeechRecognitionSupported,
   playVoiceTickSound,
   playAlreadyAddedSound,
@@ -20,6 +21,12 @@ interface UseVoiceTypingOptions {
   onSearchQueryChange?: (query: string) => void;
   onListeningStopped?: () => void;
   isDishAlreadySelected?: (dish: CatalogDish) => boolean;
+  requireConfirmation?: boolean;
+  onDishRecognizedForConfirmation?: (payload: {
+    dish: CatalogDish;
+    phrase: string;
+    alternatives: CatalogDish[];
+  }) => void;
 }
 
 export const useVoiceTyping = ({
@@ -30,6 +37,8 @@ export const useVoiceTyping = ({
   onSearchQueryChange,
   onListeningStopped,
   isDishAlreadySelected,
+  requireConfirmation = true,
+  onDishRecognizedForConfirmation,
 }: UseVoiceTypingOptions) => {
   const [isListening, setIsListening] = useState(false);
   const [voiceMode, setVoiceMode] = useState<VoiceMode>("single");
@@ -50,6 +59,29 @@ export const useVoiceTyping = ({
 
   const isSupported = isSpeechRecognitionSupported();
 
+  // Helper to confirm and add a dish explicitly (via user confirmation card or direct action)
+  const confirmAddDish = useCallback(
+    (dish: CatalogDish, phrase?: string) => {
+      const alreadyAdded = isDishAlreadySelected ? isDishAlreadySelected(dish) : false;
+      if (!alreadyAdded) {
+        onDishAdded?.(dish);
+        playVoiceTickSound();
+        setRecentResults((prev) => [
+          { phrase: phrase || dish.name_en, matchedDish: dish, status: "added" },
+          ...prev,
+        ].slice(0, 15));
+      } else {
+        playAlreadyAddedSound();
+        onDishAlreadyAdded?.(dish);
+        setRecentResults((prev) => [
+          { phrase: phrase || dish.name_en, matchedDish: dish, status: "already-added" },
+          ...prev,
+        ].slice(0, 15));
+      }
+    },
+    [onDishAdded, onDishAlreadyAdded, isDishAlreadySelected]
+  );
+
   // Process a finalized spoken phrase
   const handleFinalPhrase = useCallback(
     (text: string) => {
@@ -62,7 +94,7 @@ export const useVoiceTyping = ({
         return;
       }
 
-      // Continuous mode: split phrases and auto-add dishes
+      // Continuous mode: split phrases and evaluate dishes
       const phrases = splitContinuousSpeech(trimmed);
       const newResults: RecognizedItemResult[] = [];
       const now = Date.now();
@@ -81,16 +113,25 @@ export const useVoiceTyping = ({
         const matched = findBestDishMatch(phrase, catalogDishes);
         if (matched) {
           const alreadyAdded = isDishAlreadySelected ? isDishAlreadySelected(matched) : false;
-          if (!alreadyAdded) {
-            onDishAdded?.(matched);
-            playVoiceTickSound();
-            newResults.push({ phrase, matchedDish: matched, status: "added" });
-          } else {
+          if (alreadyAdded) {
             // Item is repeated / already in menu: play warning pip, tell user, record status
             playAlreadyAddedSound();
             speakVoiceFeedback(`${matched.name_en} already in menu`);
             onDishAlreadyAdded?.(matched);
             newResults.push({ phrase, matchedDish: matched, status: "already-added" });
+          } else if (requireConfirmation && onDishRecognizedForConfirmation) {
+            // Optimal User Control: Ask user to confirm what they spoke before adding to menu
+            const alternatives = findAllDishMatches(phrase, catalogDishes, 4).filter((d) => d.id !== matched.id);
+            onDishRecognizedForConfirmation({
+              dish: matched,
+              phrase,
+              alternatives,
+            });
+            playVoiceTickSound();
+          } else {
+            onDishAdded?.(matched);
+            playVoiceTickSound();
+            newResults.push({ phrase, matchedDish: matched, status: "added" });
           }
         } else if (onCustomDishSpoken) {
           // Auto-add not found items directly to catalog, session, and dictionary
@@ -110,7 +151,16 @@ export const useVoiceTyping = ({
         setRecentResults((prev) => [...newResults, ...prev].slice(0, 15));
       }
     },
-    [catalogDishes, onDishAdded, onDishAlreadyAdded, onCustomDishSpoken, onSearchQueryChange, isDishAlreadySelected]
+    [
+      catalogDishes,
+      onDishAdded,
+      onDishAlreadyAdded,
+      onCustomDishSpoken,
+      onSearchQueryChange,
+      isDishAlreadySelected,
+      requireConfirmation,
+      onDishRecognizedForConfirmation,
+    ]
   );
 
   const stopListening = useCallback(() => {
@@ -270,6 +320,7 @@ export const useVoiceTyping = ({
     interimTranscript,
     recentResults,
     clearRecentResults: () => setRecentResults([]),
+    confirmAddDish,
     errorMessage,
     startListening,
     stopListening,

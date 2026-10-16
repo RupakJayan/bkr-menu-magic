@@ -55,11 +55,12 @@ export const findDishByKey = (key: string): CatalogDish | null => {
   const { category, dishId } = parseDishKey(key);
   const currentCatalog = getManagedMenuCatalog();
 
-  if (category) {
-    const dish = currentCatalog[category]?.find((item) => item.id === dishId);
-    return dish ? { ...dish, category } : null;
+  if (category && currentCatalog[category]) {
+    const dish = currentCatalog[category].find((item) => item.id === dishId);
+    if (dish) return { ...dish, category };
   }
 
+  // Fallback: search across all categories (handles category reassignments and bare IDs)
   for (const [categoryName, dishes] of Object.entries(currentCatalog)) {
     const dish = dishes.find((item) => item.id === dishId);
     if (dish) {

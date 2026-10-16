@@ -1,4 +1,5 @@
 import { menuData } from "@/data/menuData";
+import { romanizeTamilToEnglish } from "@/services/tamilTranslationService";
 import type { CatalogDish, Dish, EventMenu, MenuCatalog } from "@/types/menu";
 
 const STORAGE_KEYS = {
@@ -260,7 +261,8 @@ export const addCustomDishToCatalog = (dish: {
   image?: string;
 }): CustomMenuDish => {
   const state = getMenuAdminState();
-  const rawSlug = (dish.name_en || dish.name_ta || "item")
+  const baseName = dish.name_en?.trim() || (dish.name_ta ? romanizeTamilToEnglish(dish.name_ta) : "dish");
+  const rawSlug = baseName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -324,6 +326,7 @@ export const updateDishInCatalog = (
       ...state.overrides,
       [key]: {
         ...existing,
+        name: nextEn || existing.name || existing.name_en,
         name_en: nextEn || existing.name_en,
         name_ta: nextTa || existing.name_ta,
         estimatedCost: updates.estimatedCost !== undefined ? updates.estimatedCost : existing.estimatedCost,
