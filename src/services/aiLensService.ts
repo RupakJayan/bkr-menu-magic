@@ -10,6 +10,23 @@ export const DEFAULT_GEMINI_API_KEY = "";
  */
 export const getGeminiApiKey = (): string => {
   try {
+    if (typeof localStorage !== "undefined") {
+      const stored = (localStorage.getItem(GEMINI_API_KEY_STORAGE) || "").trim();
+      if (stored) return stored;
+    }
+    if (typeof sessionStorage !== "undefined") {
+      const sess = (sessionStorage.getItem(GEMINI_API_KEY_STORAGE) || "").trim();
+      if (sess) return sess;
+    }
+    if (typeof window !== "undefined" && (window as any).__GEMINI_API_KEY__) {
+      const winKey = String((window as any).__GEMINI_API_KEY__).trim();
+      if (winKey) return winKey;
+    }
+  } catch {
+    // Ignore storage errors in restricted contexts
+  }
+
+  try {
     const metaEnv = typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_GEMINI_API_KEY : undefined;
     const processEnv = typeof process !== "undefined" && process.env ? process.env.VITE_GEMINI_API_KEY : undefined;
     const envKey = (metaEnv || processEnv)?.trim();
@@ -17,24 +34,28 @@ export const getGeminiApiKey = (): string => {
   } catch {
     // Ignore environment lookup error
   }
-  try {
-    if (typeof localStorage !== "undefined") {
-      const stored = (localStorage.getItem(GEMINI_API_KEY_STORAGE) || "").trim();
-      if (stored) return stored;
-    }
-  } catch {
-    // Ignore storage error
-  }
+
   return DEFAULT_GEMINI_API_KEY;
 };
 
 /**
- * Persist the Gemini API key in local storage.
+ * Persist the Gemini API key in local and session storage.
  */
 export const setGeminiApiKey = (key: string): void => {
+  const cleaned = key.trim();
   try {
     if (typeof localStorage !== "undefined") {
-      localStorage.setItem(GEMINI_API_KEY_STORAGE, key.trim());
+      localStorage.setItem(GEMINI_API_KEY_STORAGE, cleaned);
+    }
+  } catch {}
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem(GEMINI_API_KEY_STORAGE, cleaned);
+    }
+  } catch {}
+  try {
+    if (typeof window !== "undefined") {
+      (window as any).__GEMINI_API_KEY__ = cleaned;
     }
   } catch {}
 };

@@ -187,7 +187,7 @@ export const processVoiceWithGemini = async (
   apiKey = getGeminiApiKey()
 ): Promise<RecognizedVoiceDish[]> => {
   if (!apiKey) {
-    throw new Error("Gemini API key is required. Please set VITE_GEMINI_API_KEY in .env or configure in settings.");
+    throw new Error("Gemini API key is required. Please enter and save your Gemini API key in the setup box above.");
   }
 
   const base64Audio = await blobToBase64(audioBlob);

@@ -9,6 +9,7 @@
 1. [Change Management Philosophy & Governance](#1-change-management-philosophy--governance)
 2. [Version History & Release Matrix](#2-version-history--release-matrix)
 3. [Comprehensive Change Log](#3-comprehensive-change-log)
+   - [v1.5.6 — Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback for AI Voice Assistant](#v156--inline-gemini-api-key-setup--multi-tier-browser-storage-fallback-for-ai-voice-assistant)
    - [v1.5.5 — Session Dish Serving Sequence Arrangement & Traditional South Indian Catering Course Sorting](#v155--session-dish-serving-sequence-arrangement--traditional-south-indian-catering-course-sorting)
    - [v1.5.4 — AI Catering Voice Assistant (Gemini 2.5 Flash), Mic Echo Guard, and Unlocked Mobile Keyboard Inputs](#v154--ai-catering-voice-assistant-gemini-25-flash-mic-echo-guard-and-unlocked-mobile-keyboard-inputs)
    - [v1.5.3 — Elimination of Letter-by-Letter Transliteration & Tamil Voiced-to-English Romanization](#v153--elimination-of-letter-by-letter-transliteration--tamil-voiced-to-english-romanization)
@@ -45,6 +46,7 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 
 | Version | Release Date | Summary of Core Deliverables | Verification Status |
 |---|---|---|---|
+| **v1.5.6** | October 2026 | Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback (`localStorage`, `sessionStorage`, `window`, `.env`), 1-Click Key Persist, Friendly Guidance, Uninterrupted Speech Recording | ✅ Verified (22/22 Tests & Clean Build Pass) |
 | **v1.5.5** | October 2026 | Session Dish Serving Sequence Arrangement (Move Up/Down, Drag-and-Drop, Sequence numbering #1, #2...), 1-Click Traditional South Indian Catering Course Sequence (Starters → Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts), Alphabetical & Category Sorting, Live Serving Order Strip on Main Planner, Unit Test UT-13 | ✅ Verified (22/22 Tests & Clean Build Pass) |
 | **v1.5.4** | October 2026 | World-Class AI Catering Voice Assistant powered by Gemini 2.5 Flash, Zero Audio Reflection & Mic Echo Guard (Muted synthetic TTS, auto-pause on input focus), Mobile Virtual Keyboard Lock Elimination (Non-overwriting inputs, `autoComplete="off"`, `autoCorrect="off"`, `spellCheck={false}`), Unit Test UT-12 | ✅ Verified (21/21 Tests & Clean Build Pass) |
 | **v1.5.3** | October 2026 | Elimination of Letter-by-Letter Consonant Pulli Transliteration, Pure English Reverse Translation (`romanizeTamilToEnglish` + `TAMIL_CULINARY_WORDS`), Input Field Keystroke Protection (No Tamil Wipeout), Gemini AI Timeout & AbortSignal (3000ms), Unit Test UT-11 | ✅ Verified (20/20 Tests & Clean Build Pass) |
@@ -60,6 +62,34 @@ To maintain enterprise reliability, consistency with BKR Catering's brand guidel
 ---
 
 ## 3. Comprehensive Change Log
+
+### v1.5.6 — Inline Gemini API Key Setup & Multi-Tier Browser Storage Fallback for AI Voice Assistant
+
+#### 1. Background & Problem Statement
+When running on GitHub Pages or mobile browser devices where environment variables (`.env`) are not bundled into client-side storage at runtime, or when a user clears browser cache, `getGeminiApiKey()` resolved to empty. In `AiVoiceAssistantDialog.tsx`, attempting to start recording or transcribe audio triggered:
+> `Speech Error: Gemini API key is required. Please set VITE_GEMINI_API_KEY in .env or configure in settings.`
+Because the dialog previously lacked an inline configuration card, users were blocked with no interactive way to view, enter, or persist their Gemini API key directly from the speech interface.
+
+#### 2. Key Engineering Solutions Implemented
+- **Inline Gemini API Key Configuration Card (`AiVoiceAssistantDialog.tsx`)**:
+  - Mirrored the proven, high-elegance pattern from `AiMenuLensDialog.tsx`.
+  - If no key is configured, the dialog automatically displays an input field with a 1-click **"Save Key"** button and direct link to Google AI Studio.
+  - If a key is detected, a compact green badge **"🟢 Gemini 2.5 Flash Voice Connected"** with a **"Change API Key"** button is displayed.
+  - Added pre-recording validation: Clicking the microphone without an active key instantly focuses the key setup box with helpful guidance instead of failing silently or throwing unhandled errors.
+- **Multi-Tier Robust Key Resolution (`aiLensService.ts`)**:
+  - Enhanced `getGeminiApiKey()` to evaluate sources in prioritised order:
+    1. Browser `localStorage` (`bkr-gemini-api-key`)
+    2. Session storage `sessionStorage` (`bkr-gemini-api-key`)
+    3. Global runtime context `(window as any).__GEMINI_API_KEY__`
+    4. Bundled environment variables (`import.meta.env.VITE_GEMINI_API_KEY`, `process.env.VITE_GEMINI_API_KEY`)
+  - Updated `setGeminiApiKey()` to simultaneously save to `localStorage`, `sessionStorage`, and runtime memory.
+- **Friendly Error Messaging (`aiVoiceAssistantService.ts`)**:
+  - Replaced technical `.env` error message with clear, actionable user guidance: `"Gemini API key is required. Please enter and save your Gemini API key in the setup box above."`
+- **Automated Verification**:
+  - All 22 Playwright integration, end-to-end, and unit tests passing green (`22 passed`).
+  - Production build compiled successfully (`npm run build`).
+
+---
 
 ### v1.5.5 — Session Dish Serving Sequence Arrangement & Traditional South Indian Catering Course Sorting
 
@@ -95,6 +125,9 @@ Caterers require specific serving sequences for wedding leaf services and buffet
 - **Automated Verification**:
   - Added Unit Test `UT-13` in `tests/unit.test.ts`. All 22 Playwright integration and unit tests passing green.
 
+---
+
+### v1.5.4 — AI Catering Voice Assistant (Gemini 2.5 Flash), Mic Echo Guard, and Unlocked Mobile Keyboard Inputs
 
 #### 1. Background & Problem Statement
 Users testing voice typing on mobile phones and tablets encountered two critical pain points:

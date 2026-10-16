@@ -24,6 +24,8 @@ import {
   CheckCircle2,
   Utensils,
   RefreshCw,
+  Key,
+  ExternalLink,
 } from "lucide-react";
 import {
   AudioRecordingController,
@@ -33,7 +35,7 @@ import {
   RecognizedVoiceDish,
 } from "@/services/aiVoiceAssistantService";
 import { playVoiceTickSound, playAlreadyAddedSound } from "@/services/voiceTypingService";
-import { getGeminiApiKey } from "@/services/aiLensService";
+import { getGeminiApiKey, setGeminiApiKey, hasGeminiApiKey } from "@/services/aiLensService";
 
 interface AiVoiceAssistantDialogProps {
   open: boolean;
@@ -63,15 +65,23 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recognizedDishes, setRecognizedDishes] = useState<RecognizedVoiceDish[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [apiKey, setApiKeyInput] = useState<string>(getGeminiApiKey());
+  const [showKeyEditor, setShowKeyEditor] = useState<boolean>(!hasGeminiApiKey());
 
   const controllerRef = useRef<AudioRecordingController | null>(null);
   const timerRef = useRef<any>(null);
 
   const isSupported = isMediaRecorderSupported();
 
-  // Reset state when dialog closes
+  // Reset state when dialog closes or sync API key when opened
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      const current = getGeminiApiKey();
+      setApiKeyInput(current);
+      if (!current) {
+        setShowKeyEditor(true);
+      }
+    } else {
       if (controllerRef.current) {
         controllerRef.current.cancel();
       }
@@ -108,7 +118,32 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
     };
   }, [step]);
 
+  const handleSaveApiKey = () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter a valid Google Gemini API key.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setGeminiApiKey(apiKey);
+    setShowKeyEditor(false);
+    setErrorMessage(null);
+    toast({
+      title: "Gemini Key Saved! 🎙️✨",
+      description: "Gemini API key saved securely in your browser.",
+    });
+  };
+
   const handleStartRecording = async () => {
+    const activeKey = apiKey.trim() || getGeminiApiKey();
+    if (!activeKey) {
+      setShowKeyEditor(true);
+      setErrorMessage("Please enter and save your Gemini API key below to use the AI Voice Assistant.");
+      return;
+    }
+
     setErrorMessage(null);
     try {
       if (!controllerRef.current) {
@@ -129,11 +164,13 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
 
     try {
       const { blob, mimeType, durationSeconds } = await controllerRef.current.stop();
+      const activeKey = apiKey.trim() || getGeminiApiKey();
 
       const dishes = await processVoiceWithGemini(
         blob,
         mimeType,
-        sessionDishKeys
+        sessionDishKeys,
+        activeKey
       );
 
       if (!dishes || dishes.length === 0) {
@@ -254,6 +291,63 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
         </DialogHeader>
 
         <div className="p-5 space-y-4">
+          {/* Gemini API Key Configuration Banner */}
+          {showKeyEditor ? (
+            <div className="p-3.5 rounded-xl border border-line bg-surf-2 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+                  <Key className="h-4 w-4 text-acc" />
+                  Google Gemini API Key Setup
+                </span>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-acc hover:underline flex items-center gap-1 font-semibold"
+                >
+                  Get Free Key from Google AI Studio <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              <p className="text-[11px] text-mute leading-relaxed">
+                AI Voice Assistant uses Gemini 2.5 Flash to understand spoken Tamil and South Indian dishes. Your key is stored securely in your browser.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  placeholder="Paste Gemini API key (AIzaSy...)"
+                  value={apiKey}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                  className="h-9 text-xs bg-surf border-line text-ink placeholder:text-mute rounded-lg font-mono"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveApiKey}
+                  className="bg-acc text-accink hover:opacity-95 font-semibold px-3.5 rounded-lg shrink-0 h-9 shadow-theme-sm"
+                >
+                  Save Key
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between px-3.5 py-2 bg-surf-2 rounded-lg text-xs text-ink border border-line">
+              <span className="flex items-center gap-2 text-xs">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="font-medium">Gemini 2.5 Flash Voice Connected</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowKeyEditor(true)}
+                className="text-acc text-xs hover:underline font-semibold"
+              >
+                Change API Key
+              </button>
+            </div>
+          )}
+
           {/* Error Banner */}
           {errorMessage && (
             <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-xs text-danger flex items-start gap-2">
