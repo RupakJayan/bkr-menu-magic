@@ -227,6 +227,26 @@ export const useVoiceTyping = ({
     }
   }, [isListening, startListening, stopListening]);
 
+  // Automatically pause/stop microphone when user touches or focuses any input field or dialog
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        if (isListeningRef.current) {
+          stopListening();
+        }
+      }
+    };
+
+    window.addEventListener("focusin", handleFocusIn);
+    return () => window.removeEventListener("focusin", handleFocusIn);
+  }, [stopListening]);
+
   // Clean up on unmount
   useEffect(() => {
     return () => {

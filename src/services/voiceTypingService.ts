@@ -204,20 +204,10 @@ export const playAlreadyAddedSound = (): void => {
 };
 
 /**
- * Speak quick voice feedback (e.g. "Already in menu") using Web Speech Synthesis.
+ * Speak quick voice feedback (Disabled by default to prevent audio reflecting into phone/tablet microphone).
  */
-export const speakVoiceFeedback = (text: string): void => {
-  try {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.25;
-    utterance.pitch = 1.0;
-    utterance.volume = 0.9;
-    window.speechSynthesis.speak(utterance);
-  } catch {
-    // Ignore speech synthesis errors
-  }
+export const speakVoiceFeedback = (_text: string): void => {
+  // Speech synthesis deliberately disabled to prevent speaker audio reflecting into mobile microphones
 };
 
 /**

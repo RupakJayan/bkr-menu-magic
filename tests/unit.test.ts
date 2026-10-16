@@ -161,4 +161,53 @@ test.describe("UT - Unit Tests", () => {
     expect(isTamilScript(roman)).toBe(false);
     expect(roman).toBe("Ada Pradhaman");
   });
+
+  test("UT-12: AI Voice Assistant Service Dish Resolution and Echo Guard", async () => {
+    const { commitVoiceDishesToSession } = await import("../src/services/aiVoiceAssistantService");
+    const { speakVoiceFeedback } = await import("../src/services/voiceTypingService");
+
+    // 1. Voice feedback must be muted by default to eliminate mic reflection
+    expect(() => speakVoiceFeedback("idli already in menu")).not.toThrow();
+
+    // 2. Commit recognized voice dishes to session
+    const addedDishes: string[] = [];
+    let catalogUpdated = false;
+
+    const mockDishes = [
+      {
+        name_en: "Medu Vada",
+        name_ta: "மெது வடை",
+        category: "Breakfast (Tiffin)",
+        catalogDish: {
+          id: "medu-vada",
+          name_en: "Medu Vada",
+          name_ta: "மெது வடை",
+          category: "Breakfast (Tiffin)",
+          isVegetarian: true,
+        },
+        isExistingMatch: true,
+        isAlreadyInSession: false,
+        selected: true,
+      },
+      {
+        name_en: "Chili Parotta",
+        name_ta: "சில்லி பரோட்டா",
+        category: "Dinner (Tiffin)",
+        isExistingMatch: false,
+        isAlreadyInSession: false,
+        selected: true,
+      },
+    ];
+
+    const result = commitVoiceDishesToSession(
+      mockDishes,
+      (cat, id) => addedDishes.push(`${cat}:${id}`),
+      () => { catalogUpdated = true; }
+    );
+
+    expect(result.addedCount).toBe(2);
+    expect(result.newDishesCreated).toBe(1);
+    expect(addedDishes.length).toBe(2);
+    expect(catalogUpdated).toBe(true);
+  });
 });

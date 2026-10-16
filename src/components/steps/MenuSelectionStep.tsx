@@ -21,6 +21,7 @@ import {
 } from "@/services/tamilTranslationService";
 import { updateDishInCatalog } from "@/services/localAdminService";
 import { SessionMenuManageDialog } from "@/components/menu/SessionMenuManageDialog";
+import { AiVoiceAssistantDialog } from "@/components/ai/AiVoiceAssistantDialog";
 import type { CatalogDish } from "@/types/menu";
 
 interface MenuSelectionStepProps {
@@ -48,6 +49,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isSessionManageOpen, setIsSessionManageOpen] = useState(false);
+  const [isAiVoiceAssistantOpen, setIsAiVoiceAssistantOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Quick Add Custom Dish states
@@ -633,6 +635,41 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
 
       {/* Search Bar & Category Tabs */}
       <div className="bg-white rounded-2xl shadow-lg p-4 space-y-4">
+        {/* Search & Voice Assistant Action Row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-1">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                if (isListening) stopListening();
+                setIsAiVoiceAssistantOpen(true);
+              }}
+              className="h-9 px-3.5 text-xs bg-gradient-to-r from-[#762934] via-[#8c3240] to-[#b34052] dark:from-[#d8b36d] dark:to-[#f3d99d] text-white dark:text-[#2a1708] font-bold rounded-xl shadow-md flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+            >
+              <Mic className="h-4 w-4 text-[#d8b36d] dark:text-[#2a1708] animate-pulse" />
+              <span>AI Voice Assistant</span>
+              <Badge className="bg-[#d8b36d]/30 text-[#d8b36d] dark:bg-[#2a1708]/20 dark:text-[#2a1708] text-[9px] px-1.5 py-0 border-0 font-bold">
+                Gemini 2.5 Flash
+              </Badge>
+            </Button>
+            <span className="text-[11px] text-mute hidden md:inline">
+              World-class Tamil & English speech recognition · Zero audio reflection
+            </span>
+          </div>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setIsSessionManageOpen(true)}
+            className="h-9 text-xs font-semibold border-acc/40 text-acc hover:bg-acc/10 rounded-xl"
+          >
+            <Utensils className="h-3.5 w-3.5 mr-1.5" />
+            Manage Session Menu ({currentSession.selectedDishes.length})
+          </Button>
+        </div>
+
         {/* Google-style Search Input & Recommendations Container */}
         <div ref={searchContainerRef} className="relative z-40 space-y-2">
           <div className="relative flex items-center">
@@ -646,10 +683,14 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                 setHighlightedIndex(-1);
               }}
               onFocus={() => {
+                if (isListening) stopListening();
                 setIsSearchFocused(true);
                 setHighlightedIndex(-1);
               }}
               onKeyDown={handleKeyDown}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder={
                 isListening
                   ? voiceMode === "continuous"
@@ -679,28 +720,19 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                 </button>
               )}
 
-              {/* Voice Typing Mic Button */}
-              {isVoiceSupported && (
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-                    isListening
-                      ? "bg-acc text-accink animate-pulse shadow-theme-sm scale-105"
-                      : "text-mute hover:text-acc hover:bg-surf2"
-                  }`}
-                  title={
-                    isListening
-                      ? "Listening... Click to stop voice typing"
-                      : voiceMode === "continuous"
-                      ? "Start continuous voice adding (hands-free)"
-                      : "Click to speak / voice search"
-                  }
-                  aria-label="Voice typing"
-                >
-                  <Mic className={`h-5 w-5 ${isListening ? "animate-bounce" : ""}`} />
-                </button>
-              )}
+              {/* Quick AI Voice Assistant Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isListening) stopListening();
+                  setIsAiVoiceAssistantOpen(true);
+                }}
+                className="p-2 rounded-lg text-acc hover:bg-acc/10 transition-all flex items-center justify-center"
+                title="Open AI Voice Assistant (Gemini Flash)"
+                aria-label="Open AI Voice Assistant"
+              >
+                <Mic className="h-5 w-5 text-acc" />
+              </button>
             </div>
           </div>
 
@@ -935,26 +967,23 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                             onChange={(e) => {
                               const val = e.target.value;
                               setCustomDishEn(val);
-                              if (isTamilScript(val)) {
-                                setCustomDishTa(val);
-                                const en = getInstantEnglishName(val);
-                                if (en && !isTamilScript(en)) setCustomDishEn(en);
-                              } else {
-                                const ta = getInstantTamilName(val);
-                                if (ta) setCustomDishTa(ta);
+                              // Only auto-fill Tamil if Tamil field is empty
+                              if (!customDishTa.trim()) {
+                                if (isTamilScript(val)) {
+                                  setCustomDishTa(val);
+                                } else {
+                                  const ta = getInstantTamilName(val);
+                                  if (ta) setCustomDishTa(ta);
+                                }
                               }
                               const guessed = guessCategoryForDish(val);
                               if (guessed) setCustomDishCategory(guessed);
-
-                              // Debounced Gemini AI translation
-                              if (customAiTimerRef.current) clearTimeout(customAiTimerRef.current);
-                              if (val.trim().length >= 3 && !isTamilScript(val)) {
-                                customAiTimerRef.current = setTimeout(() => {
-                                  translateCustomWithAi(val);
-                                }, 500);
-                              }
                             }}
                             placeholder="e.g. Jackfruit Payasam"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            autoCapitalize="words"
                             className="h-8 text-xs bg-surf border-line text-ink rounded-md"
                           />
                         </div>
@@ -987,16 +1016,20 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                             onChange={(e) => {
                               const val = e.target.value;
                               setCustomDishTa(val);
-                              if (!isTamilScript(val)) {
-                                setCustomDishEn(toTitleCase(val));
-                                const ta = getInstantTamilName(val);
-                                if (ta) setCustomDishTa(ta);
-                              } else {
-                                const en = getInstantEnglishName(val);
-                                if (en && !isTamilScript(en)) setCustomDishEn(en);
+                              // Only auto-fill English if English field is empty
+                              if (!customDishEn.trim()) {
+                                if (!isTamilScript(val)) {
+                                  setCustomDishEn(toTitleCase(val));
+                                } else {
+                                  const en = getInstantEnglishName(val);
+                                  if (en && !isTamilScript(en)) setCustomDishEn(en);
+                                }
                               }
                             }}
                             placeholder="e.g. பலாப்பழ பாயாசம்"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
                             className="h-8 text-xs bg-surf border-line text-ink rounded-md font-tamil"
                           />
                         </div>
@@ -1438,6 +1471,18 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         isLastSession={nextSessionInfo.isLast}
         nextSessionName={nextSessionInfo.name}
         onCatalogChanged={() => setCatalogVersion((v) => v + 1)}
+      />
+
+      {/* World-Class AI Voice Assistant Dialog (Powered by Gemini 2.5 Flash, Zero Audio Reflection) */}
+      <AiVoiceAssistantDialog
+        open={isAiVoiceAssistantOpen}
+        onOpenChange={setIsAiVoiceAssistantOpen}
+        dayNumber={currentDay.dayNumber}
+        sessionName={currentSession.name}
+        sessionDishKeys={currentSession.selectedDishes}
+        categories={categories as string[]}
+        onAddDishToSession={(cat, dishId) => toggleDish(cat, dishId)}
+        onCatalogUpdated={() => setCatalogVersion((v) => v + 1)}
       />
     </div>
   );

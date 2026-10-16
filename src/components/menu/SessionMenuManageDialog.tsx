@@ -137,60 +137,39 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
   // Live Auto-Translation when typing English in Add Form
   const handleNewDishEnChange = (val: string) => {
     setNewDishEn(val);
-    if (isTamilScript(val)) {
-      setNewDishTa(val);
-      const en = getInstantEnglishName(val);
-      if (en && !isTamilScript(en)) setNewDishEn(en);
-    } else {
-      // Only auto-fill Tamil if an authentic culinary dictionary match was found
-      const instantTa = getInstantTamilName(val);
-      if (instantTa) {
-        setNewDishTa(instantTa);
+    
+    // Auto-fill Tamil ONLY if Tamil field is empty
+    if (!newDishTa.trim()) {
+      if (isTamilScript(val)) {
+        setNewDishTa(val);
+      } else {
+        const instantTa = getInstantTamilName(val);
+        if (instantTa) {
+          setNewDishTa(instantTa);
+        }
       }
     }
+    
     const guessed = guessCategoryForDish(val);
     if (guessed && categories.includes(guessed)) {
       setNewDishCategory(guessed);
-    }
-
-    // High accuracy translation powered by Gemini AI (debounced)
-    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-    if (val.trim().length >= 3 && !isTamilScript(val)) {
-      aiDebounceRef.current = setTimeout(() => {
-        translateWithAi(val, "new");
-      }, 500);
     }
   };
 
   // Live Auto-Translation when typing Tamil in Add Form
   const handleNewDishTaChange = (val: string) => {
     setNewDishTa(val);
-    if (!isTamilScript(val)) {
-      setNewDishEn(val);
-      const instantTa = getInstantTamilName(val);
-      if (instantTa) setNewDishTa(instantTa);
-    } else {
-      const instantEn = getInstantEnglishName(val);
-      if (instantEn && !isTamilScript(instantEn)) {
-        setNewDishEn(instantEn);
+    
+    // Auto-fill English ONLY if English field is empty
+    if (!newDishEn.trim()) {
+      if (!isTamilScript(val)) {
+        setNewDishEn(val);
+      } else {
+        const instantEn = getInstantEnglishName(val);
+        if (instantEn && !isTamilScript(instantEn)) {
+          setNewDishEn(instantEn);
+        }
       }
-    }
-
-    // Debounced AI translation for spoken or typed Tamil
-    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-    if (val.trim().length >= 2 && isTamilScript(val)) {
-      aiDebounceRef.current = setTimeout(() => {
-        fetchAiTamilTranslation(val)
-          .then((ai) => {
-            if (ai.name_en && !isTamilScript(ai.name_en)) {
-              setNewDishEn(ai.name_en);
-            }
-            if (ai.category && categories.includes(ai.category)) {
-              setNewDishCategory(ai.category);
-            }
-          })
-          .catch(() => {});
-      }, 500);
     }
   };
 
@@ -356,6 +335,10 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                     placeholder="e.g. Mushroom Pepper Fry"
                     value={newDishEn}
                     onChange={(e) => handleNewDishEnChange(e.target.value)}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoCapitalize="words"
                     className="h-9 text-xs"
                   />
                 </div>
@@ -377,6 +360,9 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       placeholder="எ.கா. காளான் மிளகு வறுவல்"
                       value={newDishTa}
                       onChange={(e) => handleNewDishTaChange(e.target.value)}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck={false}
                       className="h-9 text-xs font-tamil pr-8"
                     />
                     {isAiTranslating && (
@@ -473,26 +459,11 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                           <label className="text-[11px] font-semibold text-ink/70">English Name</label>
                           <Input
                             value={editDishEn}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDishEn(val);
-                              if (isTamilScript(val)) {
-                                setEditDishTa(val);
-                                const en = getInstantEnglishName(val);
-                                if (en && !isTamilScript(en)) setEditDishEn(en);
-                              } else {
-                                const instantTa = getInstantTamilName(val);
-                                if (instantTa) {
-                                  setEditDishTa(instantTa);
-                                }
-                              }
-                              if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-                              if (val.trim().length >= 3 && !isTamilScript(val)) {
-                                aiDebounceRef.current = setTimeout(() => {
-                                  translateWithAi(val, "edit");
-                                }, 500);
-                              }
-                            }}
+                            onChange={(e) => setEditDishEn(e.target.value)}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            autoCapitalize="words"
                             className="h-8 text-xs mt-0.5"
                           />
                         </div>
@@ -504,6 +475,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                               onClick={() => translateWithAi(editDishEn, "edit")}
                               disabled={isAiTranslating || !editDishEn.trim()}
                               className="text-[10px] text-acc hover:text-acc/80 flex items-center gap-1 font-semibold disabled:opacity-40"
+                              title="Fetch accurate Tamil translation from Gemini AI"
                             >
                               <Sparkles className={`h-2.5 w-2.5 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
                               <span>{isAiTranslating ? "Translating..." : "✨ Gemini AI"}</span>
@@ -513,6 +485,9 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                             <Input
                               value={editDishTa}
                               onChange={(e) => setEditDishTa(e.target.value)}
+                              autoComplete="off"
+                              autoCorrect="off"
+                              spellCheck={false}
                               className="h-8 text-xs font-tamil mt-0.5 pr-7"
                             />
                             {isAiTranslating && (
