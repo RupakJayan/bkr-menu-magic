@@ -24,6 +24,7 @@ import {
   registerDishToDictionary,
   fetchAiTamilTranslation,
 } from "@/services/tamilTranslationService";
+import { getDishCourseRank } from "@/services/servingOrderService";
 import {
   Check,
   ChevronRight,
@@ -161,58 +162,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
 
   // Traditional South Indian Wedding / Catering Sequence
   const handleArrangeTraditional = () => {
-    const rankDish = (dish: CatalogDish): number => {
-      const name = (dish.name_en || dish.name || "").toLowerCase();
-      const cat = (dish.category || "").toLowerCase();
-
-      // 1. Welcome Drinks & Soups
-      if (name.includes("welcome") || name.includes("juice") || name.includes("soup") || cat.includes("beverage") || cat.includes("drink")) {
-        if (name.includes("soup") || name.includes("juice")) return 10;
-      }
-      // 2. Starters & Appetizers
-      if (name.includes("starter") || name.includes("manchurian") || name.includes("roll") || name.includes("cutlet") || name.includes("chilli")) return 20;
-
-      // 3. Sweets (Traditional first: Kesari, Payasam, Laddu, Halwa, Mysore Pak)
-      if (cat.includes("sweet") || name.includes("payasam") || name.includes("kesari") || name.includes("laddu") || name.includes("halwa") || name.includes("sweet") || name.includes("poli") || name.includes("jangri") || name.includes("jamun")) return 30;
-
-      // 4. Breakfast / Tiffin (Pongal -> Vada -> Idli -> Poori -> Dosa)
-      if (name.includes("pongal")) return 40;
-      if (name.includes("vada") || name.includes("vadai")) return 42;
-      if (name.includes("idli")) return 44;
-      if (name.includes("poori") || name.includes("puri")) return 46;
-      if (name.includes("dosa") || name.includes("dosai") || name.includes("oothappam")) return 48;
-      if (cat.includes("tiffin") || cat.includes("breakfast")) return 50;
-
-      // 5. Variety Rice & Breads (Parotta, Chappathi, Biryani, Pulao, Fried Rice, White Rice)
-      if (name.includes("parotta") || name.includes("chappathi") || name.includes("naan") || name.includes("roti") || cat.includes("bread")) return 60;
-      if (name.includes("biryani") || name.includes("briyani") || name.includes("pulao") || name.includes("fried rice")) return 62;
-      if (name.includes("white rice") || name.includes("plain rice") || name.includes("sadham") || name.includes("rice")) return 64;
-
-      // 6. Sambar, Kurma, Gravies
-      if (name.includes("sambar") || name.includes("kurma") || name.includes("kuzhambu") || name.includes("gravy")) return 70;
-
-      // 7. Poriyal, Varuval, Kootu, Avial
-      if (name.includes("kootu") || name.includes("avial")) return 80;
-      if (name.includes("poriyal") || name.includes("varuval") || name.includes("roast") || name.includes("fry")) return 82;
-
-      // 8. Rasam
-      if (name.includes("rasam")) return 90;
-
-      // 9. Curd Rice & More (Thayir sadham)
-      if (name.includes("curd") || name.includes("thayir") || name.includes("mor") || name.includes("buttermilk") || name.includes("raita") || name.includes("pachadi")) return 100;
-
-      // 10. Accompaniments (Appalam, Pickle, Chutney, Thuvaiyal, Vadam)
-      if (name.includes("appalam") || name.includes("pappad") || name.includes("pickle") || name.includes("oorugai") || name.includes("chutney") || name.includes("thuvaiyal") || name.includes("vadam")) return 110;
-
-      // 11. Desserts, Ice Cream, Fruits, Coffee, Beeda
-      if (name.includes("ice cream") || name.includes("fruit") || name.includes("dessert")) return 120;
-      if (name.includes("coffee") || name.includes("tea")) return 130;
-      if (name.includes("beeda") || name.includes("paan")) return 140;
-
-      return 150;
-    };
-
-    const sorted = [...sessionDishes].sort((a, b) => rankDish(a.dish) - rankDish(b.dish));
+    const sorted = [...sessionDishes].sort((a, b) => getDishCourseRank(a.dish) - getDishCourseRank(b.dish));
     onReorderDishes(sorted.map((item) => item.key));
     toast({
       title: "Arranged in Traditional Course Order! 🍲✨",

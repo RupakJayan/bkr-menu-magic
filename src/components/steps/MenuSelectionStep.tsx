@@ -22,6 +22,12 @@ import {
 import { updateDishInCatalog } from "@/services/localAdminService";
 import { SessionMenuManageDialog } from "@/components/menu/SessionMenuManageDialog";
 import { AiVoiceAssistantDialog } from "@/components/ai/AiVoiceAssistantDialog";
+import {
+  insertDishInServingSequence,
+  sortDishesByTraditionalCourse,
+  sortDishesAlphabetical,
+  sortDishesByCategory,
+} from "@/services/servingOrderService";
 import type { CatalogDish } from "@/types/menu";
 
 interface MenuSelectionStepProps {
@@ -98,9 +104,11 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
         (id) => id !== dishKey,
       );
     } else {
-      session.selectedDishes = [
-        ...new Set([...session.selectedDishes, dishKey]),
-      ];
+      // Intelligently insert into session's serving sequence according to authentic catering course order
+      session.selectedDishes = insertDishInServingSequence(
+        session.selectedDishes,
+        dishKey
+      );
     }
 
     onMenuChange({
@@ -671,17 +679,53 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                 <Utensils className="h-3.5 w-3.5 text-acc" />
                 <span>Serving Sequence ({currentSession.selectedDishes.length} dishes):</span>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setIsSessionManageOpen(true)}
-                className="h-6 px-2.5 text-[11px] font-semibold text-acc hover:bg-acc/10 border-acc/40 rounded-lg flex items-center gap-1 transition-transform hover:scale-105"
-                title="Arrange or reorder dishes for this session"
-              >
-                <ArrowUpDown className="h-3 w-3" />
-                Arrange Serving Order
-              </Button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const sorted = sortDishesByTraditionalCourse(currentSession.selectedDishes);
+                    reorderDishesInSession(sorted);
+                    toast({
+                      title: "Arranged by Course Order! 🍲",
+                      description: "Dishes sorted in authentic South Indian catering sequence (Sweets → Tiffin → Rice → Sambar → Rasam → Curd → Desserts).",
+                    });
+                  }}
+                  className="h-6 px-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/50 rounded-lg flex items-center gap-1"
+                  title="Auto-arrange dishes into authentic South Indian catering course sequence"
+                >
+                  🍲 Course Order
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const sorted = sortDishesAlphabetical(currentSession.selectedDishes);
+                    reorderDishesInSession(sorted);
+                    toast({
+                      title: "Arranged A → Z! 🔤",
+                      description: "Dishes sorted alphabetically by English name.",
+                    });
+                  }}
+                  className="h-6 px-2 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-blue-300 dark:border-blue-700/50 rounded-lg flex items-center gap-1"
+                  title="Auto-arrange dishes alphabetically A to Z"
+                >
+                  🔤 A → Z
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsSessionManageOpen(true)}
+                  className="h-6 px-2.5 text-[11px] font-semibold text-acc hover:bg-acc/10 border-acc/40 rounded-lg flex items-center gap-1 transition-transform hover:scale-105"
+                  title="Arrange or reorder dishes for this session"
+                >
+                  <ArrowUpDown className="h-3 w-3" />
+                  Arrange Details
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">

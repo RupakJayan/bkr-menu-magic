@@ -444,5 +444,69 @@ test.describe("UT - Unit Tests", () => {
     expect(resolved?.name_en).toBe("Special Idli Upma");
     expect(resolved?.name_ta).toBe("சிறப்பு இட்லி உப்புமா");
   });
+  test("UT-20: Authentic South Indian catering course ranking & serving sequence slotting", async () => {
+    const {
+      getDishCourseRank,
+      insertDishInServingSequence,
+      sortDishesByTraditionalCourse,
+    } = await import("../src/services/servingOrderService");
+
+    // 1. Verify accurate course ranks for both English and Tamil dish variations
+    expect(getDishCourseRank({ name_en: "Pineapple Kesari", category: "Traditional Sweets" })).toBe(30);
+    expect(getDishCourseRank({ name_ta: "கேசரி" })).toBe(30);
+
+    expect(getDishCourseRank({ name_en: "Ven Pongal", category: "Breakfast (Tiffin)" })).toBe(40);
+    expect(getDishCourseRank({ name_ta: "வெண் பொங்கல்" })).toBe(40);
+
+    expect(getDishCourseRank({ name_en: "Medu Vadai", category: "Breakfast (Tiffin)" })).toBe(42);
+    expect(getDishCourseRank({ name_ta: "மெது வடை" })).toBe(42);
+
+    // Tests that 'Plain Idly' (spelled with 'y') is correctly ranked at 44 instead of falling back to 150
+    expect(getDishCourseRank({ name_en: "Plain Idly", category: "Breakfast (Tiffin)" })).toBe(44);
+    expect(getDishCourseRank({ name_en: "Rava Idli", category: "Breakfast (Tiffin)" })).toBe(44);
+    expect(getDishCourseRank({ name_ta: "இட்லி" })).toBe(44);
+
+    expect(getDishCourseRank({ name_en: "Poori Masala", category: "Breakfast (Tiffin)" })).toBe(46);
+    expect(getDishCourseRank({ name_en: "Masala Dosa", category: "Breakfast (Tiffin)" })).toBe(48);
+    expect(getDishCourseRank({ name_en: "Tiffin Sambar", category: "Sambar & Gravy" })).toBe(70);
+    expect(getDishCourseRank({ name_en: "Filter Coffee", category: "Hot Beverages" })).toBe(130);
+
+    // 2. Verify intelligent slotting into existing session serving sequence:
+    // Existing list: [Kesari (30), Ghee Pongal (40), Sambar (70), Coffee (130)]
+    // Adding "Plain Idly" (44) must slot between Ghee Pongal (40) and Sambar (70)
+    const { buildDishKey } = await import("../src/services/menuCatalogService");
+    const kesariKey = buildDishKey("Kesari", "ke2"); // Pinaplle Kesari - rank 30
+    const pongalKey = buildDishKey("Pongal", "po1"); // Ghee Pongal - rank 40
+    const idlyKey = buildDishKey("Idly", "id10"); // Plain Idly - rank 44
+    const sambarKey = buildDishKey("Side Curry (for Tiffin)", "sc2"); // Sambar - rank 70
+    const coffeeKey = buildDishKey("Hot Beverages", "hb8"); // Coffee - rank 130
+
+    const existingSession = [kesariKey, pongalKey, sambarKey, coffeeKey];
+
+    const updated = insertDishInServingSequence(existingSession, idlyKey);
+    const idlyIndex = updated.indexOf(idlyKey);
+    const pongalIndex = updated.indexOf(pongalKey);
+    const sambarIndex = updated.indexOf(sambarKey);
+
+    expect(idlyIndex).toBeGreaterThan(pongalIndex);
+    expect(idlyIndex).toBeLessThan(sambarIndex);
+    expect(updated).toEqual([
+      kesariKey,
+      pongalKey,
+      idlyKey,
+      sambarKey,
+      coffeeKey,
+    ]);
+
+    // 3. Verify sortDishesByTraditionalCourse properly arranges random items
+    const randomDishes = [coffeeKey, idlyKey, kesariKey, sambarKey];
+    const sorted = sortDishesByTraditionalCourse(randomDishes);
+    expect(sorted).toEqual([
+      kesariKey,
+      idlyKey,
+      sambarKey,
+      coffeeKey,
+    ]);
+  });
 });
 

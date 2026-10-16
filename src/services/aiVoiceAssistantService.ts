@@ -2,6 +2,7 @@ import { getGeminiApiKey, matchDishToCatalog } from "@/services/aiLensService";
 import { getManagedMenuCatalog, addCustomDishToCatalog, updateDishInCatalog, buildCatalogKey } from "@/services/localAdminService";
 import { registerDishToDictionary, isTamilScript, romanizeTamilToEnglish, getInstantEnglishName, getInstantTamilName, guessCategoryForDish, toTitleCase } from "@/services/tamilTranslationService";
 import { splitContinuousSpeech } from "@/services/voiceTypingService";
+import { getDishCourseRank } from "@/services/servingOrderService";
 import type { CatalogDish, Dish } from "@/types/menu";
 
 export interface RecognizedVoiceDish {
@@ -330,7 +331,14 @@ export const commitVoiceDishesToSession = (
   let addedCount = 0;
   let newDishesCreated = 0;
 
-  for (const item of dishes) {
+  // Sort candidate dishes in authentic South Indian catering course sequence before adding
+  const sortedDishes = [...dishes].sort((a, b) => {
+    const rankA = getDishCourseRank({ name_en: a.name_en, name_ta: a.name_ta, category: a.category });
+    const rankB = getDishCourseRank({ name_en: b.name_en, name_ta: b.name_ta, category: b.category });
+    return rankA - rankB;
+  });
+
+  for (const item of sortedDishes) {
     if (!item.selected || item.isAlreadyInSession) continue;
 
     const userEn = (item.name_en || "").trim();
