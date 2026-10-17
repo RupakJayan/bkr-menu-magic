@@ -10,7 +10,7 @@ import { ArrowLeft, Check, Download, FileText, PlusCircle, Save, Sparkles } from
 import { useToast } from '@/hooks/use-toast';
 import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
-import { getStoredGoogleToken } from '@/services/googleAuthService';
+import { clearGoogleToken, getStoredGoogleToken } from '@/services/googleAuthService';
 import { saveMenuDataToDrive, saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import { AiMenuLensDialog } from '@/components/ai/AiMenuLensDialog';
 import './planner.css';
@@ -65,7 +65,12 @@ const MenuCreator: React.FC = () => {
       let driveSyncTimer: ReturnType<typeof setTimeout> | undefined;
       if (token) {
         driveSyncTimer = setTimeout(() => {
-          saveMenuDataToDrive(menu, token).catch(() => {});
+          saveMenuDataToDrive(menu, token).catch((err) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes("401") || msg.includes("invalid authentication credentials") || msg.includes("UNAUTHENTICATED")) {
+              clearGoogleToken();
+            }
+          });
         }, 2500);
       }
 
@@ -90,7 +95,12 @@ const MenuCreator: React.FC = () => {
             title: "Menu Synced to Google Drive",
             description: "Saved to 'BKR Catering Events' in Google Drive.",
           });
-        }).catch(() => {});
+        }).catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes("401") || msg.includes("invalid authentication credentials") || msg.includes("UNAUTHENTICATED")) {
+            clearGoogleToken();
+          }
+        });
       }
       toast({
         title: "Menu Saved",

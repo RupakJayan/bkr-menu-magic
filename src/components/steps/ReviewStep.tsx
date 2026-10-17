@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatISTDate } from '@/utils/istDate';
 import { saveEventMenu, updateDishInCatalog } from '@/services/localAdminService';
 import { registerDishToDictionary, fetchAiTamilTranslation } from '@/services/tamilTranslationService';
-import { getStoredGoogleToken } from '@/services/googleAuthService';
+import { clearGoogleToken, getStoredGoogleToken } from '@/services/googleAuthService';
 import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import { resolveDishForOrdering } from '@/services/servingOrderService';
 import { useToast } from '@/hooks/use-toast';
@@ -131,7 +131,12 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
               description: "Saved to 'BKR Catering Events' in Google Drive.",
             });
           })
-          .catch(() => {});
+          .catch((err) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes("401") || msg.includes("invalid authentication credentials") || msg.includes("UNAUTHENTICATED")) {
+              clearGoogleToken();
+            }
+          });
       }
       toast({
         title: "Menu Saved to Dashboard",

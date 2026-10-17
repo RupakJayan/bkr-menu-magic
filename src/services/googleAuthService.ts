@@ -40,6 +40,12 @@ export const getGoogleClientId = (): string => {
     return customClientIdOverride;
   }
   try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("bkr-google-client-id");
+    }
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("bkr-google-client-id");
+    }
     const fromEnv =
       typeof import.meta !== "undefined" && import.meta?.env
         ? import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -59,6 +65,32 @@ export const isGoogleConfigured = (): boolean =>
 
 export const getStoredGoogleToken = (): string | null =>
   sessionStorage.getItem(TOKEN_KEY);
+
+export const clearGoogleToken = (): void => {
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
+};
+
+/**
+ * Validate that the stored Google OAuth token is still valid against Google's API.
+ * If expired (>1 hour) or invalid, automatically clears the dead token.
+ */
+export const validateGoogleToken = async (): Promise<boolean> => {
+  const token = getStoredGoogleToken();
+  if (!token) return false;
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      clearGoogleToken();
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export const getStoredGoogleUser = (): GoogleUser | null => {
   const raw = sessionStorage.getItem(USER_KEY);

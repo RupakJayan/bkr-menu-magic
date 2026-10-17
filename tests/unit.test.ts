@@ -569,12 +569,17 @@ test.describe("UT - Unit Tests", () => {
 
   test("UT-22: Automatic Google Drive syncing preserves local data without deletion", async () => {
     const { getEventSubfolderName, DEFAULT_DRIVE_ACCOUNT } = await import("../src/services/googleDriveService");
-    const { isEmailAllowed, DEFAULT_GOOGLE_CLIENT_ID } = await import("../src/services/googleAuthService");
+    const { isEmailAllowed, DEFAULT_GOOGLE_CLIENT_ID, clearGoogleToken } = await import("../src/services/googleAuthService");
 
     // 1. Verify default service configurations
     expect(DEFAULT_DRIVE_ACCOUNT).toBe("bkrcaters@gmail.com");
     expect(DEFAULT_GOOGLE_CLIENT_ID).toBeTruthy();
     expect(isEmailAllowed("bkrcaters@gmail.com")).toBe(true);
+    expect(isEmailAllowed("rupakjayan22@gmail.com")).toBe(true);
+    expect(isEmailAllowed("imurugansea@gmail.com")).toBe(true);
+    expect(isEmailAllowed("raghavendrarbass@gmail.com")).toBe(true);
+    expect(isEmailAllowed("ragsrups22@gmail.com")).toBe(true);
+    expect(isEmailAllowed("rupak.jayanb@gmail.com")).toBe(true);
 
     // 2. Storage preservation test: ensuring local data is never deleted during auto-sync
     const localDataKey = "currentMenu";
@@ -598,6 +603,9 @@ test.describe("UT - Unit Tests", () => {
       (globalThis as any).localStorage = mockStorage(localStore);
     }
 
+    sessionStorage.setItem("bkr-google-access-token", "expired_token_123");
+    sessionStorage.setItem("bkr-google-user", JSON.stringify({ email: "bkrcaters@gmail.com" }));
+
     const testMenuPayload = {
       id: "evt_preserve_1",
       clientDetails: { name: "Ramesh" },
@@ -614,15 +622,10 @@ test.describe("UT - Unit Tests", () => {
     expect(subfolder).toContain("Madurai_Mahal");
     expect(subfolder).toContain("Ramesh");
 
-    // Simulate auto-sync network failure catching
-    const autoSyncMock = async () => {
-      try {
-        throw new Error("HTTP 401 Unauthorized token expired");
-      } catch {
-        // Automatic background sync catches errors silently without touching local storage
-      }
-    };
-    await autoSyncMock();
+    // Clear Google token leaves local data completely untouched
+    clearGoogleToken();
+    expect(sessionStorage.getItem("bkr-google-access-token")).toBeNull();
+    expect(sessionStorage.getItem("bkr-google-user")).toBeNull();
 
     // Critical check: Local data must remain 100% intact
     expect(JSON.parse(localStorage.getItem(localDataKey) || "{}").id).toBe("evt_preserve_1");

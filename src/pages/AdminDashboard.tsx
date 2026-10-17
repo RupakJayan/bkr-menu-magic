@@ -33,11 +33,13 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { generateEventMenuDOCX } from "@/services/docxExportService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
 import {
+  clearGoogleToken,
   getStoredGoogleToken,
   getStoredGoogleUser,
   isGoogleAuthenticated,
   requestGoogleLogin,
   logoutGoogle,
+  validateGoogleToken,
 } from "@/services/googleAuthService";
 import {
   getCachedBkrFolderId,
@@ -181,9 +183,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setNotice(`Google Drive synced successfully (${currentEvents.length} events synced).`);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      if (errMsg.includes("403") || errMsg.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT") || errMsg.includes("insufficientPermissions")) {
-        sessionStorage.removeItem("bkr-google-access-token");
-        setNotice("Google permission scope was updated. Prompting for updated Google authorization...");
+      if (
+        errMsg.includes("401") ||
+        errMsg.includes("403") ||
+        errMsg.includes("invalid authentication credentials") ||
+        errMsg.includes("Invalid Credentials") ||
+        errMsg.includes("UNAUTHENTICATED") ||
+        errMsg.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT") ||
+        errMsg.includes("insufficientPermissions")
+      ) {
+        clearGoogleToken();
+        setNotice("Google session expired or needs re-authorization. Prompting for Google sign-in...");
         try {
           const freshToken = await requestGoogleLogin();
           setGoogleUser(getStoredGoogleUser());
@@ -201,10 +211,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   useEffect(() => {
-    const token = getStoredGoogleToken();
-    if (token) {
-      syncWithGoogleDrive(token).catch(() => {});
-    }
+    const checkAndSync = async () => {
+      const token = getStoredGoogleToken();
+      if (token) {
+        const isValid = await validateGoogleToken();
+        if (isValid) {
+          syncWithGoogleDrive(token).catch(() => {});
+        } else {
+          setGoogleUser(null);
+        }
+      }
+    };
+    checkAndSync();
   }, []);
 
   const handleGoogleConnect = async () => {
@@ -232,6 +250,25 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       await saveMenuToGoogleDrive(event.menu, token);
       setNotice(`Menu for ${event.menu.clientDetails.name || "Client"} saved to Google Drive folder "BKR Catering Events".`);
     } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (
+        errMsg.includes("401") ||
+        errMsg.includes("403") ||
+        errMsg.includes("invalid authentication credentials") ||
+        errMsg.includes("Invalid Credentials") ||
+        errMsg.includes("UNAUTHENTICATED")
+      ) {
+        clearGoogleToken();
+        try {
+          const freshToken = await requestGoogleLogin();
+          setGoogleUser(getStoredGoogleUser());
+          await saveMenuToGoogleDrive(event.menu, freshToken);
+          setNotice(`Menu for ${event.menu.clientDetails.name || "Client"} saved to Google Drive folder "BKR Catering Events".`);
+          return;
+        } catch {
+          // fall through
+        }
+      }
       setNotice(err instanceof Error ? err.message : "Could not save to Google Drive.");
     }
   };
