@@ -96,7 +96,20 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
     return session.selectedDishes
       .map((key) => {
         const dish = findDishByKey(key);
-        return dish ? { key, dish } : null;
+        if (dish) return { key, dish };
+        // Fallback resolution for custom dishes in session
+        const { category, dishId } = parseDishKey(key);
+        const namePart = dishId.replace(/^custom_/, "").replace(/_[a-z0-9]+$/, "").replace(/[-_]+/g, " ");
+        const fallbackDish: CatalogDish = {
+          id: dishId,
+          name: namePart,
+          name_en: namePart,
+          name_ta: "",
+          category: category || "Special Dishes",
+          isVegetarian: true,
+          image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+        };
+        return { key, dish: fallbackDish };
       })
       .filter((item): item is { key: string; dish: CatalogDish } => item !== null);
   }, [session.selectedDishes, localCatalogVersion]);
@@ -114,30 +127,33 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
   }, [sessionDishes, filterText]);
 
   // -------------------------------------------------------------
-  // REORDERING & SERVING SEQUENCE MANAGEMENT
+  // REORDERING & SERVING SEQUENCE MANAGEMENT (Key-based)
   // -------------------------------------------------------------
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggedKey, setDraggedKey] = useState<string | null>(null);
 
-  const handleMoveUp = (index: number) => {
-    if (index <= 0) return;
+  const handleMoveUp = (dishKey: string) => {
     const currentKeys = [...session.selectedDishes];
-    const temp = currentKeys[index - 1];
-    currentKeys[index - 1] = currentKeys[index];
-    currentKeys[index] = temp;
+    const actualIndex = currentKeys.indexOf(dishKey);
+    if (actualIndex <= 0) return;
+    const temp = currentKeys[actualIndex - 1];
+    currentKeys[actualIndex - 1] = currentKeys[actualIndex];
+    currentKeys[actualIndex] = temp;
     onReorderDishes(currentKeys);
   };
 
-  const handleMoveDown = (index: number) => {
-    if (index >= session.selectedDishes.length - 1) return;
+  const handleMoveDown = (dishKey: string) => {
     const currentKeys = [...session.selectedDishes];
-    const temp = currentKeys[index + 1];
-    currentKeys[index + 1] = currentKeys[index];
-    currentKeys[index] = temp;
+    const actualIndex = currentKeys.indexOf(dishKey);
+    if (actualIndex === -1 || actualIndex >= currentKeys.length - 1) return;
+    const temp = currentKeys[actualIndex + 1];
+    currentKeys[actualIndex + 1] = currentKeys[actualIndex];
+    currentKeys[actualIndex] = temp;
     onReorderDishes(currentKeys);
   };
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
+  const handleDragStart = (e: React.DragEvent, dishKey: string) => {
+    setDraggedKey(dishKey);
+    e.dataTransfer.setData("text/plain", dishKey);
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -146,13 +162,17 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
     e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleDrop = (e: React.DragEvent, targetDishKey: string) => {
     e.preventDefault();
-    if (draggedIndex === null || draggedIndex === targetIndex) return;
+    const sourceKey = draggedKey || e.dataTransfer.getData("text/plain");
+    if (!sourceKey || sourceKey === targetDishKey) return;
     const currentKeys = [...session.selectedDishes];
-    const [moved] = currentKeys.splice(draggedIndex, 1);
-    currentKeys.splice(targetIndex, 0, moved);
-    setDraggedIndex(null);
+    const fromIdx = currentKeys.indexOf(sourceKey);
+    const toIdx = currentKeys.indexOf(targetDishKey);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = currentKeys.splice(fromIdx, 1);
+    currentKeys.splice(toIdx, 0, moved);
+    setDraggedKey(null);
     onReorderDishes(currentKeys);
     toast({
       title: "Dishes Reordered ✨",
@@ -719,11 +739,11 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                   <div
                     key={key}
                     draggable={!filterText}
-                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragStart={(e) => handleDragStart(e, key)}
                     onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, index)}
+                    onDrop={(e) => handleDrop(e, key)}
                     className={`flex items-center justify-between p-3 rounded-xl border border-line bg-surf-2 hover:bg-surf transition-all gap-3 ${
-                      draggedIndex === index ? "opacity-40 border-acc border-dashed" : ""
+                      draggedKey === key ? "opacity-40 border-acc border-dashed" : ""
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -739,11 +759,12 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       </div>
 
                       {/* Image Thumbnail */}
-                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-line relative bg-gray-100">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-line relative bg-gray-100 select-none">
                         <img
                           src={dish.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100"}
                           alt={dish.name_en || dish.name}
-                          className="w-full h-full object-cover"
+                          draggable={false}
+                          className="w-full h-full object-cover pointer-events-none"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src =
                               "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100";
@@ -780,8 +801,8 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       <Button
                         size="sm"
                         variant="ghost"
-                        disabled={index === 0 || !!filterText}
-                        onClick={() => handleMoveUp(index)}
+                        disabled={session.selectedDishes.indexOf(key) <= 0 || !!filterText}
+                        onClick={() => handleMoveUp(key)}
                         className="h-8 w-8 p-0 text-ink/60 hover:text-ink hover:bg-acc/10 rounded-lg disabled:opacity-20"
                         title="Move dish up in serving sequence"
                       >
@@ -790,8 +811,8 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       <Button
                         size="sm"
                         variant="ghost"
-                        disabled={index === session.selectedDishes.length - 1 || !!filterText}
-                        onClick={() => handleMoveDown(index)}
+                        disabled={session.selectedDishes.indexOf(key) >= session.selectedDishes.length - 1 || !!filterText}
+                        onClick={() => handleMoveDown(key)}
                         className="h-8 w-8 p-0 text-ink/60 hover:text-ink hover:bg-acc/10 rounded-lg disabled:opacity-20"
                         title="Move dish down in serving sequence"
                       >

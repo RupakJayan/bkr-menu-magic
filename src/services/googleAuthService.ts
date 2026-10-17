@@ -184,3 +184,12 @@ export const logoutGoogle = (): void => {
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(USER_KEY);
 };
+
+/**
+ * Gracefully clear only the expired OAuth access token without touching any user profile,
+ * local storage menus, saved events, or custom dishes.
+ */
+export const clearExpiredGoogleToken = (): void => {
+  sessionStorage.removeItem(TOKEN_KEY);
+};
+

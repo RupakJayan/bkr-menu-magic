@@ -27,6 +27,7 @@ import {
   sortDishesByTraditionalCourse,
   sortDishesAlphabetical,
   sortDishesByCategory,
+  resolveDishForOrdering,
 } from "@/services/servingOrderService";
 import type { CatalogDish } from "@/types/menu";
 
@@ -730,25 +731,70 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
               {currentSession.selectedDishes.map((key, idx) => {
-                const dish = findDishByKey(key);
-                if (!dish) return null;
+                const dish = resolveDishForOrdering(key);
                 return (
                   <div
                     key={key}
-                    onClick={() => setIsSessionManageOpen(true)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surf-2 border border-line hover:border-acc/40 hover:bg-surf transition-all shrink-0 cursor-pointer text-xs"
-                    title={`#${idx + 1}: ${dish.name_en} (${dish.name_ta}) - Click to rearrange`}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surf-2 border border-line hover:border-acc/40 hover:bg-surf transition-all shrink-0 text-xs select-none group"
+                    title={`#${idx + 1}: ${dish.name_en || dish.name} (${dish.name_ta || ""}) - Use arrows to shift or click Arrange Details`}
                   >
                     <span className="text-[10px] font-bold text-acc">#{idx + 1}</span>
-                    <span className="font-semibold text-ink truncate max-w-[140px]">{dish.name_en}</span>
+                    <span
+                      onClick={() => setIsSessionManageOpen(true)}
+                      className="font-semibold text-ink truncate max-w-[130px] cursor-pointer hover:underline"
+                    >
+                      {dish.name_en || dish.name}
+                    </span>
                     {dish.name_ta && (
-                      <span className="text-[10px] text-mute font-tamil truncate max-w-[120px]">({dish.name_ta})</span>
+                      <span
+                        onClick={() => setIsSessionManageOpen(true)}
+                        className="text-[10px] text-mute font-tamil truncate max-w-[110px] cursor-pointer"
+                      >
+                        ({dish.name_ta})
+                      </span>
                     )}
+                    <div className="flex items-center gap-0.5 ml-1 border-l border-line/60 pl-1">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentKeys = [...currentSession.selectedDishes];
+                          const temp = currentKeys[idx - 1];
+                          currentKeys[idx - 1] = currentKeys[idx];
+                          currentKeys[idx] = temp;
+                          reorderDishesInSession(currentKeys);
+                        }}
+                        className="p-0.5 text-ink/40 hover:text-ink disabled:opacity-20 hover:bg-acc/10 rounded"
+                        title="Move earlier in serving sequence"
+                        aria-label={`Move ${dish.name_en || dish.name} up`}
+                      >
+                        <ChevronLeft className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === currentSession.selectedDishes.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentKeys = [...currentSession.selectedDishes];
+                          const temp = currentKeys[idx + 1];
+                          currentKeys[idx + 1] = currentKeys[idx];
+                          currentKeys[idx] = temp;
+                          reorderDishesInSession(currentKeys);
+                        }}
+                        className="p-0.5 text-ink/40 hover:text-ink disabled:opacity-20 hover:bg-acc/10 rounded"
+                        title="Move later in serving sequence"
+                        aria-label={`Move ${dish.name_en || dish.name} down`}
+                      >
+                        <ChevronRight className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
+
         )}
       </div>
 

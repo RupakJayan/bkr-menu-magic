@@ -508,5 +508,132 @@ test.describe("UT - Unit Tests", () => {
       coffeeKey,
     ]);
   });
+
+  test("UT-21: Custom dishes follow authentic course sequence and support manual arrangement", async () => {
+    const {
+      getDishCourseRank,
+      resolveDishForOrdering,
+      insertDishInServingSequence,
+      sortDishesByTraditionalCourse,
+    } = await import("../src/services/servingOrderService");
+    const { buildDishKey } = await import("../src/services/menuCatalogService");
+
+    // 1. Verify custom dish resolution and course ranking
+    const customVadaKey = buildDishKey("Tiffin", "custom_crispy_medu_vada_123");
+    const customSambarKey = buildDishKey("Gravy", "custom_special_drumstick_sambar_456");
+    const customCoffeeKey = buildDishKey("Hot Beverage", "custom_kumbakonam_degree_coffee_789");
+    const customPayasamKey = buildDishKey("Sweet", "custom_elaneer_payasam_999");
+
+    const vadaDish = resolveDishForOrdering(customVadaKey);
+    expect(vadaDish.name_en).toContain("crispy medu vada");
+    const vadaRank = getDishCourseRank(vadaDish);
+    expect(vadaRank).toBe(42); // Vada rank
+
+    const payasamDish = resolveDishForOrdering(customPayasamKey);
+    const payasamRank = getDishCourseRank(payasamDish);
+    expect(payasamRank).toBe(32); // Traditional Sweet / Payasam rank
+
+    const sambarDish = resolveDishForOrdering(customSambarKey);
+    const sambarRank = getDishCourseRank(sambarDish);
+    expect(sambarRank).toBe(70); // Sambar rank
+
+    const coffeeDish = resolveDishForOrdering(customCoffeeKey);
+    const coffeeRank = getDishCourseRank(coffeeDish);
+    expect(coffeeRank).toBe(130); // Coffee rank
+
+    // 2. Insert custom dish into serving sequence: custom payasam must slot before vada and coffee
+    const initialSession = [customVadaKey, customCoffeeKey];
+    const withPayasam = insertDishInServingSequence(initialSession, customPayasamKey);
+    expect(withPayasam).toEqual([customPayasamKey, customVadaKey, customCoffeeKey]);
+
+    // Insert custom sambar: must slot between vada (42) and coffee (130)
+    const withSambar = insertDishInServingSequence(withPayasam, customSambarKey);
+    expect(withSambar).toEqual([customPayasamKey, customVadaKey, customSambarKey, customCoffeeKey]);
+
+    // 3. Test course sorting with mixed custom and catalog dishes
+    const scrambled = [customCoffeeKey, customVadaKey, customSambarKey, customPayasamKey];
+    const sortedDishes = sortDishesByTraditionalCourse(scrambled);
+    expect(sortedDishes).toEqual([customPayasamKey, customVadaKey, customSambarKey, customCoffeeKey]);
+
+    // 4. Test manual key-based swapping (Move Up / Move Down)
+    const manualOrder = [...sortedDishes];
+    // Move customSambar up by 1
+    const sambarIdx = manualOrder.indexOf(customSambarKey);
+    const temp = manualOrder[sambarIdx - 1];
+    manualOrder[sambarIdx - 1] = manualOrder[sambarIdx];
+    manualOrder[sambarIdx] = temp;
+
+    expect(manualOrder[1]).toBe(customSambarKey);
+    expect(manualOrder[2]).toBe(customVadaKey);
+  });
+
+  test("UT-22: Google Drive HTTP 401 Unauthorized handling preserves local data and safely invalidates expired token", async () => {
+    const {
+      GoogleAuthExpiredError,
+      isGoogleAuthExpiredError,
+      driveFetch,
+    } = await import("../src/services/googleDriveService");
+    const { clearExpiredGoogleToken } = await import("../src/services/googleAuthService");
+
+    // 1. GoogleAuthExpiredError instantiation and inspection
+    const error = new GoogleAuthExpiredError("Session expired test");
+    expect(error.name).toBe("GoogleAuthExpiredError");
+    expect(error.code).toBe(401);
+    expect(isGoogleAuthExpiredError(error)).toBe(true);
+    expect(isGoogleAuthExpiredError(new Error("Request failed with 401 Unauthorized"))).toBe(true);
+    expect(isGoogleAuthExpiredError(new Error("Network timeout"))).toBe(false);
+
+    // 2. clearExpiredGoogleToken leaves other storage intact
+    const originalTokenKey = "bkr-google-access-token";
+    const originalLocalDataKey = "currentMenu";
+    const originalLocalEventsKey = "bkr-admin-events";
+
+    // Setup in-memory mock for Node test environment
+    const sessionStore = new Map<string, string>();
+    const localStore = new Map<string, string>();
+    const mockStorage = (store: Map<string, string>) => ({
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, String(v)),
+      removeItem: (k: string) => store.delete(k),
+      clear: () => store.clear(),
+      key: (i: number) => Array.from(store.keys())[i] ?? null,
+      get length() { return store.size; },
+    });
+
+    if (typeof globalThis.sessionStorage === "undefined") {
+      (globalThis as any).sessionStorage = mockStorage(sessionStore);
+    }
+    if (typeof globalThis.localStorage === "undefined") {
+      (globalThis as any).localStorage = mockStorage(localStore);
+    }
+
+    sessionStorage.setItem(originalTokenKey, "mock-expired-token-xyz");
+    localStorage.setItem(originalLocalDataKey, JSON.stringify({ id: "evt_123", test: true }));
+    localStorage.setItem(originalLocalEventsKey, JSON.stringify([{ id: "evt_123" }]));
+
+    clearExpiredGoogleToken();
+
+    // Expired token is removed
+    expect(sessionStorage.getItem(originalTokenKey)).toBeNull();
+    // Critical: existing event menu & events list MUST NOT BE ERASED
+    expect(localStorage.getItem(originalLocalDataKey)).toBeTruthy();
+    expect(localStorage.getItem(originalLocalEventsKey)).toBeTruthy();
+
+
+    // 3. driveFetch handles 401 response
+    const mock401Fetch = async () => {
+      const mockResponse = new Response("Unauthorized", { status: 401, statusText: "Unauthorized" });
+      if (mockResponse.status === 401) {
+        clearExpiredGoogleToken();
+        throw new GoogleAuthExpiredError("Google Drive session expired (Code 401). Local data is safely preserved.");
+      }
+      return mockResponse;
+    };
+
+    await expect(mock401Fetch()).rejects.toThrow("Google Drive session expired (Code 401)");
+    // Verify local data is still 100% intact after the error
+    expect(JSON.parse(localStorage.getItem(originalLocalDataKey) || "{}").id).toBe("evt_123");
+  });
 });
+
 

@@ -4,15 +4,17 @@ import { buildDishKey, findDishByKey, getManagedMenuCatalog, normalizeDishKeys }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BadgeCheck, Calendar, CalendarDays, Check, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X, Sparkles } from 'lucide-react';
+import { BadgeCheck, Calendar, CalendarDays, Check, ChevronDown, ChevronUp, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
 import { saveEventMenu, updateDishInCatalog } from '@/services/localAdminService';
 import { registerDishToDictionary, fetchAiTamilTranslation } from '@/services/tamilTranslationService';
 import { getStoredGoogleToken } from '@/services/googleAuthService';
-import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
+import { isGoogleAuthExpiredError, saveMenuToGoogleDrive } from '@/services/googleDriveService';
+import { resolveDishForOrdering } from '@/services/servingOrderService';
 import { useToast } from '@/hooks/use-toast';
+
 
 interface ReviewStepProps {
   menu: EventMenu;
@@ -122,12 +124,21 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
       saveEventMenu(menu);
       const token = getStoredGoogleToken();
       if (token) {
-        saveMenuToGoogleDrive(menu, token).then(() => {
-          toast({
-            title: "Menu Synced to Google Drive",
-            description: "Saved to 'BKR Catering Events' in Google Drive.",
+        saveMenuToGoogleDrive(menu, token)
+          .then(() => {
+            toast({
+              title: "Menu Synced to Google Drive",
+              description: "Saved to 'BKR Catering Events' in Google Drive.",
+            });
+          })
+          .catch((err) => {
+            if (isGoogleAuthExpiredError(err)) {
+              toast({
+                title: "Google Drive Session Expired (Code 401)",
+                description: "Your menu is safely saved in your dashboard records. Reconnect anytime to resume cloud backup.",
+              });
+            }
           });
-        }).catch(() => {});
       }
       toast({
         title: "Menu Saved to Dashboard",
@@ -141,6 +152,30 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
       });
     }
   };
+
+  const moveDish = (dayIndex: number, sessionIndex: number, dishKey: string, direction: 'up' | 'down') => {
+    const updatedDays = [...menu.days];
+    const session = updatedDays[dayIndex].sessions[sessionIndex];
+    const currentKeys = normalizeDishKeys(session.selectedDishes);
+    const idx = currentKeys.indexOf(dishKey);
+    if (idx === -1) return;
+    if (direction === 'up' && idx > 0) {
+      const temp = currentKeys[idx - 1];
+      currentKeys[idx - 1] = currentKeys[idx];
+      currentKeys[idx] = temp;
+    } else if (direction === 'down' && idx < currentKeys.length - 1) {
+      const temp = currentKeys[idx + 1];
+      currentKeys[idx + 1] = currentKeys[idx];
+      currentKeys[idx] = temp;
+    }
+    session.selectedDishes = currentKeys;
+    onMenuChange({
+      ...menu,
+      days: updatedDays,
+      updatedAt: new Date(),
+    });
+  };
+
 
   const removeDish = (dayIndex: number, sessionIndex: number, dishKey: string) => {
     const updatedDays = [...menu.days];
@@ -354,9 +389,13 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
           </div>
           <div className="p-5 space-y-4">
             {day.sessions.map((session, sessionIndex) => {
-              const selectedDishes = session.selectedDishes.flatMap(dishKey => {
-                const dish = findDishByKey(dishKey);
-                return dish ? [{ ...dish, selectionKey: dishKey }] : [];
+              const selectedDishes = session.selectedDishes.map((dishKey, dishIdx) => {
+                const dish = resolveDishForOrdering(dishKey);
+                return {
+                  ...dish,
+                  selectionKey: dishKey,
+                  displayOrder: dishIdx + 1,
+                };
               });
 
               const sessionTotal = calculateSessionTotal(dayIndex, sessionIndex);
@@ -417,30 +456,57 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                     <div className="space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {selectedDishes.map((dish) => (
-                          <div key={dish.selectionKey} className="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-200 hover:border-pink-400 shadow-sm transition-all">
+                          <div key={dish.selectionKey} className="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-200 hover:border-pink-400 shadow-sm transition-all gap-2">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <span className="font-extrabold text-[11px] text-pink-600 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded-md shrink-0">
+                                #{dish.displayOrder}
+                              </span>
                               <img
-                                src={dish.image}
-                                alt={dish.name_en}
-                                className="w-14 h-14 rounded-lg object-cover shrink-0"
+                                src={dish.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}
+                                alt={dish.name_en || dish.name}
+                                className="w-12 h-12 rounded-lg object-cover shrink-0 select-none pointer-events-none"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
                                 }}
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="font-bold text-gray-800 text-sm truncate">{dish.name_en || dish.name}</p>
-                                <p className="text-xs text-pink-600 truncate font-medium">{dish.name_ta}</p>
+                                {dish.name_ta && (
+                                  <p className="text-xs text-pink-600 truncate font-medium font-tamil">{dish.name_ta}</p>
+                                )}
                                 <span className="inline-block mt-0.5 text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                                   {dish.category}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 shrink-0 ml-2">
+                            <div className="flex items-center gap-0.5 shrink-0 ml-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={dish.displayOrder === 1}
+                                onClick={() => moveDish(dayIndex, sessionIndex, dish.selectionKey, 'up')}
+                                className="hover:bg-pink-100 text-pink-700 disabled:opacity-20 rounded-lg p-1.5 h-8 w-8"
+                                aria-label={`Move ${dish.name_en || dish.name} up`}
+                                title="Move up in serving sequence"
+                              >
+                                <ChevronUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={dish.displayOrder === selectedDishes.length}
+                                onClick={() => moveDish(dayIndex, sessionIndex, dish.selectionKey, 'down')}
+                                className="hover:bg-pink-100 text-pink-700 disabled:opacity-20 rounded-lg p-1.5 h-8 w-8"
+                                aria-label={`Move ${dish.name_en || dish.name} down`}
+                                title="Move down in serving sequence"
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => startEditingDish(dish, dish.selectionKey, dayIndex, sessionIndex)}
-                                className="hover:bg-pink-100 text-pink-600 hover:text-pink-800 rounded-lg p-2"
+                                className="hover:bg-pink-100 text-pink-600 hover:text-pink-800 rounded-lg p-1.5 h-8 w-8"
                                 aria-label={`Edit ${dish.name_en || dish.name}`}
                                 title="Edit dish name in Tamil or English"
                               >
@@ -450,7 +516,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeDish(dayIndex, sessionIndex, dish.selectionKey)}
-                                className="hover:bg-red-50 text-red-500 hover:text-red-700 rounded-lg p-2"
+                                className="hover:bg-red-50 text-red-500 hover:text-red-700 rounded-lg p-1.5 h-8 w-8"
                                 aria-label={`Remove ${dish.name_en || dish.name}`}
                                 title="Remove dish"
                               >
@@ -460,6 +526,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                           </div>
                         ))}
                       </div>
+
 
                       {/* Add More Dishes Dialog */}
                       <Dialog>

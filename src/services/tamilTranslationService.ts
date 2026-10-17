@@ -212,10 +212,76 @@ export const CULINARY_DICTIONARY: Record<string, string> = {
   "poli": "போளி",
   "paruppu poli": "பருப்பு போளி",
   "coconut poli": "தேங்காய் போளி",
+  "asoka halwa": "அசோகா அல்வா",
+  "thiruvaiyaru asoka halwa": "திருவையாறு அசோகா அல்வா",
+  "elaneer halwa": "இளநீர் அல்வா",
+  "jackfruit halwa": "பலாப்பழ அல்வா",
+  "chakkavaratti": "சக்கவரட்டி",
+  "karachi halwa": "கராச்சி அல்வா",
+  "bombay halwa": "பாம்பே அல்வா",
+  "anjeer halwa": "அத்திப்பழ அல்வா",
+  "cham cham": "சாம் சாம்",
+  "malai sandwich": "மலாய் சாண்ட்விச்",
+  "srivilliputhur palkova": "ஸ்ரீவில்லிபுத்தூர் பால்கோவா",
+  "palkova": "பால்கோவா",
+  "doodh peda": "பால் பேடா",
+  "kesar peda": "கேசர் பேடா",
+  "dry fruit laddu": "உலர் பழங்கள் லட்டு",
+  "maa laddu": "மா லட்டு",
+  "nei appam": "நெய் அப்பம்",
+  "unniyappam": "உன்னியப்பம்",
+  "suzhiyan": "சுழியன்",
+  "seeyam": "சீயம்",
+  "basundi": "பாசுந்தி",
+  "carrot kheer": "கேரட் கீர்",
+  "badam kheer": "பாதாம் கீர்",
+  "makhana kheer": "தாமரை விதை கீர்",
   "ice cream": "ஐஸ்கிரீம்",
   "vanilla ice cream": "வெண்ணிலா ஐஸ்கிரீம்",
   "kulfi": "குல்ஃபி",
   "matka kulfi": "மட்கா குல்ஃபி",
+
+  // Kaaram & Traditional Savories (கார வகைகள்)
+  "mixture": "மிக்சர்",
+  "madras mixture": "மெட்ராஸ் மிக்சர்",
+  "special madras mixture": "ஸ்பெஷல் மெட்ராஸ் மிக்சர்",
+  "kaju mixture": "முந்திரி மிக்சர்",
+  "cashew mixture": "முந்திரி மிக்சர்",
+  "poondu mixture": "பூண்டு மிக்சர்",
+  "garlic mixture": "பூண்டு மிக்சர்",
+  "aval mixture": "அவல் மிக்சர்",
+  "cornflakes mixture": "கார்ன்ஃப்ளேக்ஸ் மிக்சர்",
+  "kara boondi": "கார பூந்தி",
+  "murukku": "முறுக்கு",
+  "kai murukku": "கை முறுக்கு",
+  "butter murukku": "வெண்ணெய் முறுக்கு",
+  "vennai murukku": "வெண்ணெய் முறுக்கு",
+  "thenkuzhal": "தேன்குழல் முறுக்கு",
+  "thenkuzhal murukku": "தேன்குழல் முறுக்கு",
+  "mullu murukku": "முள்ளு முறுக்கு",
+  "magizhampoo murukku": "மகிழம்பூ முறுக்கு",
+  "ribbon pakoda": "ரிப்பன் பக்கோடா",
+  "ola pakoda": "ஓல பக்கோடா",
+  "ring murukku": "ரிங் முறுக்கு",
+  "ragi murukku": "கேழ்வரகு முறுக்கு",
+  "thattai": "தட்டை",
+  "crispy thattai": "மொறுமொறு தட்டை",
+  "milagu thattai": "மிளகு தட்டை",
+  "pepper thattai": "மிளகு தட்டை",
+  "thattu vadai": "தட்டு வடை",
+  "seedai": "சீடை",
+  "kara seedai": "கார சீடை",
+  "uppu seedai": "உப்பு சீடை",
+  "omapodi": "ஓமப்பொடி",
+  "ghee omapodi": "நெய் ஓமப்பொடி",
+  "kara sev": "காரா சேவ்",
+  "poondu sev": "பூண்டு காரா சேவ்",
+  "milagu sev": "மிளகு சேவ்",
+  "peanut pakoda": "வேர்க்கடலை பக்கோடா",
+  "masala peanut": "மசாலா வேர்க்கடலை பக்கோடா",
+  "vazhaipoo vadai": "வாழைப்பூ வடை",
+  "thavala vadai": "தவள வடை",
+  "paruppu vadai": "பருப்பு வடை",
 
   // Snacks & Accompaniments
   "bajji": "பஜ்ஜி",
@@ -231,6 +297,7 @@ export const CULINARY_DICTIONARY: Record<string, string> = {
   "mini samosa": "மினி சமோசா",
   "onion samosa": "வெங்காய சமோசா",
   "cutlet": "கட்லெட்",
+
   "veg cutlet": "காய்கறி கட்லெட்",
   "spring roll": "ஸ்பிரிங் ரோல்",
   "soup": "சூப்",
@@ -394,11 +461,11 @@ export const CULINARY_DICTIONARY: Record<string, string> = {
   "senai kizhangu roast": "சேனைக்கிழங்கு ரோஸ்ட்",
 
   // Sweets & Desserts (Additional catering varieties)
-  "badam kheer": "பாதாம் கீர்",
   "ashoka halwa": "அசோகா அல்வா",
   "mothi laddu": "மோத்திசூர் லட்டு",
   "paal kova": "பால்கோவா",
 };
+
 
 // Create a reverse mapping for Tamil -> English
 const REVERSE_DICTIONARY: Record<string, string> = {};
@@ -867,9 +934,32 @@ export const getInstantEnglishName = (tamilText: string): string => {
 export const guessCategoryForDish = (dishName: string): string => {
   const lower = dishName.toLowerCase();
 
+  // Kaaram & Savories (கார வகைகள்)
+  if (
+    lower.includes("mixture") ||
+    lower.includes("murukku") ||
+    lower.includes("thattai") ||
+    lower.includes("seedai") ||
+    lower.includes("omapodi") ||
+    lower.includes("kara boondi") ||
+    lower.includes("sev") ||
+    lower.includes("kaaram") ||
+    lower.includes("karam") ||
+    lower.includes("மிக்சர்") ||
+    lower.includes("முறுக்கு") ||
+    lower.includes("தட்டை") ||
+    lower.includes("சீடை") ||
+    lower.includes("ஓமப்பொடி") ||
+    lower.includes("கார பூந்தி") ||
+    lower.includes("காரம்")
+  ) {
+    return "Kaaram & Savories (கார வகைகள்)";
+  }
+
   // Sweets & Desserts
   if (
     lower.includes("kesari") ||
+
     lower.includes("halwa") ||
     lower.includes("payasam") ||
     lower.includes("laddu") ||
