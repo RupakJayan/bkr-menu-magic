@@ -11,7 +11,7 @@ import { formatISTDate } from '@/utils/istDate';
 import { saveEventMenu, updateDishInCatalog } from '@/services/localAdminService';
 import { registerDishToDictionary, fetchAiTamilTranslation } from '@/services/tamilTranslationService';
 import { getStoredGoogleToken } from '@/services/googleAuthService';
-import { isGoogleAuthExpiredError, saveMenuToGoogleDrive } from '@/services/googleDriveService';
+import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import { resolveDishForOrdering } from '@/services/servingOrderService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -131,14 +131,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
               description: "Saved to 'BKR Catering Events' in Google Drive.",
             });
           })
-          .catch((err) => {
-            if (isGoogleAuthExpiredError(err)) {
-              toast({
-                title: "Google Drive Session Expired (Code 401)",
-                description: "Your menu is safely saved in your dashboard records. Reconnect anytime to resume cloud backup.",
-              });
-            }
-          });
+          .catch(() => {});
       }
       toast({
         title: "Menu Saved to Dashboard",

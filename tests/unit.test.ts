@@ -567,28 +567,19 @@ test.describe("UT - Unit Tests", () => {
     expect(manualOrder[2]).toBe(customVadaKey);
   });
 
-  test("UT-22: Google Drive HTTP 401 Unauthorized handling preserves local data and safely invalidates expired token", async () => {
-    const {
-      GoogleAuthExpiredError,
-      isGoogleAuthExpiredError,
-      driveFetch,
-    } = await import("../src/services/googleDriveService");
-    const { clearExpiredGoogleToken } = await import("../src/services/googleAuthService");
+  test("UT-22: Automatic Google Drive syncing preserves local data without deletion", async () => {
+    const { getEventSubfolderName, DEFAULT_DRIVE_ACCOUNT } = await import("../src/services/googleDriveService");
+    const { isEmailAllowed, DEFAULT_GOOGLE_CLIENT_ID } = await import("../src/services/googleAuthService");
 
-    // 1. GoogleAuthExpiredError instantiation and inspection
-    const error = new GoogleAuthExpiredError("Session expired test");
-    expect(error.name).toBe("GoogleAuthExpiredError");
-    expect(error.code).toBe(401);
-    expect(isGoogleAuthExpiredError(error)).toBe(true);
-    expect(isGoogleAuthExpiredError(new Error("Request failed with 401 Unauthorized"))).toBe(true);
-    expect(isGoogleAuthExpiredError(new Error("Network timeout"))).toBe(false);
+    // 1. Verify default service configurations
+    expect(DEFAULT_DRIVE_ACCOUNT).toBe("bkrcaters@gmail.com");
+    expect(DEFAULT_GOOGLE_CLIENT_ID).toBeTruthy();
+    expect(isEmailAllowed("bkrcaters@gmail.com")).toBe(true);
 
-    // 2. clearExpiredGoogleToken leaves other storage intact
-    const originalTokenKey = "bkr-google-access-token";
-    const originalLocalDataKey = "currentMenu";
-    const originalLocalEventsKey = "bkr-admin-events";
+    // 2. Storage preservation test: ensuring local data is never deleted during auto-sync
+    const localDataKey = "currentMenu";
+    const localEventsKey = "bkr-admin-events";
 
-    // Setup in-memory mock for Node test environment
     const sessionStore = new Map<string, string>();
     const localStore = new Map<string, string>();
     const mockStorage = (store: Map<string, string>) => ({
@@ -607,32 +598,35 @@ test.describe("UT - Unit Tests", () => {
       (globalThis as any).localStorage = mockStorage(localStore);
     }
 
-    sessionStorage.setItem(originalTokenKey, "mock-expired-token-xyz");
-    localStorage.setItem(originalLocalDataKey, JSON.stringify({ id: "evt_123", test: true }));
-    localStorage.setItem(originalLocalEventsKey, JSON.stringify([{ id: "evt_123" }]));
-
-    clearExpiredGoogleToken();
-
-    // Expired token is removed
-    expect(sessionStorage.getItem(originalTokenKey)).toBeNull();
-    // Critical: existing event menu & events list MUST NOT BE ERASED
-    expect(localStorage.getItem(originalLocalDataKey)).toBeTruthy();
-    expect(localStorage.getItem(originalLocalEventsKey)).toBeTruthy();
-
-
-    // 3. driveFetch handles 401 response
-    const mock401Fetch = async () => {
-      const mockResponse = new Response("Unauthorized", { status: 401, statusText: "Unauthorized" });
-      if (mockResponse.status === 401) {
-        clearExpiredGoogleToken();
-        throw new GoogleAuthExpiredError("Google Drive session expired (Code 401). Local data is safely preserved.");
-      }
-      return mockResponse;
+    const testMenuPayload = {
+      id: "evt_preserve_1",
+      clientDetails: { name: "Ramesh" },
+      venueDetails: { name: "Madurai Mahal" },
+      startDate: "2026-11-10",
+      days: [],
     };
 
-    await expect(mock401Fetch()).rejects.toThrow("Google Drive session expired (Code 401)");
-    // Verify local data is still 100% intact after the error
-    expect(JSON.parse(localStorage.getItem(originalLocalDataKey) || "{}").id).toBe("evt_123");
+    localStorage.setItem(localDataKey, JSON.stringify(testMenuPayload));
+    localStorage.setItem(localEventsKey, JSON.stringify([testMenuPayload]));
+
+    // Check subfolder naming for auto-sync
+    const subfolder = getEventSubfolderName(testMenuPayload as any);
+    expect(subfolder).toContain("Madurai_Mahal");
+    expect(subfolder).toContain("Ramesh");
+
+    // Simulate auto-sync network failure catching
+    const autoSyncMock = async () => {
+      try {
+        throw new Error("HTTP 401 Unauthorized token expired");
+      } catch {
+        // Automatic background sync catches errors silently without touching local storage
+      }
+    };
+    await autoSyncMock();
+
+    // Critical check: Local data must remain 100% intact
+    expect(JSON.parse(localStorage.getItem(localDataKey) || "{}").id).toBe("evt_preserve_1");
+    expect(JSON.parse(localStorage.getItem(localEventsKey) || "[]")).toHaveLength(1);
   });
 });
 

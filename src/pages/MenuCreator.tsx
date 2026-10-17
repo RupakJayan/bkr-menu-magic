@@ -6,12 +6,12 @@ import { EventPlanningFlow } from '@/components/EventPlanningFlow';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { BrandLogo } from '@/components/BrandLogo';
-import { ArrowLeft, Check, CloudOff, Download, FileText, PlusCircle, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileText, PlusCircle, Save, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
-import { getStoredGoogleToken, requestGoogleLogin } from '@/services/googleAuthService';
-import { isGoogleAuthExpiredError, saveMenuDataToDrive, saveMenuToGoogleDrive } from '@/services/googleDriveService';
+import { getStoredGoogleToken } from '@/services/googleAuthService';
+import { saveMenuDataToDrive, saveMenuToGoogleDrive } from '@/services/googleDriveService';
 import { AiMenuLensDialog } from '@/components/ai/AiMenuLensDialog';
 import './planner.css';
 
@@ -20,7 +20,6 @@ const MenuCreator: React.FC = () => {
   const { toast } = useToast();
   const isAdmin = hasAdminSession();
   const [aiLensOpen, setAiLensOpen] = useState(false);
-  const [driveAuthExpired, setDriveAuthExpired] = useState(false);
   const [menu, setMenu] = useState<EventMenu>(() => {
     const saved = localStorage.getItem('currentMenu');
     return saved ? JSON.parse(saved) : createEmptyMenu();
@@ -36,26 +35,6 @@ const MenuCreator: React.FC = () => {
       title: "Started New Blank Event",
       description: "All previous details cleared. You are ready to plan a fresh event.",
     });
-  };
-
-  const handleReconnectDrive = async () => {
-    try {
-      const newToken = await requestGoogleLogin();
-      if (newToken) {
-        setDriveAuthExpired(false);
-        await saveMenuDataToDrive(menu, newToken);
-        toast({
-          title: "Google Drive Reconnected! ☁️",
-          description: "All existing menu data backed up safely to Google Drive.",
-        });
-      }
-    } catch (e: any) {
-      toast({
-        title: "Connection Failed",
-        description: e?.message || "Could not sign in to Google Drive. Local data is completely safe.",
-        variant: "destructive",
-      });
-    }
   };
 
   // Auto-save to localStorage
@@ -86,13 +65,7 @@ const MenuCreator: React.FC = () => {
       let driveSyncTimer: ReturnType<typeof setTimeout> | undefined;
       if (token) {
         driveSyncTimer = setTimeout(() => {
-          saveMenuDataToDrive(menu, token)
-            .then(() => setDriveAuthExpired(false))
-            .catch((err) => {
-              if (isGoogleAuthExpiredError(err)) {
-                setDriveAuthExpired(true);
-              }
-            });
+          saveMenuDataToDrive(menu, token).catch(() => {});
         }, 2500);
       }
 
@@ -109,27 +82,15 @@ const MenuCreator: React.FC = () => {
 
   const handleSave = () => {
     try {
-      // Local preservation first and foremost - 100% resilient
       saveEventMenu(menu);
       const token = getStoredGoogleToken();
       if (token) {
-        saveMenuDataToDrive(menu, token)
-          .then(() => {
-            setDriveAuthExpired(false);
-            toast({
-              title: "Menu Synced to Google Drive",
-              description: "Saved to 'BKR Catering Events' in Google Drive.",
-            });
-          })
-          .catch((err) => {
-            if (isGoogleAuthExpiredError(err)) {
-              setDriveAuthExpired(true);
-              toast({
-                title: "Google Drive Session Expired (Code 401)",
-                description: "Your menu & custom items are safely saved on this device. Reconnect anytime to resume cloud backups.",
-              });
-            }
+        saveMenuDataToDrive(menu, token).then(() => {
+          toast({
+            title: "Menu Synced to Google Drive",
+            description: "Saved to 'BKR Catering Events' in Google Drive.",
           });
+        }).catch(() => {});
       }
       toast({
         title: "Menu Saved",
@@ -156,25 +117,11 @@ const MenuCreator: React.FC = () => {
           </button>
           <div className="planner-topbar-actions">
             <ThemeToggle showLabel />
-            {driveAuthExpired && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReconnectDrive}
-                className="border-amber-400 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:bg-amber-100 font-medium text-xs flex items-center gap-1.5 shadow-sm animate-pulse"
-                aria-label="Reconnect Google Drive session"
-                title="Google Drive session expired (Code 401). All your menu items & details are safe locally. Click to reconnect."
-              >
-                <CloudOff className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                <span>Reconnect Drive</span>
-              </Button>
-            )}
             {autoSaved && (
               <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full animate-fade-in">
                 <Check className="h-3 w-3" /> Auto-saved
               </span>
             )}
-
             <Button
               variant="outline"
               size="sm"

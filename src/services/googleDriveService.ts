@@ -9,51 +9,12 @@ import { getTamilSolarDate } from "@/utils/tamilDate";
 import { buildEventMenuPDFBlob } from "@/services/pdfExportService";
 import { buildEventMenuDOCXBlob } from "@/services/docxExportService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
-import { ALLOWED_ADMIN_EMAILS, clearExpiredGoogleToken } from "@/services/googleAuthService";
+import { ALLOWED_ADMIN_EMAILS } from "@/services/googleAuthService";
 
 export const BKR_FOLDER_NAME = "BKR Catering Events";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet";
 export const DEFAULT_DRIVE_ACCOUNT = "bkrcaters@gmail.com";
-
-/**
- * Error thrown when a Google Drive API request returns HTTP 401 Unauthorized (expired token).
- * Using this error guarantees local storage and existing event menus are completely untouched.
- */
-export class GoogleAuthExpiredError extends Error {
-  readonly code = 401;
-  constructor(message = "Google Drive session expired (Code 401). Local data is safely preserved. Please re-authenticate.") {
-    super(message);
-    this.name = "GoogleAuthExpiredError";
-  }
-}
-
-export const isGoogleAuthExpiredError = (error: unknown): boolean => {
-  if (!error) return false;
-  if (error instanceof GoogleAuthExpiredError) return true;
-  const msg = error instanceof Error ? error.message : String(error);
-  return msg.includes("401") || msg.includes("GoogleAuthExpiredError") || msg.includes("session expired");
-};
-
-/**
- * Drive API fetch wrapper that automatically catches HTTP 401 Unauthorized responses,
- * safely clears the expired token from session storage, and throws GoogleAuthExpiredError
- * so that no user data is erased.
- */
-export const driveFetch = async (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-  actionDesc = "calling Google Drive API",
-): Promise<Response> => {
-  const res = await fetch(input, init);
-  if (res.status === 401) {
-    clearExpiredGoogleToken();
-    throw new GoogleAuthExpiredError(
-      `Google Drive session expired (Code 401) during ${actionDesc}. Local data is safely preserved.`,
-    );
-  }
-  return res;
-};
 
 interface DriveFile {
   id: string;
@@ -107,12 +68,11 @@ export const shareFolderWithAuthorizedAdmins = async (
   sharedCheckCache.add(folderId);
 
   try {
-    const listRes = await driveFetch(
+    const listRes = await fetch(
       `https://www.googleapis.com/drive/v3/files/${folderId}/permissions?fields=permissions(id,emailAddress,role)&supportsAllDrives=true`,
       {
         headers: { Authorization: `Bearer ${accessToken}` },
       },
-      "checking shared folder permissions",
     );
 
     const existingEmails = new Set<string>();
@@ -127,7 +87,7 @@ export const shareFolderWithAuthorizedAdmins = async (
       const normalized = email.toLowerCase().trim();
       if (!existingEmails.has(normalized)) {
         try {
-          await driveFetch(
+          await fetch(
             `https://www.googleapis.com/drive/v3/files/${folderId}/permissions?sendNotificationEmail=false&supportsAllDrives=true`,
             {
               method: "POST",
@@ -141,7 +101,6 @@ export const shareFolderWithAuthorizedAdmins = async (
                 emailAddress: email,
               }),
             },
-            "sharing folder with authorized admins",
           );
         } catch {
           // If permission fails or already owner, continue
@@ -149,7 +108,6 @@ export const shareFolderWithAuthorizedAdmins = async (
       }
     }
   } catch (e) {
-    if (isGoogleAuthExpiredError(e)) throw e;
     console.warn("Could not auto-share folder with all admins:", e);
   }
 };
@@ -167,10 +125,9 @@ export const getOrCreateBkrFolder = async (
   try {
     const cachedFolderId = localStorage.getItem(CACHED_BKR_FOLDER_KEY);
     if (cachedFolderId) {
-      const checkRes = await driveFetch(
+      const checkRes = await fetch(
         `https://www.googleapis.com/drive/v3/files/${cachedFolderId}?fields=id,name,trashed&supportsAllDrives=true`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
-        "verifying cached folder",
       );
       if (checkRes.ok) {
         const checkData = await checkRes.json();
@@ -180,21 +137,18 @@ export const getOrCreateBkrFolder = async (
         }
       }
     }
-  } catch (e) {
-    if (isGoogleAuthExpiredError(e)) throw e;
-  }
+  } catch {}
 
   // 1. Search in user's owned files or accessible shared files
   const query = encodeURIComponent(
     `mimeType='${FOLDER_MIME}' and name='${BKR_FOLDER_NAME}' and trashed=false`,
   );
 
-  const searchRes = await driveFetch(
+  const searchRes = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
-    "searching root folder",
   );
 
   if (searchRes.ok) {
@@ -214,12 +168,11 @@ export const getOrCreateBkrFolder = async (
     `mimeType='${FOLDER_MIME}' and name='${BKR_FOLDER_NAME}' and sharedWithMe=true and trashed=false`,
   );
 
-  const sharedRes = await driveFetch(
+  const sharedRes = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${sharedQuery}&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
-    "searching shared root folder",
   );
 
   if (sharedRes.ok) {
@@ -235,21 +188,17 @@ export const getOrCreateBkrFolder = async (
   }
 
   // 3. Create folder if it doesn't exist yet
-  const createRes = await driveFetch(
-    "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: BKR_FOLDER_NAME,
-        mimeType: FOLDER_MIME,
-      }),
+  const createRes = await fetch("https://www.googleapis.com/drive/v3/files?supportsAllDrives=true", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
-    "creating root folder",
-  );
+    body: JSON.stringify({
+      name: BKR_FOLDER_NAME,
+      mimeType: FOLDER_MIME,
+    }),
+  });
 
   if (!createRes.ok) {
     const err = await createRes.text();
@@ -265,7 +214,6 @@ export const getOrCreateBkrFolder = async (
   return newFolderId;
 };
 
-
 /**
  * Find or create an event subfolder inside the root "BKR Catering Events" folder
  */
@@ -278,12 +226,11 @@ export const getOrCreateEventSubfolder = async (
     `mimeType='${FOLDER_MIME}' and name='${subfolderName}' and '${parentFolderId}' in parents and trashed=false`,
   );
 
-  const searchRes = await driveFetch(
+  const searchRes = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
-    `searching event subfolder '${subfolderName}'`,
   );
 
   if (searchRes.ok) {
@@ -293,22 +240,18 @@ export const getOrCreateEventSubfolder = async (
     }
   }
 
-  const createRes = await driveFetch(
-    "https://www.googleapis.com/drive/v3/files",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: subfolderName,
-        mimeType: FOLDER_MIME,
-        parents: [parentFolderId],
-      }),
+  const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
-    `creating event subfolder '${subfolderName}'`,
-  );
+    body: JSON.stringify({
+      name: subfolderName,
+      mimeType: FOLDER_MIME,
+      parents: [parentFolderId],
+    }),
+  });
 
   if (!createRes.ok) {
     const err = await createRes.text();
@@ -333,12 +276,11 @@ export const uploadOrUpdateDriveFile = async (
     `name='${fileName}' and '${folderId}' in parents and trashed=false`,
   );
 
-  const searchRes = await driveFetch(
+  const searchRes = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
-    `checking existing file '${fileName}'`,
   );
 
   let existingId: string | null = null;
@@ -366,21 +308,16 @@ export const uploadOrUpdateDriveFile = async (
     ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
     : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
 
-  const uploadRes = await driveFetch(
-    url,
-    {
-      method: existingId ? "PATCH" : "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: form,
-    },
-    `uploading '${fileName}'`,
-  );
+  const uploadRes = await fetch(url, {
+    method: existingId ? "PATCH" : "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  });
 
   if (!uploadRes.ok) {
     const err = await uploadRes.text();
     throw new Error(`Failed to upload ${fileName}: ${err}`);
   }
-
 
   const result = await uploadRes.json();
   return result.id;
@@ -571,30 +508,24 @@ export const loadMenusFromGoogleDrive = async (
   );
 
   await Promise.all([
-    driveFetch(
+    fetch(
       `https://www.googleapis.com/drive/v3/files?q=${rootQuery}&fields=files(id,name)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
-      "searching root event files",
     )
       .then((r) => (r.ok ? r.json() : { files: [] }))
       .then((data: DriveFileList) => {
         (data.files || []).forEach((f) => foundFileIds.set(f.id, f.name));
       })
-      .catch((e) => {
-        if (isGoogleAuthExpiredError(e)) throw e;
-      }),
-    driveFetch(
+      .catch(() => {}),
+    fetch(
       `https://www.googleapis.com/drive/v3/files?q=${globalQuery}&fields=files(id,name)&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
-      "searching global event files",
     )
       .then((r) => (r.ok ? r.json() : { files: [] }))
       .then((data: DriveFileList) => {
         (data.files || []).forEach((f) => foundFileIds.set(f.id, f.name));
       })
-      .catch((e) => {
-        if (isGoogleAuthExpiredError(e)) throw e;
-      }),
+      .catch(() => {}),
   ]);
 
   const menusMap = new Map<string, EventMenu>();
@@ -604,12 +535,11 @@ export const loadMenusFromGoogleDrive = async (
   await Promise.all(
     fileEntries.map(async ([fileId, fileName]) => {
       try {
-        const contentRes = await driveFetch(
+        const contentRes = await fetch(
           `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
           {
             headers: { Authorization: `Bearer ${accessToken}` },
           },
-          `downloading ${fileName}`,
         );
 
         if (contentRes.ok) {
@@ -619,12 +549,10 @@ export const loadMenusFromGoogleDrive = async (
           }
         }
       } catch (e) {
-        if (isGoogleAuthExpiredError(e)) throw e;
         console.warn(`Could not read Drive file ${fileName}:`, e);
       }
     }),
   );
-
 
   return Array.from(menusMap.values());
 };
@@ -644,12 +572,11 @@ export const syncAnalyticsSpreadsheetToGoogleDrive = async (
   const query = encodeURIComponent(
     `name='${sheetFileName}' and '${rootFolderId}' in parents and trashed=false`,
   );
-  const searchRes = await driveFetch(
+  const searchRes = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
-    "checking existing analytics spreadsheet",
   );
 
   let existingId: string | null = null;
@@ -782,16 +709,11 @@ export const syncAnalyticsSpreadsheetToGoogleDrive = async (
     ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
     : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
 
-  const uploadRes = await driveFetch(
-    url,
-    {
-      method: existingId ? "PATCH" : "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: form,
-    },
-    "uploading analytics spreadsheet",
-  );
-
+  const uploadRes = await fetch(url, {
+    method: existingId ? "PATCH" : "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  });
 
   if (!uploadRes.ok) {
     const err = await uploadRes.text();
