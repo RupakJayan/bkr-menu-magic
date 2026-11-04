@@ -74,7 +74,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
       <div className="space-y-3 bg-white/5 dark:bg-white/[0.03] p-3.5 rounded-xl border border-line backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#00f5d4] dark:text-[#00f5d4]" />
+            <Users className="h-4 w-4 text-[#e2c99a] dark:text-[#e2c99a]" />
             <span className="font-semibold text-ink">Guest Head Count</span>
           </div>
 
@@ -87,9 +87,9 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
                 onBlur={handleHeadcountSubmit}
                 onKeyDown={(e) => e.key === "Enter" && handleHeadcountSubmit()}
                 autoFocus
-                className="h-7 w-24 text-xs font-mono font-bold bg-surf border-[#00f5d4]"
+                className="h-7 w-24 text-xs font-mono font-bold bg-surf border-[#e2c99a]"
               />
-              <Button size="sm" onClick={handleHeadcountSubmit} className="h-7 px-2 text-[10px] bg-[#00f5d4] text-black">
+              <Button size="sm" onClick={handleHeadcountSubmit} className="h-7 px-2 text-[10px] bg-[#e2c99a] text-black">
                 OK
               </Button>
             </div>
@@ -100,7 +100,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
                 setIsEditingHeadcount(true);
               }}
               title="Click to type custom guest count"
-              className="text-sm font-bold text-ink font-mono px-2.5 py-0.5 rounded bg-surf-2 border border-line hover:border-[#00f5d4] transition-colors"
+              className="text-sm font-bold text-ink font-mono px-2.5 py-0.5 rounded bg-surf-2 border border-line hover:border-[#e2c99a] transition-colors"
             >
               {analysis.headCountFormatted} <span className="text-xs font-normal text-mute">pax</span>
             </button>
@@ -131,7 +131,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
               onClick={() => onHeadCountChange(chip.val)}
               className={`py-1 text-[11px] rounded-lg border transition-all font-mono ${
                 headCount === chip.val
-                  ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4] font-bold"
+                  ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a] font-bold"
                   : "bg-surf border-line text-mute hover:text-ink"
               }`}
             >
@@ -180,7 +180,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
       <div className="space-y-3 bg-white/5 dark:bg-white/[0.03] p-3.5 rounded-xl border border-line backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[#00f5d4]" />
+            <TrendingUp className="h-4 w-4 text-[#e2c99a]" />
             <span className="font-semibold text-ink">Queue Flow Diagnostics</span>
           </div>
           <Badge
@@ -289,14 +289,14 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
       {onOpenCustomStallModal && (
         <button
           onClick={onOpenCustomStallModal}
-          className="w-full p-3 rounded-xl bg-gradient-to-r from-[#8b5cf6]/20 via-[#a855f7]/15 to-[#00f5d4]/20 border border-[#8b5cf6]/40 hover:border-[#8b5cf6] transition-all flex items-center justify-between text-left group"
+          className="w-full p-3 rounded-xl bg-gradient-to-r from-[#8b5cf6]/20 via-[#a855f7]/15 to-[#e2c99a]/20 border border-[#8b5cf6]/40 hover:border-[#8b5cf6] transition-all flex items-center justify-between text-left group"
         >
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#8b5cf6] text-white flex items-center justify-center shrink-0 shadow-md">
               <ImageIcon className="h-4 w-4" />
             </div>
             <div>
-              <span className="font-bold text-xs text-ink block group-hover:text-[#00f5d4] transition-colors">
+              <span className="font-bold text-xs text-ink block group-hover:text-[#e2c99a] transition-colors">
                 Photo-to-3D Stall Generator
               </span>
               <span className="text-[10px] text-mute block">
@@ -318,7 +318,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
             variant="ghost"
             size="sm"
             onClick={onApplyOptimalLayout}
-            className="h-7 text-xs text-[#00f5d4] hover:text-[#00f5d4] hover:bg-[#00f5d4]/10 flex items-center gap-1 font-semibold"
+            className="h-7 text-xs text-[#e2c99a] hover:text-[#e2c99a] hover:bg-[#e2c99a]/10 flex items-center gap-1 font-semibold"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Auto-Balance 3D Scene
@@ -340,7 +340,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
               {advice.type === "warning" ? (
                 <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
               ) : (
-                <Sparkles className="h-3.5 w-3.5 text-[#00f5d4] shrink-0" />
+                <Sparkles className="h-3.5 w-3.5 text-[#e2c99a] shrink-0" />
               )}
               {advice.title}
             </div>
@@ -375,7 +375,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
           {stalls.map((stall) => (
             <div
               key={stall.id}
-              className="flex items-center justify-between p-2 rounded-lg bg-surf border border-line hover:border-[#00f5d4]/40 transition-colors text-xs"
+              className="flex items-center justify-between p-2 rounded-lg bg-surf border border-line hover:border-[#e2c99a]/40 transition-colors text-xs"
             >
               <div className="flex items-center gap-2 truncate">
                 <div
@@ -394,7 +394,7 @@ export const SmartCounterAdvisor: React.FC<SmartCounterAdvisorProps> = ({
                 <button
                   onClick={() => onDuplicateStall(stall.id)}
                   title="Duplicate this stall"
-                  className="p-1 text-mute hover:text-[#00f5d4] transition-colors"
+                  className="p-1 text-mute hover:text-[#e2c99a] transition-colors"
                 >
                   <Copy className="h-3.5 w-3.5" />
                 </button>

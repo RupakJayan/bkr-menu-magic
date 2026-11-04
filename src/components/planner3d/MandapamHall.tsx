@@ -96,7 +96,7 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           args={[
             Math.max(w, l),
             Math.round(Math.max(w, l)),
-            isDark ? "#00f5d4" : "#762934",
+            isDark ? "#e2c99a" : "#762934",
             isDark ? (isOutdoor ? "#1e3a24" : "#1e293b") : "#cbd5e1",
           ]}
           position={[0, 0.008, 0]}
@@ -171,7 +171,7 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
         {/* Arch Beam with Welcome Sign */}
         <mesh position={[0, h - 0.5, 0]} castShadow>
           <boxGeometry args={[8.8, 0.8, 0.8]} />
-          <meshStandardMaterial color={isDark ? "#00f5d4" : "#762934"} roughness={0.3} />
+          <meshStandardMaterial color={isDark ? "#e2c99a" : "#762934"} roughness={0.3} />
         </mesh>
         {/* Entrance Signboard Plate */}
         <mesh position={[0, h - 0.5, 0.42]}>
@@ -321,7 +321,7 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
             <mesh key={`bulb-${pIdx}`} position={pt}>
               <sphereGeometry args={[0.07, 8, 8]} />
               <meshBasicMaterial
-                color={pIdx % 3 === 0 ? "#fef08a" : pIdx % 3 === 1 ? "#38bdf8" : "#f472b6"}
+                color={pIdx % 3 === 0 ? "#fef08a" : pIdx % 3 === 1 ? "#d4af37" : "#f472b6"}
               />
             </mesh>
           ))}
@@ -334,7 +334,7 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <mesh position={[-w / 2 + 0.1, 0.04, 0]}>
             <boxGeometry args={[0.08, 0.08, l]} />
             <meshBasicMaterial
-              color={isOutdoor ? "#22c55e" : "#00f5d4"}
+              color={isOutdoor ? "#22c55e" : "#e2c99a"}
               transparent
               opacity={0.6}
             />
@@ -342,7 +342,7 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <mesh position={[w / 2 - 0.1, 0.04, 0]}>
             <boxGeometry args={[0.08, 0.08, l]} />
             <meshBasicMaterial
-              color={isOutdoor ? "#22c55e" : "#00f5d4"}
+              color={isOutdoor ? "#22c55e" : "#e2c99a"}
               transparent
               opacity={0.6}
             />

@@ -115,7 +115,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
       {isSelected && (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[Math.max(w, d) * 0.65, Math.max(w, d) * 0.75, 32]} />
-          <meshBasicMaterial color="#00f5d4" side={THREE.DoubleSide} transparent opacity={0.8} />
+          <meshBasicMaterial color="#e2c99a" side={THREE.DoubleSide} transparent opacity={0.8} />
         </mesh>
       )}
 
@@ -200,7 +200,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
           <Text
             position={[0, 0.25, 0.12]}
             fontSize={0.14}
-            color="#38bdf8"
+            color="#d4af37"
             anchorX="center"
             anchorY="middle"
           >
@@ -214,7 +214,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
           <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
             <boxGeometry args={[w, 0.9, d]} />
             <meshStandardMaterial
-              color={isSelected ? "#00f5d4" : stall.color}
+              color={isSelected ? "#e2c99a" : stall.color}
               roughness={0.35}
               metalness={0.2}
             />
@@ -294,7 +294,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
                 angle={0.5}
                 penumbra={0.5}
                 distance={6}
-                color={stall.type === "dosa" ? "#fed7aa" : stall.type === "sweet_halwa" ? "#fde047" : "#00f5d4"}
+                color={stall.type === "dosa" ? "#fed7aa" : stall.type === "sweet_halwa" ? "#fde047" : "#e2c99a"}
               />
             </group>
           )}
@@ -435,7 +435,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
               {/* Water in Basin */}
               <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <circleGeometry args={[0.22, 20]} />
-                <meshStandardMaterial color="#38bdf8" roughness={0.1} transparent opacity={0.7} />
+                <meshStandardMaterial color="#d4af37" roughness={0.1} transparent opacity={0.7} />
               </mesh>
               {/* Swan-Neck Tap */}
               <mesh position={[0, 0.26, -0.18]}>

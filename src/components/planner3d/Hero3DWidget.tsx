@@ -22,7 +22,7 @@ const HologramStall: React.FC = () => {
         <cylinderGeometry args={[2.2, 2.4, 0.2, 32]} />
         <meshStandardMaterial
           color="#0c0d16"
-          emissive="#00f5d4"
+          emissive="#e2c99a"
           emissiveIntensity={0.2}
           roughness={0.2}
           metalness={0.8}
@@ -32,7 +32,7 @@ const HologramStall: React.FC = () => {
       {/* Hologram Light Rings */}
       <mesh position={[0, -0.48, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.8, 2.0, 32]} />
-        <meshBasicMaterial color="#00f5d4" side={THREE.DoubleSide} transparent opacity={0.6} />
+        <meshBasicMaterial color="#e2c99a" side={THREE.DoubleSide} transparent opacity={0.6} />
       </mesh>
 
       {/* 3D Dosa Station Model */}
@@ -74,7 +74,7 @@ const HologramStall: React.FC = () => {
         <Text
           position={[0, 1.8, 0]}
           fontSize={0.22}
-          color="#00f5d4"
+          color="#e2c99a"
           anchorX="center"
           anchorY="middle"
         >
@@ -89,12 +89,12 @@ export const Hero3DWidget: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-full max-w-xl mx-auto aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden border border-[#00f5d4]/40 bg-gradient-to-b from-[#0c0d16]/90 via-[#050508]/95 to-[#0c0d16]/90 backdrop-blur-2xl shadow-2xl shadow-[#00f5d4]/10 group">
+    <div className="relative w-full max-w-xl mx-auto aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden border border-[#e2c99a]/40 bg-gradient-to-b from-[#0c0d16]/90 via-[#050508]/95 to-[#0c0d16]/90 backdrop-blur-2xl shadow-2xl shadow-[#e2c99a]/10 group">
       {/* 3D Canvas */}
       <Canvas shadows camera={{ position: [0, 2.2, 4.2], fov: 42 }}>
         <ambientLight intensity={1.0} />
         <directionalLight position={[5, 8, 5]} intensity={1.8} castShadow />
-        <pointLight position={[0, 3, 0]} intensity={1.5} color="#00f5d4" />
+        <pointLight position={[0, 3, 0]} intensity={1.5} color="#e2c99a" />
         <pointLight position={[0, 1, 2]} intensity={1.0} color="#f59e0b" />
         <HologramStall />
         <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1.2} maxPolarAngle={Math.PI / 2 - 0.1} />
@@ -102,8 +102,8 @@ export const Hero3DWidget: React.FC = () => {
 
       {/* Floating HUD Badges & Overlays */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00f5d4]/15 border border-[#00f5d4]/40 text-[#00f5d4] text-[11px] font-bold uppercase tracking-wider backdrop-blur-md">
-          <span className="w-2 h-2 rounded-full bg-[#00f5d4] animate-ping" />
+        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e2c99a]/15 border border-[#e2c99a]/40 text-[#e2c99a] text-[11px] font-bold uppercase tracking-wider backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-[#e2c99a] animate-ping" />
           Interactive 3D Hologram
         </span>
       </div>
@@ -129,7 +129,7 @@ export const Hero3DWidget: React.FC = () => {
         <Button
           size="sm"
           onClick={() => navigate("/3d-planner")}
-          className="h-8 px-3.5 text-xs bg-gradient-to-r from-[#00f5d4] to-[#0284c7] hover:opacity-90 text-black font-extrabold rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
+          className="h-8 px-3.5 text-xs bg-gradient-to-r from-[#e2c99a] to-[#c5a059] hover:opacity-90 text-black font-extrabold rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
         >
           <Maximize2 className="h-3 w-3" />
           Full 3D Venue

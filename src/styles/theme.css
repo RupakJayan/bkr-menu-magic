@@ -110,17 +110,17 @@
   --tp-surf-2: #141624;
   --tp-ink: #f8fafc;
   --tp-mute: #94a3b8;
-  --tp-acc: #00f5d4; /* Lusion luminous cyan */
+  --tp-acc: #e2c99a; /* Lusion luminous cyan */
   --tp-acc-2: #d8b36d; /* Celestial gold */
   --tp-acc-ink: #040810;
   --tp-line: rgba(255, 255, 255, 0.09);
-  --tp-grad: linear-gradient(135deg, #00f5d4, #0284c7);
+  --tp-grad: linear-gradient(135deg, #e2c99a, #c5a059);
   --tp-img-frame: 1px solid rgba(255, 255, 255, 0.1);
   --tp-img-filter: saturate(1.05) brightness(0.95);
   --tp-img-overlay-op: 0.1;
-  --tp-sh: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 245, 212, 0.05);
+  --tp-sh: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(226, 201, 154, 0.05);
   --tp-sh-sm: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --tp-glow: 0 0 25px rgba(0, 245, 212, 0.25);
+  --tp-glow: 0 0 25px rgba(226, 201, 154, 0.25);
   --tp-glow-gold: 0 0 25px rgba(216, 179, 109, 0.3);
 }
 
@@ -140,7 +140,7 @@
 }
 
 .lusion-glow-cyan {
-  box-shadow: 0 0 30px rgba(0, 245, 212, 0.25);
+  box-shadow: 0 0 30px rgba(226, 201, 154, 0.25);
 }
 
 .lusion-glow-gold {
@@ -149,7 +149,7 @@
 
 .lusion-radial-bg {
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 245, 212, 0.08), transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(226, 201, 154, 0.08), transparent 70%),
     radial-gradient(ellipse 60% 40% at 80% 100%, rgba(216, 179, 109, 0.06), transparent 70%);
 }
 

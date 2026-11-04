@@ -70,7 +70,7 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
 
     // Color palettes for Lusion effect
     const darkPalette = [
-      "rgba(0, 245, 212, ",   // Lusion Cyan
+      "rgba(226, 201, 154, ",   // Lusion Cyan
       "rgba(56, 189, 248, ",  // Sky Glow
       "rgba(216, 179, 109, ", // Celestial Gold
       "rgba(168, 85, 247, ",  // Violet Nebula
@@ -117,7 +117,7 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.strokeStyle = isDark
-              ? `rgba(0, 245, 212, ${lineAlpha})`
+              ? `rgba(226, 201, 154, ${lineAlpha})`
               : `rgba(183, 138, 75, ${lineAlpha})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
@@ -154,7 +154,7 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `${p.color}${p.alpha})`;
-        ctx.shadowColor = isDark ? "#00f5d4" : "#b78a4b";
+        ctx.shadowColor = isDark ? "#e2c99a" : "#b78a4b";
         ctx.shadowBlur = isDark ? 8 : 4;
         ctx.fill();
         ctx.shadowBlur = 0; // reset

@@ -248,10 +248,10 @@ export const Planner3DPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-wider text-sm bg-gradient-to-r from-[#00f5d4] via-[#38bdf8] to-[#d8b36d] bg-clip-text text-transparent">
+              <span className="font-extrabold tracking-wider text-sm bg-gradient-to-r from-[#e2c99a] via-[#d4af37] to-[#d8b36d] bg-clip-text text-transparent">
                 CATER-O-PHOBIC
               </span>
-              <Badge className="bg-[#00f5d4]/10 text-[#00f5d4] border-[#00f5d4]/30 text-[10px] font-mono font-semibold px-1.5 py-0">
+              <Badge className="bg-[#e2c99a]/10 text-[#e2c99a] border-[#e2c99a]/30 text-[10px] font-mono font-semibold px-1.5 py-0">
                 3D LABS
               </Badge>
             </div>
@@ -264,9 +264,9 @@ export const Planner3DPage: React.FC = () => {
         {/* Center Venue Selector */}
         <button
           onClick={() => setIsVenueModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surf-2 border border-line hover:border-[#00f5d4]/50 transition-all text-xs"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surf-2 border border-line hover:border-[#e2c99a]/50 transition-all text-xs"
         >
-          <MapPin className="h-3.5 w-3.5 text-[#00f5d4]" />
+          <MapPin className="h-3.5 w-3.5 text-[#e2c99a]" />
           <div className="text-left">
             <span className="font-bold text-ink block">{selectedVenue.name}</span>
             <span className="text-[10px] text-mute block">
@@ -284,7 +284,7 @@ export const Planner3DPage: React.FC = () => {
               onClick={() => setViewMode("orbit")}
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "orbit"
-                  ? "bg-[#00f5d4] text-black font-bold shadow-sm"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
                   : "text-mute hover:text-ink"
               }`}
             >
@@ -294,7 +294,7 @@ export const Planner3DPage: React.FC = () => {
               onClick={() => setViewMode("top_down")}
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "top_down"
-                  ? "bg-[#00f5d4] text-black font-bold shadow-sm"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
                   : "text-mute hover:text-ink"
               }`}
             >
@@ -304,7 +304,7 @@ export const Planner3DPage: React.FC = () => {
               onClick={() => setViewMode("walkthrough")}
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "walkthrough"
-                  ? "bg-[#00f5d4] text-black font-bold shadow-sm"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
                   : "text-mute hover:text-ink"
               }`}
             >
@@ -318,7 +318,7 @@ export const Planner3DPage: React.FC = () => {
             title="Toggle Blueprint Projection Overlay"
             className={`p-2 rounded-xl border transition-all text-xs flex items-center gap-1.5 ${
               blueprintOpacity > 0
-                ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4]"
+                ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a]"
                 : "bg-surf border-line text-mute hover:text-ink"
             }`}
           >
@@ -334,7 +334,7 @@ export const Planner3DPage: React.FC = () => {
             title="Toggle Floor Grid"
             className={`p-2 rounded-xl border transition-all ${
               showGrid
-                ? "bg-surf-2 border-[#00f5d4]/40 text-[#00f5d4]"
+                ? "bg-surf-2 border-[#e2c99a]/40 text-[#e2c99a]"
                 : "bg-surf border-line text-mute hover:text-ink"
             }`}
           >
@@ -381,7 +381,7 @@ export const Planner3DPage: React.FC = () => {
             title="Simulate Peak Muhurtham Crowd Movement"
             className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
               showCrowdSimulation
-                ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4] shadow-md shadow-[#00f5d4]/20 animate-pulse"
+                ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a] shadow-md shadow-[#e2c99a]/20 animate-pulse"
                 : "bg-surf border-line text-mute hover:text-ink"
             }`}
           >
@@ -408,7 +408,7 @@ export const Planner3DPage: React.FC = () => {
             className={`h-8 text-xs font-bold rounded-xl shadow-lg flex items-center gap-1.5 transition-all ${
               isPitchMode
                 ? "bg-gradient-to-r from-[#d8b36d] to-[#f59e0b] text-black"
-                : "bg-surf-2 border border-line text-ink hover:text-[#00f5d4]"
+                : "bg-surf-2 border border-line text-ink hover:text-[#e2c99a]"
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
@@ -419,7 +419,7 @@ export const Planner3DPage: React.FC = () => {
           <Button
             size="sm"
             onClick={handleExportSnapshot}
-            className="h-8 text-xs bg-gradient-to-r from-[#00f5d4] to-[#0284c7] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5"
+            className="h-8 text-xs bg-gradient-to-r from-[#e2c99a] to-[#c5a059] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5"
           >
             <Camera className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Export 3D Snapshot</span>
@@ -439,7 +439,7 @@ export const Planner3DPage: React.FC = () => {
         >
           <div className="flex items-center justify-between p-3 border-b border-line">
             <span className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#00f5d4]" />
+              <Sparkles className="h-4 w-4 text-[#e2c99a]" />
               Smart Capacity & Duplication
             </span>
             <button
@@ -469,7 +469,7 @@ export const Planner3DPage: React.FC = () => {
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="absolute left-3 top-3 z-30 p-2.5 rounded-xl bg-[#0c0d16] border border-[#00f5d4]/40 text-[#00f5d4] shadow-xl hover:scale-105 transition-transform"
+            className="absolute left-3 top-3 z-30 p-2.5 rounded-xl bg-[#0c0d16] border border-[#e2c99a]/40 text-[#e2c99a] shadow-xl hover:scale-105 transition-transform"
             title="Open Capacity Advisor"
           >
             <Sparkles className="h-5 w-5" />
@@ -505,7 +505,7 @@ export const Planner3DPage: React.FC = () => {
 
           {/* Selected Stall Floating Inspector Card */}
           {selectedStall && (
-            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 bg-[#0c0d16]/95 border border-[#00f5d4]/50 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl w-min(90vw,480px) space-y-3 animate-in fade-in slide-in-from-bottom-4">
+            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 bg-[#0c0d16]/95 border border-[#e2c99a]/50 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl w-min(90vw,480px) space-y-3 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -525,7 +525,7 @@ export const Planner3DPage: React.FC = () => {
                     size="sm"
                     variant="outline"
                     onClick={handleRotateSelected}
-                    className="h-8 px-2 text-xs border-line text-ink hover:text-[#00f5d4] hover:bg-white/10 rounded-lg flex items-center gap-1"
+                    className="h-8 px-2 text-xs border-line text-ink hover:text-[#e2c99a] hover:bg-white/10 rounded-lg flex items-center gap-1"
                     title="Rotate 45°"
                   >
                     <RotateCw className="h-3.5 w-3.5" />
@@ -535,7 +535,7 @@ export const Planner3DPage: React.FC = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDuplicateStall(selectedStall.id)}
-                    className="h-8 px-2 text-xs border-[#00f5d4]/40 text-[#00f5d4] hover:bg-[#00f5d4]/10 rounded-lg flex items-center gap-1 font-semibold"
+                    className="h-8 px-2 text-xs border-[#e2c99a]/40 text-[#e2c99a] hover:bg-[#e2c99a]/10 rounded-lg flex items-center gap-1 font-semibold"
                     title="Duplicate to opposite wing"
                   >
                     <Copy className="h-3.5 w-3.5" />
@@ -570,7 +570,7 @@ export const Planner3DPage: React.FC = () => {
                   <span>{selectedStall.waterRequired ? "Water Line Req" : "Dry Station"}</span>
                 </div>
                 <div className="flex items-center gap-1 text-mute font-mono">
-                  <Utensils className="h-3.5 w-3.5 text-[#00f5d4]" />
+                  <Utensils className="h-3.5 w-3.5 text-[#e2c99a]" />
                   <span>{selectedStall.capacityPerHour} pax/hr</span>
                 </div>
               </div>
@@ -613,7 +613,7 @@ export const Planner3DPage: React.FC = () => {
                         onClick={() => handleSetTableTexture(selectedStall.id, pattern.url)}
                         className={`p-1 text-[10px] font-medium rounded border transition-all text-center ${
                           selectedStall.customTableTextureUrl === pattern.url
-                            ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4] font-bold"
+                            ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a] font-bold"
                             : "bg-surf-2 border-line text-mute hover:text-ink"
                         }`}
                       >
@@ -624,7 +624,7 @@ export const Planner3DPage: React.FC = () => {
 
                   {/* Custom upload */}
                   <div className="flex items-center gap-2 pt-1">
-                    <label className="text-[10px] text-[#00f5d4] hover:underline cursor-pointer flex items-center gap-1">
+                    <label className="text-[10px] text-[#e2c99a] hover:underline cursor-pointer flex items-center gap-1">
                       <Camera className="h-3 w-3" />
                       Upload Table Photo
                       <input
@@ -703,14 +703,14 @@ export const Planner3DPage: React.FC = () => {
           <Button
             size="sm"
             onClick={() => setIsCustomStallModalOpen(true)}
-            className="h-8 text-xs bg-gradient-to-r from-[#8b5cf6] to-[#00f5d4] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5 shrink-0"
+            className="h-8 text-xs bg-gradient-to-r from-[#8b5cf6] to-[#e2c99a] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5 shrink-0"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Photo-to-3D Stall
           </Button>
 
           <span className="text-xs font-bold uppercase tracking-wider text-mute shrink-0 flex items-center gap-1.5">
-            <Plus className="h-3.5 w-3.5 text-[#00f5d4]" />
+            <Plus className="h-3.5 w-3.5 text-[#e2c99a]" />
             Add Stalls:
           </span>
 
@@ -720,7 +720,7 @@ export const Planner3DPage: React.FC = () => {
               <button
                 key={type}
                 onClick={() => handleAddStall(type)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surf border border-line hover:border-[#00f5d4] hover:bg-white/5 transition-all text-xs shrink-0 group"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surf border border-line hover:border-[#e2c99a] hover:bg-white/5 transition-all text-xs shrink-0 group"
               >
                 <div
                   className="w-2.5 h-2.5 rounded-full group-hover:scale-125 transition-transform"
