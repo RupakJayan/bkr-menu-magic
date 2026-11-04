@@ -1,4 +1,5 @@
 import React from "react";
+import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { MandapamVenue } from "@/types/planner3d";
 
@@ -172,6 +173,30 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <boxGeometry args={[8.8, 0.8, 0.8]} />
           <meshStandardMaterial color={isDark ? "#00f5d4" : "#762934"} roughness={0.3} />
         </mesh>
+        {/* Entrance Signboard Plate */}
+        <mesh position={[0, h - 0.5, 0.42]}>
+          <boxGeometry args={[7.6, 0.6, 0.04]} />
+          <meshStandardMaterial color="#0c0d16" emissive="#d8b36d" emissiveIntensity={0.3} />
+        </mesh>
+        <Text
+          position={[0, h - 0.38, 0.46]}
+          fontSize={0.22}
+          color="#fef08a"
+          anchorX="center"
+          anchorY="middle"
+        >
+          BKR CATERING & EVENTS
+        </Text>
+        <Text
+          position={[0, h - 0.62, 0.46]}
+          fontSize={0.18}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="middle"
+        >
+          நல்வரவு • ENTRANCE / WELCOME
+        </Text>
+
         {/* Traditional Brass Kuthuvilakku Lamps at entrance */}
         <group position={[-3.2, 0, 0.8]}>
           <cylinderGeometry args={[0.1, 0.3, 1.6, 12]} />
@@ -183,6 +208,62 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <meshStandardMaterial color="#d8b36d" metalness={0.9} roughness={0.2} />
           <pointLight color="#f59e0b" intensity={1.2} distance={4} position={[0, 1.7, 0]} />
         </group>
+      </group>
+
+      {/* 5. Directional Signboards: Handwash & Exit / Tamboolam */}
+      {/* Handwash Directional Signboard Totem (West Flank near Handwash) */}
+      <group position={[-w / 2 + 5, 0, l / 2 - 4]}>
+        {/* Post */}
+        <mesh position={[0, 1.3, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 2.6, 8]} />
+          <meshStandardMaterial color="#334155" metalness={0.9} />
+        </mesh>
+        {/* Sign Board with Glowing Aquamarine Border */}
+        <mesh position={[0, 2.4, 0]}>
+          <boxGeometry args={[2.4, 0.65, 0.06]} />
+          <meshStandardMaterial color="#0c0d16" emissive="#14b8a6" emissiveIntensity={0.35} />
+        </mesh>
+        <Text position={[0, 2.52, 0.04]} fontSize={0.16} color="#14b8a6" anchorX="center">
+          💧 HANDWASH STATION
+        </Text>
+        <Text position={[0, 2.3, 0.04]} fontSize={0.14} color="#f8fafc" anchorX="center">
+          கை கழுவும் இடம் ➡️
+        </Text>
+      </group>
+
+      {/* Exit & Tamboolam Directional Signboard Totem (East Flank near Tamboolam) */}
+      <group position={[w / 2 - 5, 0, l / 2 - 4]}>
+        {/* Post */}
+        <mesh position={[0, 1.3, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 2.6, 8]} />
+          <meshStandardMaterial color="#334155" metalness={0.9} />
+        </mesh>
+        {/* Sign Board with Glowing Rose Border */}
+        <mesh position={[0, 2.4, 0]}>
+          <boxGeometry args={[2.4, 0.65, 0.06]} />
+          <meshStandardMaterial color="#0c0d16" emissive="#f43f5e" emissiveIntensity={0.35} />
+        </mesh>
+        <Text position={[0, 2.52, 0.04]} fontSize={0.16} color="#f43f5e" anchorX="center">
+          🎁 TAMBOOLAM & EXIT
+        </Text>
+        <Text position={[0, 2.3, 0.04]} fontSize={0.14} color="#f8fafc" anchorX="center">
+          ⬅️ நன்றி மீண்டும் வருக
+        </Text>
+      </group>
+
+      {/* Central Dining Hall Directional Signboard */}
+      <group position={[0, 0, l / 2 - 8]}>
+        <mesh position={[0, 1.4, 0]}>
+          <cylinderGeometry args={[0.03, 0.03, 2.8, 8]} />
+          <meshStandardMaterial color="#334155" metalness={0.8} />
+        </mesh>
+        <mesh position={[0, 2.6, 0]}>
+          <boxGeometry args={[2.8, 0.55, 0.05]} />
+          <meshStandardMaterial color="#0c0d16" emissive="#d8b36d" emissiveIntensity={0.25} />
+        </mesh>
+        <Text position={[0, 2.6, 0.04]} fontSize={0.17} color="#d8b36d" anchorX="center">
+          🍽️ விருந்து அரங்கம் • DINING BANQUET ⬆️
+        </Text>
       </group>
 
       {/* 5. Architectural Pillars or Outdoor Light Poles */}

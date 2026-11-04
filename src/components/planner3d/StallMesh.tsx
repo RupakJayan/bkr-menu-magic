@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
@@ -9,12 +9,14 @@ interface StallMeshProps {
   isSelected: boolean;
   onSelect: (stall: StallItem) => void;
   onMove?: (id: string, newPos: [number, number, number]) => void;
+  showFocusLights?: boolean;
 }
 
 export const StallMesh: React.FC<StallMeshProps> = ({
   stall,
   isSelected,
   onSelect,
+  showFocusLights = true,
 }) => {
   const steamRef = useRef<THREE.Points | null>(null);
 
@@ -54,6 +56,52 @@ export const StallMesh: React.FC<StallMeshProps> = ({
     return tex;
   }, [stall.customPhotoUrl]);
 
+  // Custom dining table linen / optical illusion texture
+  const tableTexture = React.useMemo(() => {
+    if (!stall.customTableTextureUrl) return null;
+    const loader = new THREE.TextureLoader();
+    const tex = loader.load(stall.customTableTextureUrl);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+    return tex;
+  }, [stall.customTableTextureUrl]);
+
+  // HTML5 Video Texture for BKR Catering 3D Video Wall & Reel Screen
+  const [videoTexture, setVideoTexture] = useState<THREE.VideoTexture | null>(null);
+  useEffect(() => {
+    if (stall.type === "bkr_video_wall") {
+      const video = document.createElement("video");
+      video.src = "/bkr-logo-intro.mp4";
+      video.crossOrigin = "anonymous";
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+      video.play().catch(() => {});
+
+      const texture = new THREE.VideoTexture(video);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.format = THREE.RGBAFormat;
+      setVideoTexture(texture);
+
+      return () => {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
+    }
+  }, [stall.type]);
+
+  const isLiveCounter =
+    stall.type === "dosa" ||
+    stall.type === "idli" ||
+    stall.type === "sweet_halwa" ||
+    stall.type === "continental_pasta" ||
+    stall.type === "buffet_spread" ||
+    stall.type === "custom_stall";
+
   return (
     <group
       position={stall.position}
@@ -71,76 +119,185 @@ export const StallMesh: React.FC<StallMeshProps> = ({
         </mesh>
       )}
 
-      {/* Counter Base / Table */}
-      <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-        <boxGeometry args={[w, 0.9, d]} />
-        <meshStandardMaterial
-          color={isSelected ? "#00f5d4" : stall.color}
-          roughness={0.35}
-          metalness={0.2}
-        />
-      </mesh>
-
-      {/* Counter Top Surface (Polished Granite / Stainless Steel) */}
-      <mesh position={[0, 0.92, 0]} receiveShadow>
-        <boxGeometry args={[w + 0.1, 0.06, d + 0.1]} />
-        <meshStandardMaterial
-          color={stall.type === "dosa" ? "#94a3b8" : "#1e293b"}
-          roughness={0.15}
-          metalness={stall.type === "dosa" ? 0.8 : 0.4}
-        />
-      </mesh>
-
-      {/* Canopy Poles */}
-      {stall.type !== "dining_table" && (
-        <>
-          <mesh position={[-w / 2 + 0.08, h / 2, -d / 2 + 0.08]} castShadow>
-            <cylinderGeometry args={[0.03, 0.03, h, 8]} />
-            <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+      {/* 1. Dustbin Mesh */}
+      {stall.type === "dustbin" ? (
+        <group position={[0, 0, 0]}>
+          {/* Main Cylindrical Stainless Steel Bin */}
+          <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.26, 0.28, 0.88, 24]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
           </mesh>
-          <mesh position={[w / 2 - 0.08, h / 2, -d / 2 + 0.08]} castShadow>
-            <cylinderGeometry args={[0.03, 0.03, h, 8]} />
-            <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+          {/* Top Stainless Dome Lid with Hinge */}
+          <mesh position={[0, 0.91, 0]}>
+            <cylinderGeometry args={[0.28, 0.27, 0.06, 24]} />
+            <meshStandardMaterial color="#cbd5e1" metalness={0.95} roughness={0.15} />
           </mesh>
-          <mesh position={[-w / 2 + 0.08, h / 2, d / 2 - 0.08]} castShadow>
-            <cylinderGeometry args={[0.03, 0.03, h, 8]} />
-            <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+          {/* Lid Handle */}
+          <mesh position={[0, 0.96, 0]}>
+            <boxGeometry args={[0.12, 0.04, 0.03]} />
+            <meshStandardMaterial color="#d8b36d" metalness={0.9} />
           </mesh>
-          <mesh position={[w / 2 - 0.08, h / 2, d / 2 - 0.08]} castShadow>
-            <cylinderGeometry args={[0.03, 0.03, h, 8]} />
-            <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+          {/* Foot Pedal at Bottom */}
+          <mesh position={[0, 0.04, 0.28]}>
+            <boxGeometry args={[0.14, 0.03, 0.1]} />
+            <meshStandardMaterial color="#cbd5e1" metalness={0.9} />
           </mesh>
-
-          {/* Roof Canopy / Marquee */}
-          <mesh position={[0, h, 0]} castShadow>
-            <boxGeometry args={[w + 0.2, 0.18, d + 0.2]} />
-            <meshStandardMaterial
-              color={stall.accentColor}
-              roughness={0.5}
-            />
+          {/* Eco Green Leaf / Recycle Badge */}
+          <mesh position={[0, 0.52, 0.27]} rotation={[0, 0, 0]}>
+            <circleGeometry args={[0.08, 16]} />
+            <meshBasicMaterial color="#22c55e" />
           </mesh>
-
-          {/* Glowing Header Signage Plate */}
-          <mesh position={[0, h + 0.2, 0]}>
-            <boxGeometry args={[w * 0.8, 0.25, 0.04]} />
-            <meshStandardMaterial
-              color="#0c0d16"
-              emissive={stall.accentColor}
-              emissiveIntensity={0.25}
-            />
+          <Text position={[0, 1.15, 0]} fontSize={0.13} color="#22c55e" anchorX="center">
+            WASTE BIN
+          </Text>
+        </group>
+      ) : stall.type === "bkr_video_wall" ? (
+        /* 2. BKR Catering 3D Video Wall & Reel Screen */
+        <group position={[0, 0, 0]}>
+          {/* Structural Trusses & Stand */}
+          <mesh position={[-w / 2 + 0.2, h / 2, 0]} castShadow>
+            <boxGeometry args={[0.2, h, 0.4]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.9} />
           </mesh>
-
-          {/* Signboard Text */}
+          <mesh position={[w / 2 - 0.2, h / 2, 0]} castShadow>
+            <boxGeometry args={[0.2, h, 0.4]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.9} />
+          </mesh>
+          {/* Carbon Fiber Video Screen Frame */}
+          <mesh position={[0, h / 2 + 0.2, 0]} castShadow>
+            <boxGeometry args={[w, h * 0.85, 0.15]} />
+            <meshStandardMaterial color="#05070e" roughness={0.3} metalness={0.8} />
+          </mesh>
+          {/* Glowing Gold Border Bezel */}
+          <mesh position={[0, h / 2 + 0.2, 0.08]}>
+            <boxGeometry args={[w + 0.08, h * 0.85 + 0.08, 0.02]} />
+            <meshStandardMaterial color="#d8b36d" metalness={0.9} roughness={0.1} />
+          </mesh>
+          {/* Active Video Screen Surface with HTML5 Video Texture */}
+          <mesh position={[0, h / 2 + 0.2, 0.1]}>
+            <planeGeometry args={[w * 0.94, h * 0.78]} />
+            {videoTexture ? (
+              <meshBasicMaterial map={videoTexture} />
+            ) : (
+              <meshStandardMaterial color="#0c0d16" emissive="#d8b36d" emissiveIntensity={0.2} />
+            )}
+          </mesh>
+          {/* Top Header Sign: BKR CATERING & EVENTS */}
+          <mesh position={[0, h + 0.45, 0]}>
+            <boxGeometry args={[w * 0.7, 0.35, 0.06]} />
+            <meshStandardMaterial color="#0c0d16" emissive="#d8b36d" emissiveIntensity={0.4} />
+          </mesh>
           <Text
-            position={[0, h + 0.2, 0.03]}
-            fontSize={0.16}
-            color="#ffffff"
+            position={[0, h + 0.45, 0.04]}
+            fontSize={0.22}
+            color="#fef08a"
             anchorX="center"
             anchorY="middle"
-            maxWidth={w * 0.75}
           >
-            {stall.name}
+            BKR CATERING & EVENTS
           </Text>
+          {/* Bottom Reel Details: @bkr_events_ • Instagram Reels */}
+          <Text
+            position={[0, 0.25, 0.12]}
+            fontSize={0.14}
+            color="#38bdf8"
+            anchorX="center"
+            anchorY="middle"
+          >
+            Instagram: @bkr_events_ • Live Reel Highlights
+          </Text>
+        </group>
+      ) : (
+        /* Standard Food / Beverage Stalls with Counter, Canopy & Focus Lights */
+        <>
+          {/* Counter Base / Table */}
+          <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+            <boxGeometry args={[w, 0.9, d]} />
+            <meshStandardMaterial
+              color={isSelected ? "#00f5d4" : stall.color}
+              roughness={0.35}
+              metalness={0.2}
+            />
+          </mesh>
+
+          {/* Counter Top Surface (Polished Granite / Stainless Steel) */}
+          <mesh position={[0, 0.92, 0]} receiveShadow>
+            <boxGeometry args={[w + 0.1, 0.06, d + 0.1]} />
+            <meshStandardMaterial
+              color={stall.type === "dosa" ? "#94a3b8" : "#1e293b"}
+              roughness={0.15}
+              metalness={stall.type === "dosa" ? 0.8 : 0.4}
+            />
+          </mesh>
+
+          {/* Canopy Poles */}
+          {stall.type !== "dining_table" && (
+            <>
+              <mesh position={[-w / 2 + 0.08, h / 2, -d / 2 + 0.08]} castShadow>
+                <cylinderGeometry args={[0.03, 0.03, h, 8]} />
+                <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+              </mesh>
+              <mesh position={[w / 2 - 0.08, h / 2, -d / 2 + 0.08]} castShadow>
+                <cylinderGeometry args={[0.03, 0.03, h, 8]} />
+                <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+              </mesh>
+              <mesh position={[-w / 2 + 0.08, h / 2, d / 2 - 0.08]} castShadow>
+                <cylinderGeometry args={[0.03, 0.03, h, 8]} />
+                <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+              </mesh>
+              <mesh position={[w / 2 - 0.08, h / 2, d / 2 - 0.08]} castShadow>
+                <cylinderGeometry args={[0.03, 0.03, h, 8]} />
+                <meshStandardMaterial color="#b78a4b" metalness={0.8} roughness={0.2} />
+              </mesh>
+
+              {/* Roof Canopy / Marquee */}
+              <mesh position={[0, h, 0]} castShadow>
+                <boxGeometry args={[w + 0.2, 0.18, d + 0.2]} />
+                <meshStandardMaterial color={stall.accentColor} roughness={0.5} />
+              </mesh>
+
+              {/* Glowing Header Signage Plate */}
+              <mesh position={[0, h + 0.2, 0]}>
+                <boxGeometry args={[w * 0.8, 0.25, 0.04]} />
+                <meshStandardMaterial
+                  color="#0c0d16"
+                  emissive={stall.accentColor}
+                  emissiveIntensity={0.25}
+                />
+              </mesh>
+
+              {/* Signboard Text */}
+              <Text
+                position={[0, h + 0.2, 0.03]}
+                fontSize={0.16}
+                color="#ffffff"
+                anchorX="center"
+                anchorY="middle"
+                maxWidth={w * 0.75}
+              >
+                {stall.name}
+              </Text>
+            </>
+          )}
+
+          {/* Dynamic Focus Spotlight to make live counter look cool and dramatic */}
+          {isLiveCounter && showFocusLights && (
+            <group position={[0, h + 0.5, d * 0.5]}>
+              <mesh rotation={[Math.PI / 4, 0, 0]}>
+                <cylinderGeometry args={[0.06, 0.12, 0.18, 12]} />
+                <meshStandardMaterial color="#1e293b" metalness={0.9} />
+              </mesh>
+              <spotLight
+                position={[0, 0, 0]}
+                target-position={[0, -h, -d * 0.5]}
+                intensity={2.2}
+                angle={0.5}
+                penumbra={0.5}
+                distance={6}
+                color={stall.type === "dosa" ? "#fed7aa" : stall.type === "sweet_halwa" ? "#fde047" : "#00f5d4"}
+              />
+            </group>
+          )}
         </>
       )}
 
@@ -213,10 +370,14 @@ export const StallMesh: React.FC<StallMeshProps> = ({
       {/* 4. Dining Table with Chairs */}
       {stall.type === "dining_table" && (
         <group>
-          {/* Round Table Top */}
+          {/* Round Table Top with Tablecloth or Custom Illusion Pattern */}
           <mesh position={[0, 0.74, 0]}>
             <cylinderGeometry args={[1.0, 1.0, 0.05, 32]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.3} />
+            <meshStandardMaterial
+              color={tableTexture ? "#ffffff" : "#f8fafc"}
+              map={tableTexture || undefined}
+              roughness={0.35}
+            />
           </mesh>
           {/* Center Table Base Pedestal */}
           <mesh position={[0, 0.37, 0]}>
