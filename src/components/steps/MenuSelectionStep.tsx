@@ -814,9 +814,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
             >
               <Mic className="h-4 w-4 text-[#d8b36d] dark:text-[#2a1708] animate-pulse" />
               <span>AI Voice Assistant</span>
-              <Badge className="bg-[#d8b36d]/30 text-[#d8b36d] dark:bg-[#2a1708]/20 dark:text-[#2a1708] text-[9px] px-1.5 py-0 border-0 font-bold">
-                Gemini 2.5 Flash
-              </Badge>
+              
             </Button>
             <span className="text-[11px] text-mute hidden md:inline">
               World-class Tamil & English speech recognition · Zero audio reflection
@@ -1257,10 +1255,10 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                                 onClick={() => translateCustomWithAi(customDishEn || customDishTa)}
                                 disabled={isAiTranslatingCustom || (!customDishEn.trim() && !customDishTa.trim())}
                                 className="text-[10px] font-bold text-acc hover:underline flex items-center gap-1 disabled:opacity-40"
-                                title="Translate with Gemini 3.6 Flash AI"
+                                title="Auto Translate to Tamil"
                               >
                                 <Sparkles className="h-2.5 w-2.5" />
-                                ✨ Gemini AI
+                                ✨ Auto Translate
                               </button>
                             </div>
                           </div>

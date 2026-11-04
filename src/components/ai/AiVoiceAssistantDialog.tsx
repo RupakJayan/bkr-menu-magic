@@ -36,7 +36,6 @@ import {
   RecognizedVoiceDish,
 } from "@/services/aiVoiceAssistantService";
 import { playVoiceTickSound, playAlreadyAddedSound, isSpeechRecognitionSupported } from "@/services/voiceTypingService";
-import { getGeminiApiKey, setGeminiApiKey, hasGeminiApiKey, DEFAULT_GEMINI_API_KEY } from "@/services/aiLensService";
 
 interface AiVoiceAssistantDialogProps {
   open: boolean;
@@ -71,8 +70,6 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recognizedDishes, setRecognizedDishes] = useState<RecognizedVoiceDish[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [apiKey, setApiKeyInput] = useState<string>(getGeminiApiKey());
-  const [showKeyEditor, setShowKeyEditor] = useState<boolean>(!hasGeminiApiKey());
 
   const controllerRef = useRef<AudioRecordingController | null>(null);
   const speechRecRef = useRef<any>(null);
@@ -85,13 +82,6 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
   // Reset state when dialog closes or sync API key when opened
   useEffect(() => {
     if (open) {
-      const current = getGeminiApiKey();
-      setApiKeyInput(current);
-      if (!current) {
-        setShowKeyEditor(true);
-      } else {
-        setShowKeyEditor(false);
-      }
       setLiveTranscript("");
     } else {
       isRecordingRef.current = false;
@@ -136,24 +126,6 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
     };
   }, [step]);
 
-  const handleSaveApiKey = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter a valid Google Gemini API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setGeminiApiKey(apiKey);
-    setShowKeyEditor(false);
-    setErrorMessage(null);
-    toast({
-      title: "Gemini Key Saved! 🎙️✨",
-      description: "Gemini API key saved securely in your browser.",
-    });
-  };
-
   const handleStartRecording = async () => {
     setErrorMessage(null);
     setLiveTranscript("");
@@ -162,7 +134,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
     if (engine === "browser") {
       const SpeechRec = typeof window !== "undefined" && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
       if (!SpeechRec) {
-        setErrorMessage("Free browser voice recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari, or switch to Gemini Cloud AI.");
+        setErrorMessage("Voice recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari.");
         return;
       }
       try {
@@ -205,7 +177,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
     }
 
     // MODE 2: Gemini Cloud Multimodal Audio
-    const activeKey = apiKey.trim() || getGeminiApiKey();
+    const activeKey = getGeminiApiKey();
     if (!activeKey) {
       // Seamlessly switch to Free Browser Voice rather than blocking user with an error
       setEngine("browser");
@@ -272,7 +244,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
     if (!controllerRef.current) return;
     try {
       const { blob, mimeType } = await controllerRef.current.stop();
-      const activeKey = apiKey.trim() || getGeminiApiKey();
+      const activeKey = getGeminiApiKey();
 
       const dishes = await processVoiceWithGemini(
         blob,
@@ -292,11 +264,9 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
       playVoiceTickSound();
     } catch (err: any) {
       console.error("Gemini voice assistant processing error:", err);
-      const msg = err?.message || "Failed to analyze speech. Please check your network or Gemini API key.";
+      const msg = err?.message || "Failed to analyze speech. Please speak clearly and try again.";
       setErrorMessage(msg);
-      if (msg.toLowerCase().includes("key") || msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("http 40")) {
-        setShowKeyEditor(true);
-      }
+      
       setStep("idle");
     }
   };
@@ -391,9 +361,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
               <div>
                 <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
                   <span>AI Voice Assistant</span>
-                  <Badge className="bg-[#d8b36d] text-[#2a1708] hover:bg-[#d8b36d] font-bold text-[10px] px-2 py-0.5">
-                    Gemini 2.5 Flash
-                  </Badge>
+                  
                 </DialogTitle>
                 <DialogDescription className="text-white/80 text-xs mt-0.5">
                   World-class multimodal catering speech-to-menu for Day {dayNumber} – {sessionName}
@@ -409,157 +377,24 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
         </DialogHeader>
 
         <div className="p-5 space-y-4">
-          {/* Dual-Engine Mode Switcher */}
-          <div className="flex items-center justify-between p-1 bg-surf-2 border border-line rounded-xl gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setEngine("browser");
-                setErrorMessage(null);
-              }}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                engine === "browser"
-                  ? "bg-acc text-accink shadow-sm"
-                  : "text-mute hover:text-ink"
-              }`}
-            >
-              <Mic className="h-3.5 w-3.5" />
-              <span>Free Voice Engine (No Key Required)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEngine("gemini");
-                setShowKeyEditor(!hasGeminiApiKey());
-                setErrorMessage(null);
-              }}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                engine === "gemini"
-                  ? "bg-acc text-accink shadow-sm"
-                  : "text-mute hover:text-ink"
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Gemini Cloud AI</span>
-            </button>
-          </div>
-
-          {/* Banner for Free Browser Voice (Default Mode - 100% Free) */}
-          {engine === "browser" && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="font-semibold">Free Speech Recognition Active · 100% Free · No API Key Needed</span>
-              </span>
-              <div className="flex items-center gap-1.5 text-[11px] self-end sm:self-auto">
-                <span className="text-emerald-700/80 dark:text-emerald-300/80 font-medium">Voice Language:</span>
-                <button
-                  type="button"
-                  onClick={() => setSpeechLang(speechLang === "ta-IN" ? "en-IN" : "ta-IN")}
-                  className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 font-bold hover:shadow-sm transition-all"
-                >
-                  {speechLang === "ta-IN" ? "தமிழ் (Tamil)" : "English (IN)"}
-                </button>
-              </div>
+          {/* Language Selection & Voice Status */}
+          <div className="flex items-center justify-between px-3.5 py-2.5 bg-surf-2 rounded-xl text-xs text-ink border border-line">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="font-semibold text-emerald-700 dark:text-emerald-400">Voice Assistant Ready</span>
+              <span className="text-mute hidden sm:inline">· Speak Tamil or English</span>
+            </span>
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-mute font-medium">Language:</span>
+              <button
+                type="button"
+                onClick={() => setSpeechLang(speechLang === "ta-IN" ? "en-IN" : "ta-IN")}
+                className="px-2.5 py-1 rounded-lg bg-surf border border-line font-bold hover:shadow-sm transition-all text-ink"
+              >
+                {speechLang === "ta-IN" ? "தமிழ் (Tamil)" : "English (IN)"}
+              </button>
             </div>
-          )}
-
-          {/* Gemini API Key Configuration Banner (Only when in Gemini mode) */}
-          {engine === "gemini" && (
-            showKeyEditor ? (
-              <div className="p-3.5 rounded-xl border border-line bg-surf-2 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                    <Key className="h-4 w-4 text-acc" />
-                    Google Gemini API Key Setup
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href="https://aistudio.google.com/app/apikey"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] text-acc hover:underline flex items-center gap-1 font-semibold"
-                    >
-                      Get Free Key <ExternalLink className="h-3 w-3" />
-                    </a>
-                    {hasGeminiApiKey() && (
-                      <button
-                        type="button"
-                        onClick={() => setShowKeyEditor(false)}
-                        className="text-xs text-mute hover:text-ink font-semibold ml-1"
-                      >
-                        Hide
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <p className="text-[11px] text-mute leading-relaxed">
-                  AI Voice Assistant uses Google Gemini to understand spoken Tamil and South Indian dishes. A built-in system key is pre-configured and active.
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    type="password"
-                    placeholder="Paste Gemini API key (AIzaSy...)"
-                    value={apiKey}
-                    onChange={(e) => setApiKeyInput(e.target.value)}
-                    className="h-9 text-xs bg-surf border-line text-ink placeholder:text-mute rounded-lg font-mono"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleSaveApiKey}
-                    className="bg-acc text-accink hover:opacity-95 font-semibold px-3.5 rounded-lg shrink-0 h-9 shadow-theme-sm"
-                  >
-                    Save Key
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setApiKeyInput(DEFAULT_GEMINI_API_KEY);
-                      setGeminiApiKey(DEFAULT_GEMINI_API_KEY);
-                      setShowKeyEditor(false);
-                      toast({
-                        title: "Default Key Restored",
-                        description: "Standard built-in Gemini API key is active.",
-                      });
-                    }}
-                    className="border-line text-ink font-medium px-2.5 rounded-lg text-xs shrink-0 h-9"
-                  >
-                    Reset Default
-                  </Button>
-                </div>
-                <div className="pt-1 flex items-center justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setEngine("browser")}
-                    className="text-xs text-acc font-semibold hover:underline"
-                  >
-                    ← Switch back to Free Voice Mode (No Key Required)
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between px-3.5 py-2 bg-surf-2 rounded-lg text-xs text-ink border border-line">
-                <span className="flex items-center gap-2 text-xs">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="font-medium text-emerald-700 dark:text-emerald-400">Gemini AI Voice Connected</span>
-                  <span className="text-mute hidden sm:inline">· Pre-configured & active</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowKeyEditor(true)}
-                  className="text-acc text-xs hover:underline font-semibold"
-                >
-                  Change API Key
-                </button>
-              </div>
-            )
-          )}
+          </div>
 
           {/* Error Banner */}
           {errorMessage && (
@@ -583,7 +418,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                     }}
                     className="h-7 text-xs bg-surf border-danger/40 text-danger hover:bg-danger/10 font-semibold rounded-lg shadow-sm"
                   >
-                    🎙️ Switch to Free Browser Voice Typing (No Key Required)
+                    🎙️ Switch to Browser Voice Typing
                   </Button>
                 </div>
               )}
@@ -713,7 +548,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
             </div>
           )}
 
-          {/* STEP 3: ANALYZING WITH GEMINI */}
+          {/* STEP 3: ANALYZING */}
           {step === "analyzing" && (
             <div className="py-12 text-center space-y-4 animate-fade-in">
               <div className="relative inline-flex items-center justify-center">
@@ -722,7 +557,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-ink">
-                  Deciphering Catering Speech with Gemini 2.5 Flash
+                  Deciphering spoken catering dishes...
                 </h3>
                 <p className="text-xs text-mute max-w-sm mx-auto">
                   Accurately extracting South Indian dishes, resolving authentic culinary Tamil translations, and matching catering categories...

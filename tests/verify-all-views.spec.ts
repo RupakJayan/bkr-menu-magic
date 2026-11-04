@@ -52,7 +52,8 @@ test.describe("Full Application Verification & Screenshot Capture", () => {
 
     const lensDialog = page.locator('[role="dialog"]').filter({ hasText: "AI Menu Lens" }).first();
     await expect(lensDialog).toBeVisible();
-    await expect(lensDialog.locator("text=Gemini AI Vision Ready")).toBeVisible();
+    await expect(lensDialog.locator("text=Take Photo with Camera")).toBeVisible();
+    await expect(lensDialog.locator("input[placeholder*=\"Paste AI Studio API key\"]")).toHaveCount(0);
     await expect(lensDialog.locator("text=Take Photo with Camera")).toBeVisible();
     await expect(lensDialog.locator("text=Upload Picture(s)")).toBeVisible();
 

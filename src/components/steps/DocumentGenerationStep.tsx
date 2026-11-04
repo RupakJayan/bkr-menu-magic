@@ -13,9 +13,27 @@ interface DocumentGenerationStepProps {
   menu: EventMenu;
   onPrevious: () => void;
   onStartNewEvent?: () => void;
+  onMenuChange?: (menu: EventMenu) => void;
 }
 
-export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ menu, onPrevious, onStartNewEvent }) => {
+export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ menu, onPrevious, onStartNewEvent, onMenuChange }) => {
+  const handleToggleSessionStyle = (dayIndex: number, sessionIndex: number, style: 'traditional' | 'buffet') => {
+    const updated = {
+      ...menu,
+      days: menu.days.map((d, dIdx) => {
+        if (dIdx !== dayIndex) return d;
+        return {
+          ...d,
+          sessions: d.sessions.map((s, sIdx) => {
+            if (sIdx !== sessionIndex) return s;
+            return { ...s, serviceStyle: style };
+          }),
+        };
+      }),
+    };
+    if (onMenuChange) onMenuChange(updated);
+    saveEventMenu(updated);
+  };
   const [generating, setGenerating] = useState<DocumentType | null>(null);
   const [generated, setGenerated] = useState<DocumentType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -139,6 +157,81 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
           </div>
         </div>
       )}
+
+            {/* Session Format & Buffet / Traditional Selector */}
+      <div className="p-5 rounded-xl border-2 border-emerald-200 bg-white shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+          <div>
+            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <span>🍃</span>
+              <span>Menu Format & Service Style / பந்தி வடிவம்</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Choose between Traditional Leaf service (plain text, arranged with Sweet first & Mains/Sides paired) or Buffet (categorized with subheadings).
+            </p>
+          </div>
+          <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 text-xs px-2.5 py-1 font-semibold self-start sm:self-auto">
+            Default: Traditional
+          </Badge>
+        </div>
+
+        <div className="space-y-3">
+          {menu.days.map((day, dayIndex) => (
+            <div key={day.dayNumber} className="space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                Day {day.dayNumber} Sessions
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {day.sessions.map((session, sessionIndex) => {
+                  const isBuffet = session.serviceStyle === 'buffet';
+                  return (
+                    <div
+                      key={session.id || sessionIndex}
+                      className="p-3.5 rounded-xl border border-gray-200 bg-gray-50/70 flex items-center justify-between gap-3"
+                    >
+                      <div>
+                        <p className="font-bold text-sm text-gray-900">
+                          {session.name || `Session ${sessionIndex + 1}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {session.startTime} · {session.headCount} NOS · {session.selectedDishes?.length || 0} dishes
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSessionStyle(dayIndex, sessionIndex, 'traditional')}
+                          className={`px-2.5 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${
+                            !isBuffet
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                          title="Traditional Leaf Service (No subheadings, Sweet first, Main + Side paired)"
+                        >
+                          🍃 Traditional
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSessionStyle(dayIndex, sessionIndex, 'buffet')}
+                          className={`px-2.5 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${
+                            isBuffet
+                              ? 'bg-amber-600 text-white shadow-xs'
+                              : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                          title="Buffet Counter (Categorized with Halwa Varieties, Dosa, Chettinad Special subheadings)"
+                        >
+                          🍽️ Buffet
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Document Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

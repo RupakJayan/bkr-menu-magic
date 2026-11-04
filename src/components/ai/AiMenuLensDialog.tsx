@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +7,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -18,7 +16,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Trash2,
-  Key,
   ArrowRight,
   RefreshCw,
   FileImage,
@@ -27,13 +24,8 @@ import {
   User,
   MapPin,
   X,
-  ExternalLink,
 } from "lucide-react";
 import {
-  DEFAULT_GEMINI_API_KEY,
-  getGeminiApiKey,
-  setGeminiApiKey,
-  hasGeminiApiKey,
   compressImageFileToBase64,
   extractMenuFromHandwrittenImages,
   buildEventMenuFromExtractedData,
@@ -64,8 +56,6 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
   currentMenu,
 }) => {
   const { toast } = useToast();
-  const [apiKey, setApiKeyInput] = useState<string>(getGeminiApiKey());
-  const [showKeyEditor, setShowKeyEditor] = useState<boolean>(!hasGeminiApiKey());
   const [images, setImages] = useState<ImageUploadItem[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingStatus, setProcessingStatus] = useState<string>("");
@@ -73,32 +63,6 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  // Sync API key state and reset dialog state when opened
-  useEffect(() => {
-    if (open) {
-      const current = getGeminiApiKey();
-      setApiKeyInput(current);
-      setShowKeyEditor(!current);
-    }
-  }, [open]);
-
-  const handleSaveApiKey = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter a valid Google Gemini API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setGeminiApiKey(apiKey);
-    setShowKeyEditor(false);
-    toast({
-      title: "API Key Saved",
-      description: "Gemini API key saved securely in your browser.",
-    });
-  };
 
   const handleFilesAdded = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -127,17 +91,6 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
   };
 
   const handleStartExtraction = async () => {
-    const key = apiKey.trim() || getGeminiApiKey();
-    if (!key) {
-      setShowKeyEditor(true);
-      toast({
-        title: "API Key Required",
-        description: "Please enter your Gemini API key to scan handwritten menus.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (images.length === 0) {
       toast({
         title: "No Photos Added",
@@ -148,7 +101,7 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
     }
 
     setIsProcessing(true);
-    setProcessingStatus("Optimizing photo resolution for AI vision...");
+    setProcessingStatus("Optimizing photo resolution...");
 
     try {
       const preparedImages = await Promise.all(
@@ -163,8 +116,8 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
         })
       );
 
-      setProcessingStatus("Deciphering Tamil & English handwriting...");
-      const extracted = await extractMenuFromHandwrittenImages(preparedImages, key);
+      setProcessingStatus("Deciphering handwriting...");
+      const extracted = await extractMenuFromHandwrittenImages(preparedImages);
 
       setExtractedData(extracted);
       toast({
@@ -229,83 +182,6 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
         </div>
 
         <div className="p-6 space-y-6">
-          {/* API Key Status / Editor */}
-          {showKeyEditor ? (
-            <div className="p-4 rounded-xl border border-line bg-surf2 space-y-3 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-ink flex items-center gap-2">
-                  <Key className="h-4 w-4 text-acc" />
-                  Google Gemini API Key Setup
-                </span>
-                <div className="flex items-center gap-3">
-                  <a
-                    href="https://aistudio.google.com/app/apikey"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-acc hover:underline flex items-center gap-1 font-semibold"
-                  >
-                    Get Free Key <ExternalLink className="h-3 w-3" />
-                  </a>
-                  {hasGeminiApiKey() && (
-                    <button
-                      type="button"
-                      onClick={() => setShowKeyEditor(false)}
-                      className="text-xs text-mute hover:text-ink font-semibold"
-                    >
-                      Hide
-                    </button>
-                  )}
-                </div>
-              </div>
-              <p className="text-xs text-mute">
-                AI Menu Lens uses Google Gemini Multimodal Vision to decipher Tamil and English handwriting. A built-in system key is active by default.
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  type="password"
-                  placeholder="Paste AI Studio API key (AIzaSy...)"
-                  value={apiKey}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  className="bg-surf border-line text-ink placeholder:text-mute rounded-lg"
-                />
-                <Button onClick={handleSaveApiKey} className="bg-acc text-accink hover:opacity-95 font-medium px-4 rounded-lg shadow-theme-sm shrink-0">
-                  Save Key
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setApiKeyInput(DEFAULT_GEMINI_API_KEY);
-                    setGeminiApiKey(DEFAULT_GEMINI_API_KEY);
-                    setShowKeyEditor(false);
-                    toast({
-                      title: "Default Key Restored",
-                      description: "Standard built-in Gemini API key is active.",
-                    });
-                  }}
-                  className="border-line text-ink font-medium px-3 rounded-lg text-xs shrink-0"
-                >
-                  Reset Default
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between px-3.5 py-2.5 bg-surf2 rounded-lg text-xs text-ink border border-line">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">Gemini AI Vision Ready</span>
-                <span className="text-mute hidden sm:inline">· Pre-configured & active</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowKeyEditor(true)}
-                className="text-acc hover:underline font-semibold"
-              >
-                Change API Key
-              </button>
-            </div>
-          )}
-
           {/* STEP 1: UPLOAD / CAMERA (shown when no extracted data yet) */}
           {!extractedData && !isProcessing && (
             <div className="space-y-5">

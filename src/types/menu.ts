@@ -32,6 +32,7 @@ export interface Session {
   headCount: number;
   ratePerPerson?: number;
   selectedDishes: string[];
+  serviceStyle?: 'traditional' | 'buffet';
 }
 
 export interface DayPlan {

@@ -476,7 +476,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       className="text-[11px] text-acc hover:text-acc/80 flex items-center gap-1 font-semibold transition-colors disabled:opacity-40"
                     >
                       <Sparkles className={`h-3 w-3 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
-                      <span>{isAiTranslating ? "Gemini Translating..." : "✨ Gemini AI Translate"}</span>
+                      <span>{isAiTranslating ? "Translating..." : "✨ Auto Translate"}</span>
                     </button>
                   </label>
                   <div className="relative">
@@ -670,10 +670,10 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                               onClick={() => translateWithAi(editDishEn, "edit")}
                               disabled={isAiTranslating || !editDishEn.trim()}
                               className="text-[10px] text-acc hover:text-acc/80 flex items-center gap-1 font-semibold disabled:opacity-40"
-                              title="Fetch accurate Tamil translation from Gemini AI"
+                              title="Fetch accurate Tamil translation"
                             >
                               <Sparkles className={`h-2.5 w-2.5 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
-                              <span>{isAiTranslating ? "Translating..." : "✨ Gemini AI"}</span>
+                              <span>{isAiTranslating ? "Translating..." : "✨ Auto Translate"}</span>
                             </button>
                           </label>
                           <div className="relative">

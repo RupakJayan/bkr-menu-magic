@@ -531,3 +531,135 @@ export const sortDishesByCategory = (dishKeys: string[]): string[] => {
   });
 };
 
+/**
+ * Arranges a session's selected dishes in authentic South Indian traditional serving order:
+ * 1. Sweet / Halwa / Kesari / Payasam comes FIRST.
+ * 2. Mains are paired immediately with their corresponding side dish (e.g. Poori -> Channa Masala, Chappathi -> Kurma).
+ * 3. Tiffin / Meals courses progress naturally (Pongal, Poori, Idli, Dosa, Rice, Sambar, Rasam, Curd).
+ * 4. Accompaniments, Desserts, and Hot Filter Coffee conclude the course.
+ */
+export const arrangeDishesForTraditionalService = (dishKeys: string[]): string[] => {
+  if (!dishKeys || dishKeys.length === 0) return [];
+  const uniqueKeys = Array.from(new Set(dishKeys));
+
+  // 1. Initial sort by authentic traditional course rank
+  const sortedKeys = [...uniqueKeys].sort((a, b) => {
+    const dishA = resolveDishForOrdering(a);
+    const dishB = resolveDishForOrdering(b);
+    return getDishCourseRank(dishA) - getDishCourseRank(dishB);
+  });
+
+  // 2. Companion pairing definitions
+  const companionRules: Array<{
+    isMain: (dish: CatalogDish) => boolean;
+    isCompanion: (dish: CatalogDish) => boolean;
+  }> = [
+    // Poori / Puri -> Channa Masala / Potato Masala / Aloo Masala / Poori Masala / Kurma
+    {
+      isMain: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '')).toLowerCase();
+        return /\b(poori|puri|பூரி)\b/i.test(n);
+      },
+      isCompanion: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '') + ' ' + (d.category || '')).toLowerCase();
+        return /\b(channa|chenna|chana|chole|potato|aloo|kizhangu|கிழங்கு|சென்னா|மசாலா|kurma|குருமா)\b/i.test(n) &&
+               !/\b(poori|puri|பூரி)\b/i.test(n);
+      },
+    },
+    // Chappathi / Parotta / Naan / Roti -> Kurma / Salna / Paneer / Gravy / Dal
+    {
+      isMain: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '')).toLowerCase();
+        return /\b(chappathi|chapati|parotta|paratha|naan|roti|kulcha|சப்பாத்தி|பரோட்டா|ரொட்டி|நான்)\b/i.test(n);
+      },
+      isCompanion: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '') + ' ' + (d.category || '')).toLowerCase();
+        return /\b(kurma|salna|paneer|dal\s*fry|makhani|kadai|gravy|குருமா|சால்னா|பன்னீர்|கிரேவி)\b/i.test(n) &&
+               !/\b(chappathi|chapati|parotta|paratha|naan|roti|kulcha|சப்பாத்தி|பரோட்டா)\b/i.test(n);
+      },
+    },
+    // Aappam / Idiyappam -> Coconut Milk (Theenpal) / Sodhi / Stew / Kurma
+    {
+      isMain: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '')).toLowerCase();
+        return /\b(appam|aappam|idiyappam|ஆப்பம்|இடியாப்பம்)\b/i.test(n);
+      },
+      isCompanion: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '') + ' ' + (d.category || '')).toLowerCase();
+        return /\b(milk|theenpal|தேங்காய்ப்பால்|stew|sodhi|சொதி|kurma|குருமா)\b/i.test(n) &&
+               !/\b(appam|aappam|idiyappam|ஆப்பம்|இடியாப்பம்)\b/i.test(n);
+      },
+    },
+    // Biryani / Pulao / Fried Rice -> Raitha / Brinjal Gravy / Ennai Kathirikai / Manchurian
+    {
+      isMain: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '')).toLowerCase();
+        return /\b(biryani|briyani|biriyani|pulao|fried\s*rice|பிரியாணி|புலாவ்)\b/i.test(n);
+      },
+      isCompanion: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '') + ' ' + (d.category || '')).toLowerCase();
+        return /\b(raita|raitha|ரய்த்தா|பச்சடி|kathirikai|brinjal|கத்திரிக்காய்|dalcha|manchurian|மஞ்சூரியன்)\b/i.test(n);
+      },
+    },
+    // Pongal -> Gothsu
+    {
+      isMain: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '')).toLowerCase();
+        return /\b(pongal|பொங்கல்)\b/i.test(n);
+      },
+      isCompanion: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '') + ' ' + (d.category || '')).toLowerCase();
+        return /\b(gothsu|கொத்சு)\b/i.test(n);
+      },
+    },
+    // Idli -> Tiffin Sambar / Idli Podi
+    {
+      isMain: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '')).toLowerCase();
+        return /\b(idli|idly|idlee|iddly|இட்லி)\b/i.test(n);
+      },
+      isCompanion: (d) => {
+        const n = ((d.name_en || d.name || '') + ' ' + (d.name_ta || '') + ' ' + (d.category || '')).toLowerCase();
+        return /\b(podi|பொடி|tiffin\s*sambar|டிபன்\s*சாம்பார்)\b/i.test(n);
+      },
+    },
+  ];
+
+  const claimedCompanions = new Set<string>();
+  const arranged: string[] = [];
+
+  for (let i = 0; i < sortedKeys.length; i++) {
+    const key = sortedKeys[i];
+    if (claimedCompanions.has(key)) continue;
+
+    arranged.push(key);
+    const dish = resolveDishForOrdering(key);
+
+    // Look for matching companions among remaining unplaced items
+    for (const rule of companionRules) {
+      if (rule.isMain(dish)) {
+        for (let j = 0; j < sortedKeys.length; j++) {
+          const candidateKey = sortedKeys[j];
+          if (candidateKey === key || claimedCompanions.has(candidateKey) || arranged.includes(candidateKey)) {
+            continue;
+          }
+          const candidateDish = resolveDishForOrdering(candidateKey);
+          if (rule.isCompanion(candidateDish)) {
+            arranged.push(candidateKey);
+            claimedCompanions.add(candidateKey);
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  // Fallback check to ensure all items are included
+  for (const key of sortedKeys) {
+    if (!arranged.includes(key)) {
+      arranged.push(key);
+    }
+  }
+
+  return arranged;
+};

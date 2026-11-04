@@ -239,6 +239,57 @@ export const SessionPlanningStep: React.FC<SessionPlanningStepProps> = ({ menu, 
                         className="h-12 rounded-lg border-2 border-pink-300"
                       />
                     </div>
+
+                    <div className="space-y-2 md:col-span-2 pt-2 border-t border-pink-100">
+                      <Label className="text-base font-semibold text-gray-700">Service Format / பந்தி வடிவம்</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => updateSession(dayIndex, sessionIndex, 'serviceStyle', 'traditional')}
+                          className={`p-3 rounded-xl border-2 text-left transition-all flex items-start gap-3 ${
+                            session.serviceStyle !== 'buffet'
+                              ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-semibold shadow-sm ring-1 ring-emerald-600/20'
+                              : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <span className="text-xl shrink-0 mt-0.5">🍃</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold">Traditional Leaf Service</span>
+                              {session.serviceStyle !== 'buffet' && (
+                                <span className="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-bold">Default</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 font-normal mt-0.5">
+                              Dishes in arranged sequence (Sweet first, Mains & Sides paired) in plain text with zero subheadings.
+                            </p>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateSession(dayIndex, sessionIndex, 'serviceStyle', 'buffet')}
+                          className={`p-3 rounded-xl border-2 text-left transition-all flex items-start gap-3 ${
+                            session.serviceStyle === 'buffet'
+                              ? 'border-amber-600 bg-amber-50 text-amber-950 font-semibold shadow-sm ring-1 ring-amber-600/20'
+                              : 'border-gray-200 bg-gray-50/60 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <span className="text-xl shrink-0 mt-0.5">🍽️</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold">Buffet Counter Service</span>
+                              {session.type === 'dinner' && session.serviceStyle !== 'buffet' && (
+                                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Recommended for Dinner</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 font-normal mt-0.5">
+                              Categorized with bold subheadings like Halwa Varieties, Dosa, Chettinad Special, etc.
+                            </p>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </article>
               ))}

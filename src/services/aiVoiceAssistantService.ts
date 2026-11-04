@@ -188,8 +188,9 @@ export const processVoiceWithGemini = async (
   sessionDishKeys: string[] = [],
   apiKey = getGeminiApiKey()
 ): Promise<RecognizedVoiceDish[]> => {
-  if (!apiKey) {
-    throw new Error("Gemini API key is required. Please enter and save your Gemini API key in the setup box above.");
+  const activeKey = apiKey || getGeminiApiKey();
+  if (!activeKey) {
+    throw new Error("Voice service is temporarily unavailable. Please try again.");
   }
 
   const base64Audio = await blobToBase64(audioBlob);
@@ -267,7 +268,7 @@ Respond ONLY with a valid JSON array:
         const errorData = await response.json().catch(() => ({}));
         const rawMsg = errorData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
         if (response.status === 400 || response.status === 401 || response.status === 403 || rawMsg.includes("API_KEY_INVALID") || rawMsg.includes("API key not valid")) {
-          throw new Error("Invalid or expired Gemini API key. Please verify your Google AI Studio API key.");
+          throw new Error("Voice service temporarily unavailable. Please try again.");
         }
         throw new Error(rawMsg);
       }
@@ -275,7 +276,7 @@ Respond ONLY with a valid JSON array:
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!rawText) {
-        throw new Error("No text response from Gemini.");
+        throw new Error("Could not detect spoken dishes. Please speak clearly.");
       }
 
       const cleanedText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();

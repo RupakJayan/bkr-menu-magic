@@ -674,10 +674,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                     onClick={handleTranslateDishAi}
                     disabled={isAiTranslatingDish || !editDishEn.trim()}
                     className="text-xs text-pink-600 hover:text-pink-800 font-bold flex items-center gap-1 disabled:opacity-40"
-                    title="Translate with Gemini AI"
+                    title="Auto Translate to Tamil"
                   >
                     <Sparkles className={`h-3 w-3 ${isAiTranslatingDish ? "animate-spin text-amber-500" : ""}`} />
-                    <span>{isAiTranslatingDish ? "Translating..." : "✨ Gemini AI"}</span>
+                    <span>{isAiTranslatingDish ? "Translating..." : "✨ Auto Translate"}</span>
                   </button>
                 </div>
                 <Input

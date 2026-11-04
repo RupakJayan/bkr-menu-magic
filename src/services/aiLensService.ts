@@ -259,8 +259,9 @@ export const extractMenuFromHandwrittenImages = async (
   images: { base64Data: string; mimeType: string }[],
   apiKey = getGeminiApiKey()
 ): Promise<ExtractedMenuData> => {
-  if (!apiKey) {
-    throw new Error("Gemini API key is required. Please provide your API key in the AI Lens dialog.");
+  const activeKey = apiKey || getBuiltinGeminiKey();
+  if (!activeKey) {
+    throw new Error("Unable to initialize image scanner. Please try again.");
   }
 
   const catalogContext = getCatalogSummary();
@@ -388,7 +389,7 @@ Respond ONLY with valid, parseable JSON matching this schema:
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (!rawText) {
-        throw new Error("No text response received from Gemini.");
+        throw new Error("Could not extract menu details from image. Please try with clearer photos.");
       }
 
       const cleanedText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
@@ -435,14 +436,14 @@ Respond ONLY with valid, parseable JSON matching this schema:
     } catch (err: any) {
       lastError = err;
       console.warn(`Model ${modelName} failed:`, err.message);
-      // If error is an invalid API key, do not try other models
+      // If authentication failure, do not try other models
       if (err.message?.includes("API_KEY_INVALID") || err.message?.includes("API key not valid")) {
-        throw new Error("Invalid Gemini API key. Please check your key from Google AI Studio.");
+        throw new Error("Handwritten menu service is temporarily unavailable. Please try again.");
       }
     }
   }
 
-  throw lastError || new Error("Failed to process handwritten menu image with Gemini AI.");
+  throw lastError || new Error("Failed to process handwritten menu image. Please try with clearer photos.");
 };
 
 /**

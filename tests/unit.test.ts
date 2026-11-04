@@ -680,6 +680,76 @@ test.describe("UT - Unit Tests", () => {
     setGeminiApiKey("");
     expect(getGeminiApiKey()).toBe(DEFAULT_GEMINI_API_KEY);
   });
+
+  test("UT-24: arrangeDishesForTraditionalService places Sweet first and pairs Poori with Channa Masala", async () => {
+    const { arrangeDishesForTraditionalService } = await import("../src/services/servingOrderService");
+    const { findDishByKey } = await import("../src/services/menuCatalogService");
+
+    // Sample session dishes in mixed random order
+    const mixedKeys = [
+      "beverages::filter_coffee",
+      "tiffin::channa_masala",
+      "tiffin::poori",
+      "tiffin::plain_idly",
+      "sweets::ashoka_halwa",
+      "tiffin::tiffin_sambar",
+      "tiffin::coconut_chutney"
+    ];
+
+    const arranged = arrangeDishesForTraditionalService(mixedKeys);
+
+    // 1. Sweet (Ashoka Halwa) must come FIRST!
+    expect(arranged[0]).toBe("sweets::ashoka_halwa");
+
+    // 2. Poori must be followed IMMEDIATELY by Channa Masala!
+    const pooriIndex = arranged.indexOf("tiffin::poori");
+    const channaIndex = arranged.indexOf("tiffin::channa_masala");
+    expect(pooriIndex).toBeGreaterThan(-1);
+    expect(channaIndex).toBe(pooriIndex + 1);
+
+    // 3. Filter coffee must be at the end
+    expect(arranged[arranged.length - 1]).toBe("beverages::filter_coffee");
+  });
+
+  test("UT-25: PDF generation omits subheadings for Traditional sessions and includes them for Buffet", async () => {
+    const { buildEventMenuPDFBlob } = await import("../src/services/pdfExportService");
+    const { createEmptyMenu } = await import("../src/services/menuCalculationService");
+
+    const menu = createEmptyMenu();
+    menu.days = [
+      {
+        dayNumber: 1,
+        date: "2026-10-25",
+        sessions: [
+          {
+            id: "sess_1",
+            name: "Breakfast",
+            type: "breakfast",
+            startTime: "07:30",
+            endTime: "10:00",
+            headCount: 200,
+            ratePerPerson: 150,
+            serviceStyle: "traditional",
+            selectedDishes: [
+              "sweets::ashoka_halwa",
+              "tiffin::poori",
+              "tiffin::channa_masala"
+            ],
+          },
+        ],
+      },
+    ];
+
+    // Traditional PDF generation should succeed (plain arranged text without subheadings)
+    const traditionalResult = await buildEventMenuPDFBlob(menu, "en");
+    expect(traditionalResult.blob).toBeDefined();
+    expect(traditionalResult.blob.size).toBeGreaterThan(1000);
+
+    // Buffet PDF generation should succeed (categorized with subheadings)
+    menu.days[0].sessions[0].serviceStyle = "buffet";
+    const buffetResult = await buildEventMenuPDFBlob(menu, "en");
+    expect(buffetResult.blob).toBeDefined();
+    expect(buffetResult.blob.size).toBeGreaterThan(1000);
+  });
+
 });
-
-

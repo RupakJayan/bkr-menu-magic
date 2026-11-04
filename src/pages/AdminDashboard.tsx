@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowDownToLine, CalendarDays, CheckCircle2, Download, FileJson, Key, LogOut, Menu as MenuIcon, Plus, Search, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import type { EventMenu } from "@/types/menu";
 import { AiMenuLensDialog } from "@/components/ai/AiMenuLensDialog";
-import { getGeminiApiKey, setGeminiApiKey, DEFAULT_GEMINI_API_KEY } from "@/services/aiLensService";
 import {
   buildCatalogKey,
   deleteContact,
@@ -132,8 +131,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [newDish, setNewDish] = useState({ category: "", name_en: "", name_ta: "", estimatedCost: "0" });
   const [notice, setNotice] = useState("");
   const [aiLensOpen, setAiLensOpen] = useState(false);
-  const [geminiKey, setGeminiKey] = useState(getGeminiApiKey);
-  const [showGeminiKeyEditor, setShowGeminiKeyEditor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -762,80 +759,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <TermsEditor value={settings.termsTamil} onChange={(termsTamil) => setSettings({ ...settings, termsTamil })} />
               <Button className="mt-3" onClick={saveSettings}>Save Tamil terms</Button>
             </Card>
-            <Card title="Google Gemini Vision AI (AI Menu Lens)">
-              <p className="mb-3 text-sm text-mute">
-                Powers AI Menu Lens to decipher handwritten Tamil & English catering notes and convert them into digital menus.
-              </p>
-              <div className="flex items-center justify-between p-3.5 bg-surf2 rounded-xl text-xs text-ink border border-line">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span className="font-semibold text-emerald-700 dark:text-emerald-400">Gemini AI Vision Ready</span>
-                  <span className="text-mute hidden sm:inline">· Pre-configured & active out of the box</span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowGeminiKeyEditor(!showGeminiKeyEditor)}
-                  className="text-acc hover:underline font-semibold text-xs h-7 px-2"
-                >
-                  {showGeminiKeyEditor ? "Hide Settings" : "Change API Key"}
-                </Button>
-              </div>
-
-              {showGeminiKeyEditor && (
-                <div className="mt-3 p-3.5 rounded-xl border border-line bg-surf2 space-y-2.5 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                      <Key className="h-3.5 w-3.5 text-acc" />
-                      Custom Gemini API Key (Optional)
-                    </span>
-                    <a
-                      href="https://aistudio.google.com/app/apikey"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-acc hover:underline font-semibold"
-                    >
-                      Get Free Key →
-                    </a>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="password"
-                      placeholder="Paste Gemini API key (AIzaSy...)"
-                      value={geminiKey}
-                      onChange={(e) => setGeminiKey(e.target.value)}
-                      className="text-xs bg-surf border-line text-ink"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setGeminiApiKey(geminiKey);
-                        setNotice("Gemini API key saved.");
-                      }}
-                      className="bg-acc text-accink font-medium shrink-0"
-                    >
-                      Save Key
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setGeminiKey(DEFAULT_GEMINI_API_KEY);
-                        setGeminiApiKey(DEFAULT_GEMINI_API_KEY);
-                        setShowGeminiKeyEditor(false);
-                        setNotice("Default pre-configured Gemini API key restored.");
-                      }}
-                      className="border-line text-ink font-medium shrink-0 text-xs"
-                    >
-                      Reset Default
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </Card>
-
-            <Card title="Local storage and data export">
+                        <Card title="Local storage and data export">
               <p className="mb-3 text-sm text-mute">This admin keeps events locally for instant load and syncs with Google Drive. Keep regular backups if you clear browser data or change devices.</p>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={exportBackup}><FileJson className="mr-2 h-4 w-4" />Download JSON backup</Button>

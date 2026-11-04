@@ -305,31 +305,48 @@ const createSessionRows = (
         spacing: { before: 140, after: 80 },
         keepNext: true,
       }),
-      dishes: groupSessionDishes(session).flatMap(([category, dishes]) => [
-        new Paragraph({
-          children: [new TextRun({
-            text: category,
-            font: ENGLISH_FONT,
-            size: 24,
-            bold: true,
-            color: BRAND_BROWN,
-          })],
-          spacing: { before: 70, after: 20 },
-          keepNext: true,
-        }),
-        ...dishes.map((dish) => new Paragraph({
-          children: [new TextRun({
-            text: `•  ${language === "ta"
-              ? dish?.name_ta ?? dish?.name_en ?? ""
-              : dish?.name_en ?? dish?.name_ta ?? ""}`,
-            font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
-            size: 24,
-            color: INK,
-          })],
-          indent: { left: 300 },
-          spacing: { after: 20 },
-        })),
-      ]),
+      dishes: session.serviceStyle === "buffet"
+        ? groupSessionDishes(session).flatMap(([category, dishes]) => [
+            new Paragraph({
+              children: [new TextRun({
+                text: category,
+                font: ENGLISH_FONT,
+                size: 24,
+                bold: true,
+                color: BRAND_BROWN,
+              })],
+              spacing: { before: 70, after: 20 },
+              keepNext: true,
+            }),
+            ...dishes.map((dish) => new Paragraph({
+              children: [new TextRun({
+                text: `•  ${language === "ta"
+                  ? dish?.name_ta ?? dish?.name_en ?? ""
+                  : dish?.name_en ?? dish?.name_ta ?? ""}`,
+                font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
+                size: 24,
+                color: INK,
+              })],
+              indent: { left: 300 },
+              spacing: { after: 20 },
+            })),
+          ])
+        : arrangeDishesForTraditionalService(Array.from(new Set(session.selectedDishes))).map((key) => {
+            const dish = findDishByKey(key);
+            const text = dish
+              ? (language === "ta" ? dish.name_ta || dish.name_en || "" : dish.name_en || dish.name_ta || "")
+              : key;
+            return new Paragraph({
+              children: [new TextRun({
+                text: `•  ${text}`,
+                font: language === "ta" ? TAMIL_FONT : ENGLISH_FONT,
+                size: 24,
+                color: INK,
+              })],
+              indent: { left: 240 },
+              spacing: { after: 20 },
+            });
+          }),
     })),
   );
 

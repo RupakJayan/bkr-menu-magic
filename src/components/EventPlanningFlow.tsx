@@ -129,6 +129,7 @@ export const EventPlanningFlow: React.FC<EventPlanningFlowProps> = ({
             menu={menu}
             onPrevious={handlePrevious}
             onStartNewEvent={handleStartNew}
+            onMenuChange={onMenuChange}
           />
         )}
       </div>

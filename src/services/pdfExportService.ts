@@ -1,6 +1,7 @@
 import jsPDFDefault, { jsPDF as jsPDFNamed } from "jspdf";
 import { EventMenu } from "@/types/menu";
 import { findDishByKey } from "@/services/menuCatalogService";
+import { arrangeDishesForTraditionalService } from "@/services/servingOrderService";
 import { getBusinessSettings } from "@/services/localAdminService";
 import { formatISTDate, getISTDateString } from "@/utils/istDate";
 import { getTamilSolarDate } from "@/utils/tamilDate";
@@ -373,23 +374,40 @@ export const buildEventMenuPDFBlob = async (
         `${language === "ta" ? session.name : session.name.toUpperCase()} @ ${session.startTime}     NOS: ${session.headCount}`,
         { size: TEXT_SIZE, bold: true, color: BROWN, gap: 3 },
       );
-      const groups = new Map<string, string[]>();
-      for (const key of new Set(session.selectedDishes)) {
-        const dish = findDishByKey(key);
-        if (!dish) continue;
-        const categoryDishes = groups.get(dish.category) ?? [];
-        const name = language === "ta" ? dish.name_ta || dish.name_en : dish.name_en || dish.name_ta;
-        if (name) categoryDishes.push(name);
-        groups.set(dish.category, categoryDishes);
-      }
-      if (groups.size === 0) {
+      const isBuffet = session.serviceStyle === "buffet";
+      const selectedKeys = Array.from(new Set(session.selectedDishes));
+
+      if (selectedKeys.length === 0) {
         drawParagraph(language === "ta" ? "உணவுகள் தேர்ந்தெடுக்கப்படவில்லை" : "No dishes selected", { color: MUTED });
+      } else if (isBuffet) {
+        // Buffet service: group dishes by category with bold subheadings (Halwa Varieties, Dosa, Chettinad Special, etc.)
+        const groups = new Map<string, string[]>();
+        for (const key of selectedKeys) {
+          const dish = findDishByKey(key);
+          if (!dish) continue;
+          const categoryDishes = groups.get(dish.category) ?? [];
+          const name = language === "ta" ? dish.name_ta || dish.name_en : dish.name_en || dish.name_ta;
+          if (name) categoryDishes.push(name);
+          groups.set(dish.category, categoryDishes);
+        }
+
+        groups.forEach((dishes, category) => {
+          drawParagraph(category, { size: TEXT_SIZE, bold: true, indent: 2, color: BROWN, gap: 1 });
+          dishes.forEach((dish) => drawParagraph(`•  ${dish}`, { indent: 5, gap: 0.7 }));
+          y += 2;
+        });
+      } else {
+        // Traditional service: plain text, arranged in course order (sweet first, main with side companion, no subheadings)
+        const arrangedKeys = arrangeDishesForTraditionalService(selectedKeys);
+        arrangedKeys.forEach((key) => {
+          const dish = findDishByKey(key);
+          if (!dish) return;
+          const name = language === "ta" ? dish.name_ta || dish.name_en : dish.name_en || dish.name_ta;
+          if (name) {
+            drawParagraph(`•  ${name}`, { indent: 3, gap: 0.7, size: TEXT_SIZE });
+          }
+        });
       }
-      groups.forEach((dishes, category) => {
-        drawParagraph(category, { size: TEXT_SIZE, bold: true, indent: 2, color: BROWN, gap: 1 });
-        dishes.forEach((dish) => drawParagraph(`•  ${dish}`, { indent: 5, gap: 0.7 }));
-        y += 2;
-      });
       y += 4;
     });
   });
@@ -755,27 +773,46 @@ export const buildChefKitchenPDFBlob = async (
       );
       y += 12;
 
-      const groups = new Map<string, string[]>();
-      for (const key of new Set(session.selectedDishes)) {
-        const dish = findDishByKey(key);
-        if (!dish) continue;
-        const categoryDishes = groups.get(dish.category) ?? [];
-        const taName = dish.name_ta || dish.name_en || "";
-        const enName = dish.name_en || "";
-        const combined = taName && enName && taName !== enName
-          ? `${taName} (${enName})`
-          : taName || enName;
-        if (combined) categoryDishes.push(combined);
-        groups.set(dish.category, categoryDishes);
-      }
+      const isBuffet = session.serviceStyle === "buffet";
+      const selectedKeys = Array.from(new Set(session.selectedDishes));
 
-      if (groups.size === 0) {
+      if (selectedKeys.length === 0) {
         drawParagraph("உணவுகள் தேர்ந்தெடுக்கப்படவில்லை", { color: MUTED });
-      } else {
+      } else if (isBuffet) {
+        // Buffet service: group dishes by category with subheadings
+        const groups = new Map<string, string[]>();
+        for (const key of selectedKeys) {
+          const dish = findDishByKey(key);
+          if (!dish) continue;
+          const categoryDishes = groups.get(dish.category) ?? [];
+          const taName = dish.name_ta || dish.name_en || "";
+          const enName = dish.name_en || "";
+          const combined = taName && enName && taName !== enName
+            ? `${taName} (${enName})`
+            : taName || enName;
+          if (combined) categoryDishes.push(combined);
+          groups.set(dish.category, categoryDishes);
+        }
+
         groups.forEach((dishes, category) => {
           drawParagraph(category, { size: 12, bold: true, indent: 2, color: BROWN, gap: 1 });
           dishes.forEach((dish) => drawParagraph(`•  ${dish}`, { indent: 5, gap: 0.8, size: 11 }));
           y += 2;
+        });
+      } else {
+        // Traditional service: plain text, arranged in course order (sweet first, main + side paired, no subheadings)
+        const arrangedKeys = arrangeDishesForTraditionalService(selectedKeys);
+        arrangedKeys.forEach((key) => {
+          const dish = findDishByKey(key);
+          if (!dish) return;
+          const taName = dish.name_ta || dish.name_en || "";
+          const enName = dish.name_en || "";
+          const combined = taName && enName && taName !== enName
+            ? `${taName} (${enName})`
+            : taName || enName;
+          if (combined) {
+            drawParagraph(`•  ${combined}`, { indent: 4, gap: 0.8, size: 11 });
+          }
         });
       }
       y += 4;

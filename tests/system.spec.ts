@@ -352,21 +352,14 @@ test.describe("ST - System / End-to-End Tests", () => {
     const voiceDialog = page.locator('[role="dialog"]');
     await expect(voiceDialog).toBeVisible();
     await expect(voiceDialog.locator('text=AI Voice Assistant').first()).toBeVisible();
-    // Verify Free Voice banner is active by default (Zero Key Needed)
-    const freeVoiceBanner = voiceDialog.getByText(/Free Speech Recognition Active|Free Voice Engine/).first();
-    await expect(freeVoiceBanner).toBeVisible();
+    // Verify Voice Assistant Ready status is active
+    const readyStatus = voiceDialog.getByText(/Voice Assistant Ready/).first();
+    await expect(readyStatus).toBeVisible();
     await voiceDialog.screenshot({ path: "C:/Users/rupak/.gemini/antigravity/brain/9b2ffdfe-4ea7-47ac-b63a-d8b4e9a5c029/voice-assistant-free-mode.png" });
 
-    // Switch to Gemini Cloud AI tab to verify optional Gemini Key setup
-    const geminiTab = voiceDialog.locator('button:has-text("Gemini Cloud AI")').first();
-    if (await geminiTab.isVisible()) {
-      await geminiTab.click();
-      await page.waitForTimeout(200);
-    }
-
-    // Verify Inline Gemini Key setup banner exists
-    const keyBanner = voiceDialog.getByText(/Google Gemini API Key Setup|Gemini.*Voice Connected/).first();
-    await expect(keyBanner).toBeVisible();
+    // Verify there is NO mention of API keys or Google Gemini in the dialog
+    await expect(voiceDialog.locator('text=Google Gemini API Key Setup')).toHaveCount(0);
+    await expect(voiceDialog.locator('input[placeholder*="Paste Gemini API key"]')).toHaveCount(0);
 
     // Close Dialog
     const closeBtn = voiceDialog.locator('button:has-text("Close"), button[aria-label="Close"]').first();
@@ -527,13 +520,10 @@ test.describe("ST - System / End-to-End Tests", () => {
     const lensDialog = page.locator('[role="dialog"]').filter({ hasText: "AI Menu Lens" }).first();
     await expect(lensDialog).toBeVisible();
 
-    // Verify "Gemini AI Vision Ready" is displayed
-    const readyBadge = lensDialog.locator('text=Gemini AI Vision Ready').first();
-    await expect(readyBadge).toBeVisible();
-
-    // Verify "Paste AI Studio API key" is NOT displayed by default
+    // Verify "Paste AI Studio API key" and key setup banners are NOT displayed
     const pasteKeyInput = lensDialog.locator('input[placeholder*="Paste AI Studio API key"]');
     await expect(pasteKeyInput).toHaveCount(0);
+    await expect(lensDialog.locator('text=Google Gemini API Key Setup')).toHaveCount(0);
 
     // Verify Take Photo and Upload Photo options are present and ready
     await expect(lensDialog.locator('text=Take Photo with Camera')).toBeVisible();
