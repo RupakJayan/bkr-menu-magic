@@ -35,6 +35,8 @@ import {
   StudioEventBriefingModal,
   StudioBriefingData,
 } from "@/components/planner3d/StudioEventBriefingModal";
+import { GoogleMapsVenueSearchDialog } from "@/components/planner3d/GoogleMapsVenueSearchDialog";
+import { PrecisionDimensionsInspector } from "@/components/planner3d/PrecisionDimensionsInspector";
 import { VectorGridOverlay } from "@/components/effects/VectorGridOverlay";
 import {
   CrosshairVector,
@@ -159,8 +161,10 @@ export const Planner3DPage: React.FC = () => {
     }
   };
 
-  // STARTING STEP: Studio Event Briefing Modal (Opens first to let user fill everything via speech or type)
-  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(true);
+  // STARTING STEP: Studio Event Briefing Modal (Opens on demand, does not block viewport)
+  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(false);
+  const [isGoogleMapsModalOpen, setIsGoogleMapsModalOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<"inspector" | "advisor">("inspector");
 
   // Planning state (Default: 3,500 guests, 2 Dosa counters)
   const [headCount, setHeadCount] = useState<number>(3500);
@@ -168,6 +172,26 @@ export const Planner3DPage: React.FC = () => {
     getRecommendedStalls(3500, "classic", PRESET_VENUES[0])
   );
   const [selectedStallId, setSelectedStallId] = useState<string | null>(null);
+
+  const handleSelectStall = (stall: StallItem | null) => {
+    setSelectedStallId(stall ? stall.id : null);
+    if (stall) {
+      setIsSidebarOpen(true);
+      setSidebarTab("inspector");
+    }
+  };
+
+  const handleUpdateStall = (updatedStall: StallItem) => {
+    setStalls((prev) =>
+      prev.map((s) => (s.id === updatedStall.id ? updatedStall : s))
+    );
+  };
+
+  const handleDeleteStall = (id: string) => {
+    setStalls((prev) => prev.filter((s) => s.id !== id));
+    if (selectedStallId === id) setSelectedStallId(null);
+    toast.info("Stall removed from scene");
+  };
 
   // View & visualization controls
   const [viewMode, setViewMode] = useState<CameraViewMode>("orbit");
@@ -765,6 +789,15 @@ export const Planner3DPage: React.FC = () => {
             <ImageIcon className="h-3.5 w-3.5 text-[#e2c99a]" />
             <span className="hidden sm:inline">Upload Image to 3D</span>
           </label>
+
+          {/* Google Maps Search Button */}
+          <button
+            onClick={() => setIsGoogleMapsModalOpen(true)}
+            className="h-8 px-3 rounded-xl bg-[#222530] border border-[#e2c99a]/50 hover:border-[#e2c99a] text-xs text-[#e2c99a] flex items-center gap-1.5 transition-all shadow-sm font-bold shrink-0"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            <span>Google Maps Mahal Search</span>
+          </button>
         </div>
 
         {/* Quick Venue Pills */}
@@ -789,37 +822,76 @@ export const Planner3DPage: React.FC = () => {
       {/* 2. MAIN 3D WORKSPACE VIEWPORT */}
       <div className="relative flex-1 flex overflow-hidden">
         
-        {/* Left Drawer: Smart Counter Advisor & Capacity Analyzer */}
+        {/* Left Drawer: Precision CAD Inspector & Smart Counter Advisor */}
         <aside
           className={`relative z-20 transition-all duration-300 ease-in-out border-r border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl flex flex-col ${
             isSidebarOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden border-none"
           }`}
         >
-          <div className="flex items-center justify-between p-3 border-b border-white/[0.08]">
-            <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5 font-mono">
-              <CrosshairVector size={14} className="text-[#e2c99a]" />
-              CAPACITY &amp; DUPLICATION DYNAMICS
-            </span>
+          {/* Tab Selector between Inspector and Advisor */}
+          <div className="flex items-center justify-between p-2 border-b border-white/[0.08] bg-[#161820] font-mono text-xs">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSidebarTab("inspector")}
+                className={`px-3 py-1 rounded-lg font-bold transition-all text-xs ${
+                  sidebarTab === "inspector"
+                    ? "bg-[#e2c99a] text-black shadow-sm"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                CAD Inspector
+              </button>
+              <button
+                onClick={() => setSidebarTab("advisor")}
+                className={`px-3 py-1 rounded-lg font-bold transition-all text-xs ${
+                  sidebarTab === "advisor"
+                    ? "bg-[#e2c99a] text-black shadow-sm"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Queue Advisor
+              </button>
+            </div>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="text-neutral-400 hover:text-white p-1 rounded-lg"
+              className="text-neutral-400 hover:text-white p-1 rounded-lg text-sm"
             >
               ×
             </button>
           </div>
 
-          <SmartCounterAdvisor
-            headCount={headCount}
-            onHeadCountChange={setHeadCount}
-            analysis={analysis}
-            stalls={stalls}
-            onAddStall={handleAddStall}
-            onDuplicateStall={handleDuplicateStall}
-            onRemoveStall={handleRemoveStall}
-            onApplyOptimalLayout={handleApplyOptimalLayout}
-            onOpenCustomStallModal={() => setIsCustomStallModalOpen(true)}
-            onOpenBriefingModal={() => setIsBriefingModalOpen(true)}
-          />
+          <div className="flex-1 overflow-y-auto">
+            {sidebarTab === "inspector" ? (
+              <PrecisionDimensionsInspector
+                selectedStall={selectedStall}
+                onUpdateStall={handleUpdateStall}
+                onDeselectStall={() => setSelectedStallId(null)}
+                onDuplicateStall={handleDuplicateStall}
+                onDeleteStall={handleDeleteStall}
+                venue={selectedVenue}
+                onUpdateVenue={(v) => {
+                  setSelectedVenue(v);
+                  setStalls(getRecommendedStalls(headCount, "classic", v));
+                }}
+                headCount={headCount}
+                onUpdateHeadCount={setHeadCount}
+                onOpenGoogleMapsSearch={() => setIsGoogleMapsModalOpen(true)}
+              />
+            ) : (
+              <SmartCounterAdvisor
+                headCount={headCount}
+                onHeadCountChange={setHeadCount}
+                analysis={analysis}
+                stalls={stalls}
+                onAddStall={handleAddStall}
+                onDuplicateStall={handleDuplicateStall}
+                onRemoveStall={handleRemoveStall}
+                onApplyOptimalLayout={handleApplyOptimalLayout}
+                onOpenCustomStallModal={() => setIsCustomStallModalOpen(true)}
+                onOpenBriefingModal={() => setIsBriefingModalOpen(true)}
+              />
+            )}
+          </div>
         </aside>
 
         {/* Toggle open sidebar button when closed */}
@@ -839,7 +911,7 @@ export const Planner3DPage: React.FC = () => {
             venue={selectedVenue}
             stalls={stalls}
             selectedStallId={selectedStallId}
-            onSelectStall={(stall) => setSelectedStallId(stall ? stall.id : null)}
+            onSelectStall={handleSelectStall}
             onMoveStall={handleMoveStall}
             viewMode={viewMode}
             blueprintOpacity={blueprintOpacity}
@@ -1080,6 +1152,16 @@ export const Planner3DPage: React.FC = () => {
         open={isCustomStallModalOpen}
         onOpenChange={setIsCustomStallModalOpen}
         onSaveCustomStall={handleSaveCustomStall}
+      />
+
+      {/* Google Maps Venue Search Modal */}
+      <GoogleMapsVenueSearchDialog
+        isOpen={isGoogleMapsModalOpen}
+        onClose={() => setIsGoogleMapsModalOpen(false)}
+        onSelectVenue={(v) => {
+          setSelectedVenue(v);
+          setStalls(getRecommendedStalls(headCount, "classic", v));
+        }}
       />
     </div>
   );
