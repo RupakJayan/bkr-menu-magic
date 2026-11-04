@@ -22,6 +22,44 @@ export interface VenueTemplate {
 
 export const PRESET_VENUES: MandapamVenue[] = [
   {
+    id: "vasavi_anaimalai",
+    name: "Sri Vasavi Kanyaka Parameswari Temple & Kalyana Mandapam",
+    name_ta: "ஸ்ரீ வாசவி கன்னிகா பரமேஸ்வரி திருக்கோவில் மற்றும் மண்டபம்",
+    location: "Car Street, Anaimalai, Pollachi Taluk, Coimbatore",
+    terrainType: "hall",
+    hallLength: 38,
+    hallWidth: 26,
+    hallHeight: 7.0,
+    defaultCapacity: 1500,
+    blueprintUrl: "",
+    stagePosition: [0, 0, -15],
+    entrancePosition: [0, 0, 16],
+    handwashPosition: [-10, 0, 13],
+    timeOfDay: "sunset",
+    weather: "golden_hour",
+    panoramicSkyboxUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Vasavi_matha_statue.jpg/1200px-Vasavi_matha_statue.jpg",
+    description: "Sacred Arya Vysya temple and historic wedding mandapam located on Car Street, Anaimalai near Pollachi. Features traditional Dravidian ceremonial mandap, central aisle, marble dining concourse, and 1,500-guest wedding reception capacity.",
+  },
+  {
+    id: "masani_amman_anaimalai",
+    name: "Arulmigu Sri Masani Amman Temple & Mandapam",
+    name_ta: "அருள்மிகு மாசாணி அம்மன் திருக்கோவில் & திருமண அரங்கம்",
+    location: "Temple Road, Anaimalai, Pollachi, Coimbatore",
+    terrainType: "hall",
+    hallLength: 44,
+    hallWidth: 28,
+    hallHeight: 7.5,
+    defaultCapacity: 2200,
+    blueprintUrl: "",
+    stagePosition: [0, 0, -17],
+    entrancePosition: [0, 0, 18],
+    handwashPosition: [-11, 0, 15],
+    timeOfDay: "morning",
+    weather: "clear",
+    panoramicSkyboxUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/MASANI_AMMAN.jpg/1200px-MASANI_AMMAN.jpg",
+    description: "Renowned pilgrimage temple and wedding hall along the Aliyar River in Anaimalai. Known for massive festival gatherings, expansive ceremonial courtyards, and grand South Indian feast catering facilities.",
+  },
+  {
     id: "codissia_coimbatore",
     name: "CODISSIA Trade Fair Complex (Hall E)",
     name_ta: "கொடிசியா வர்த்தக மையம் (அரங்கம் E)",
@@ -408,6 +446,14 @@ export function synthesizeVenueFromQuery(query: string): MandapamVenue {
     if (
       lower.includes(key.split(" ")[0].toLowerCase()) ||
       lower.includes(preset.id.replace(/_/g, " ")) ||
+      (preset.id === "vasavi_anaimalai" &&
+        (lower.includes("vasavi") ||
+          lower.includes("kanyaka") ||
+          lower.includes("kanika") ||
+          lower.includes("parameswari") ||
+          lower.includes("parameshwari"))) ||
+      (preset.id === "masani_amman_anaimalai" &&
+        (lower.includes("masani") || lower.includes("amman"))) ||
       (preset.id === "codissia_coimbatore" && (lower.includes("codissia") || lower.includes("trade fair"))) ||
       (preset.id === "mrc_chennai" && (lower.includes("ramanathan") || lower.includes("mrc") || lower.includes("chettiar"))) ||
       (preset.id === "itc_grand_chola" && (lower.includes("chola") || lower.includes("grand chola") || lower.includes("itc"))) ||
