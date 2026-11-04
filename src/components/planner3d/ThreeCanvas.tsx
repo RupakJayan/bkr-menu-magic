@@ -19,6 +19,7 @@ interface ThreeCanvasProps {
   showGrid: boolean;
   showCrowdSimulation?: boolean;
   showCadAisles?: boolean;
+  showFocusLights?: boolean;
   cinematicAutoRotate?: boolean;
   isDark: boolean;
   canvasRef?: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -153,6 +154,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   showGrid,
   showCrowdSimulation = false,
   showCadAisles = false,
+  showFocusLights = true,
   cinematicAutoRotate = false,
   isDark,
   canvasRef,
@@ -254,6 +256,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             isSelected={stall.id === selectedStallId}
             onSelect={onSelectStall}
             onMove={onMoveStall}
+            showFocusLights={showFocusLights}
           />
         ))}
 

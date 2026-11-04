@@ -20,6 +20,8 @@ import {
   ChevronRight,
   Eye,
   Users,
+  Lightbulb,
+  ExternalLink,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -68,6 +70,7 @@ export const Planner3DPage: React.FC = () => {
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [showCrowdSimulation, setShowCrowdSimulation] = useState<boolean>(false);
   const [showCadAisles, setShowCadAisles] = useState<boolean>(false);
+  const [showFocusLights, setShowFocusLights] = useState<boolean>(true);
   const [isPitchMode, setIsPitchMode] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
@@ -143,6 +146,31 @@ export const Planner3DPage: React.FC = () => {
     toast.success(`Duplicated ${target.name}`, {
       description: `Placed opposite wing for optimal crowd flow.`,
     });
+  };
+
+  // Place dustbin near a specific dining table
+  const handlePlaceDustbinNearTable = (tableId: string) => {
+    const table = stalls.find((s) => s.id === tableId);
+    if (!table) return;
+    const newId = `dustbin-${Date.now().toString().slice(-4)}`;
+    const newDustbin: StallItem = {
+      ...STALL_CATALOG.dustbin,
+      id: newId,
+      position: [table.position[0] + 1.8, 0, table.position[2]],
+      rotation: 0,
+      wing: table.wing,
+    };
+    setStalls((prev) => [...prev, newDustbin]);
+    setSelectedStallId(newId);
+    toast.success("Placed Eco Dustbin beside table");
+  };
+
+  // Upload or set table illusion texture
+  const handleSetTableTexture = (tableId: string, textureUrl: string) => {
+    setStalls((prev) =>
+      prev.map((s) => (s.id === tableId ? { ...s, customTableTextureUrl: textureUrl } : s))
+    );
+    toast.success("Applied Table Linen Illusion Pattern");
   };
 
   // Remove stall
@@ -327,6 +355,23 @@ export const Planner3DPage: React.FC = () => {
             <span className="hidden xl:inline text-[11px] font-semibold">CAD Aisles</span>
           </button>
 
+          {/* Live Stall Focus Lights Toggle */}
+          <button
+            onClick={() => {
+              setShowFocusLights((f) => !f);
+              toast.info(!showFocusLights ? "Focus Spotlights Activated" : "Focus Lights Off");
+            }}
+            title="Toggle Dramatic Focus Lights on Live Stalls"
+            className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
+              showFocusLights
+                ? "bg-[#fed7aa]/20 border-[#f97316] text-[#fed7aa] shadow-md shadow-[#f97316]/20"
+                : "bg-surf border-line text-mute hover:text-ink"
+            }`}
+          >
+            <Lightbulb className="h-4 w-4" />
+            <span className="hidden xl:inline text-[11px] font-semibold">Focus Lights</span>
+          </button>
+
           {/* Interactive Crowd Flow Simulation Toggle */}
           <button
             onClick={() => {
@@ -444,6 +489,7 @@ export const Planner3DPage: React.FC = () => {
             showGrid={showGrid}
             showCrowdSimulation={showCrowdSimulation}
             showCadAisles={showCadAisles}
+            showFocusLights={showFocusLights}
             cinematicAutoRotate={isPitchMode}
             isDark={isDark}
             canvasRef={canvasRef}
@@ -529,22 +575,123 @@ export const Planner3DPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sample Dishes */}
-              <div className="space-y-1">
-                <span className="text-[10px] uppercase tracking-wider text-mute block">
-                  Dishes Served at Counter
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {selectedStall.dishes.slice(0, 4).map((d, i) => (
-                    <span
-                      key={i}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-surf-2 border border-line text-ink"
-                    >
-                      {d}
+              {/* Table Illusion & Dustbin Placement for Dining Tables */}
+              {selectedStall.type === "dining_table" && (
+                <div className="space-y-2 pt-2 border-t border-line">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-ink">
+                      Tablecloth & 3D Illusion Linen
                     </span>
-                  ))}
+                    <Button
+                      size="sm"
+                      onClick={() => handlePlaceDustbinNearTable(selectedStall.id)}
+                      className="h-6 text-[10px] bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold px-2 rounded-lg flex items-center gap-1"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Place Dustbin Beside Table
+                    </Button>
+                  </div>
+
+                  {/* Illusion Presets */}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      {
+                        label: "3D Illusion",
+                        url: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=400&q=80",
+                      },
+                      {
+                        label: "Gold Brocade",
+                        url: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=400&q=80",
+                      },
+                      {
+                        label: "Velvet Damask",
+                        url: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=400&q=80",
+                      },
+                    ].map((pattern) => (
+                      <button
+                        key={pattern.label}
+                        onClick={() => handleSetTableTexture(selectedStall.id, pattern.url)}
+                        className={`p-1 text-[10px] font-medium rounded border transition-all text-center ${
+                          selectedStall.customTableTextureUrl === pattern.url
+                            ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4] font-bold"
+                            : "bg-surf-2 border-line text-mute hover:text-ink"
+                        }`}
+                      >
+                        {pattern.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom upload */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <label className="text-[10px] text-[#00f5d4] hover:underline cursor-pointer flex items-center gap-1">
+                      <Camera className="h-3 w-3" />
+                      Upload Table Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (ev.target?.result) {
+                                handleSetTableTexture(selectedStall.id, ev.target.result as string);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* BKR Video Wall & Instagram Reel Display */}
+              {selectedStall.type === "bkr_video_wall" && (
+                <div className="space-y-2 pt-2 border-t border-line">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-[#fef08a] block">
+                        BKR Catering Media Wall
+                      </span>
+                      <span className="text-[10px] text-mute block">
+                        Continuous 30-sec Instagram Reel stream featuring signature wedding feasts & decor
+                      </span>
+                    </div>
+                    <a
+                      href="https://www.instagram.com/bkr_events_/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] rounded-lg bg-gradient-to-r from-[#d8b36d] to-[#f59e0b] text-black font-bold flex items-center gap-1 shadow-md hover:opacity-90 shrink-0"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      @bkr_events_
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Sample Dishes */}
+              {selectedStall.dishes.length > 0 && selectedStall.type !== "bkr_video_wall" && (
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-mute block">
+                    Dishes Served at Counter
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedStall.dishes.slice(0, 4).map((d, i) => (
+                      <span
+                        key={i}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-surf-2 border border-line text-ink"
+                      >
+                        {d}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>

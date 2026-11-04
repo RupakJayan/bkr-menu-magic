@@ -10,7 +10,9 @@ export type StallType =
   | "handwash_station"
   | "tamboolam_beeda"
   | "custom_stall"
-  | "dining_table";
+  | "dining_table"
+  | "dustbin"
+  | "bkr_video_wall";
 
 export type BudgetTier = "economy" | "classic" | "grandeur";
 
@@ -48,6 +50,7 @@ export interface StallItem {
   tag?: string;
   wing?: "North" | "South" | "East" | "West" | "Central";
   customPhotoUrl?: string; // photo uploaded to generate this stall's 3D facade
+  customTableTextureUrl?: string; // photo / illusion uploaded for dining table linen
 }
 
 export interface MandapamVenue {

@@ -313,6 +313,42 @@ export const STALL_CATALOG: Record<
     dishes_ta: ["மேசை குடிநீர்", "வாழை இலை / பீங்கான் தட்டுகள்"],
     tag: "Guest Seating Cluster",
   },
+  dustbin: {
+    type: "dustbin",
+    name: "Eco Stainless Pedal Dustbin",
+    name_ta: "சுற்றுச்சூழல் குப்பைத் தொட்டி",
+    category: "Sanitation & Waste",
+    width: 0.7,
+    depth: 0.7,
+    height: 1.0,
+    color: "#334155",
+    accentColor: "#22c55e",
+    capacityPerHour: 600,
+    unitCost: 1500,
+    powerRequiredKw: 0,
+    waterRequired: false,
+    dishes: ["Recyclable Food Waste Disposal", "Paper Napkin Drop"],
+    dishes_ta: ["உணவு கழிவு மேலாண்மை", "காகித துடைப்பான்"],
+    tag: "Eco Cleanliness Station",
+  },
+  bkr_video_wall: {
+    type: "bkr_video_wall",
+    name: "BKR Catering 3D Video Wall & Reel Screen",
+    name_ta: "BKR கேட்டரிங் 3D வீடியோ சுவர்",
+    category: "Brand Showcase",
+    width: 6.2,
+    depth: 0.6,
+    height: 3.8,
+    color: "#0f172a",
+    accentColor: "#d8b36d",
+    capacityPerHour: 5000,
+    unitCost: 45000,
+    powerRequiredKw: 3.0,
+    waterRequired: false,
+    dishes: ["@bkr_events_ Instagram Reels Loop", "Signature Wedding Feast Highlights"],
+    dishes_ta: ["இன்ஸ்டாகிராம் ரீல்ஸ் நேரடி காட்சி", "திருமண விருந்து தருணங்கள்"],
+    tag: "BKR Brand Experience Wall",
+  },
 };
 
 export const PRESET_VENUES: MandapamVenue[] = [
@@ -689,6 +725,36 @@ export function getRecommendedStalls(
       rotation: 0,
       wing: "Central",
     });
+  });
+
+  // 13. Eco Pedal Dustbins Placed Near Dining Tables & Handwash Area
+  const dustbinPositions: [number, number, number][] = [
+    [-8, 0, -8], // Beside Table Cluster 1
+    [8, 0, -8],  // Beside Table Cluster 2
+    [-halfW + 3.5, 0, halfL - 2], // Beside Handwash Station
+    [halfW - 2.5, 0, -9], // Beside Dessert Cart
+  ];
+
+  dustbinPositions.forEach((pos, idx) => {
+    result.push({
+      ...STALL_CATALOG.dustbin,
+      id: makeId(`dustbin-${idx + 1}`),
+      name: `Sanitary Dustbin #${idx + 1}`,
+      position: pos,
+      rotation: 0,
+      wing: idx % 2 === 0 ? "North" : "South",
+    });
+  });
+
+  // 14. BKR Catering 3D Video Wall & Reel Screen (Prominently mounted flank wall)
+  result.push({
+    ...STALL_CATALOG.bkr_video_wall,
+    id: makeId("bkr-video-wall"),
+    name: "BKR Catering 3D Video Wall (@bkr_events_)",
+    position: [halfW + 0.5, 0, -halfL + 6],
+    rotation: -Math.PI / 2,
+    wing: "East",
+    tag: "BKR Royal LED Media Wall",
   });
 
   return result;
