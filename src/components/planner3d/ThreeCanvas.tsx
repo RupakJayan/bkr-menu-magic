@@ -78,7 +78,39 @@ const CameraRig: React.FC<{
   );
 };
 
-// Floor Click Handler for moving selected stalls
+// Environment / Skybox Handler
+const SceneEnvironment: React.FC<{
+  venue: MandapamVenue;
+  isDark: boolean;
+}> = ({ venue, isDark }) => {
+  const { scene } = useThree();
+
+  useEffect(() => {
+    if (venue.panoramicSkyboxUrl) {
+      const loader = new THREE.TextureLoader();
+      loader.load(venue.panoramicSkyboxUrl, (texture) => {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+        scene.environment = texture;
+      });
+    } else {
+      // Atmospheric sky color based on time of day and theme
+      const time = venue.timeOfDay || (isDark ? "night" : "afternoon");
+      if (time === "night") {
+        scene.background = new THREE.Color("#05050a");
+      } else if (time === "sunset") {
+        scene.background = new THREE.Color("#2a1215");
+      } else if (time === "morning") {
+        scene.background = new THREE.Color(isDark ? "#0f172a" : "#e0f2fe");
+      } else {
+        scene.background = new THREE.Color(isDark ? "#0b0c14" : "#f8fafc");
+      }
+      scene.environment = null;
+    }
+  }, [venue.panoramicSkyboxUrl, venue.timeOfDay, isDark, scene]);
+
+  return null;
+};
 const FloorPlaneClickCatcher: React.FC<{
   venue: MandapamVenue;
   selectedStallId: string | null;
@@ -143,21 +175,54 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           cinematicAutoRotate={cinematicAutoRotate}
         />
 
-        {/* Lighting setup */}
-        <ambientLight intensity={isDark ? 0.8 : 1.2} />
-        <directionalLight
-          position={[15, 25, 12]}
-          intensity={1.4}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={60}
-          shadow-camera-left={-25}
-          shadow-camera-right={25}
-          shadow-camera-top={25}
-          shadow-camera-bottom={-25}
-        />
-        <directionalLight position={[-15, 15, -12]} intensity={0.6} />
+        <SceneEnvironment venue={venue} isDark={isDark} />
+
+        {/* Dynamic Lighting setup according to Time of Day & Weather */}
+        {venue.timeOfDay === "sunset" ? (
+          <>
+            <ambientLight intensity={0.7} color="#fed7aa" />
+            <directionalLight
+              position={[25, 12, 18]}
+              intensity={1.8}
+              color="#f97316"
+              castShadow
+              shadow-mapSize-width={2048}
+              shadow-mapSize-height={2048}
+            />
+            <directionalLight position={[-15, 8, -12]} intensity={0.4} color="#ec4899" />
+          </>
+        ) : venue.timeOfDay === "night" ? (
+          <>
+            <ambientLight intensity={0.45} color="#60a5fa" />
+            <directionalLight
+              position={[12, 28, 10]}
+              intensity={0.65}
+              color="#93c5fd"
+              castShadow
+              shadow-mapSize-width={2048}
+              shadow-mapSize-height={2048}
+            />
+            {/* Warm Festival Ambient Fill */}
+            <pointLight position={[0, 8, 0]} intensity={1.5} color="#fef08a" distance={35} />
+          </>
+        ) : (
+          <>
+            <ambientLight intensity={isDark ? 0.8 : 1.2} />
+            <directionalLight
+              position={[15, 25, 12]}
+              intensity={1.4}
+              castShadow
+              shadow-mapSize-width={2048}
+              shadow-mapSize-height={2048}
+              shadow-camera-far={60}
+              shadow-camera-left={-25}
+              shadow-camera-right={25}
+              shadow-camera-top={25}
+              shadow-camera-bottom={-25}
+            />
+            <directionalLight position={[-15, 15, -12]} intensity={0.6} />
+          </>
+        )}
 
         {/* Mandapam Hall Architecture & Blueprint */}
         <MandapamHall
