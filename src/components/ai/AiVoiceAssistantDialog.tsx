@@ -36,7 +36,7 @@ import {
   RecognizedVoiceDish,
 } from "@/services/aiVoiceAssistantService";
 import { playVoiceTickSound, playAlreadyAddedSound, isSpeechRecognitionSupported } from "@/services/voiceTypingService";
-import { getGeminiApiKey, setGeminiApiKey, hasGeminiApiKey } from "@/services/aiLensService";
+import { getGeminiApiKey, setGeminiApiKey, hasGeminiApiKey, DEFAULT_GEMINI_API_KEY } from "@/services/aiLensService";
 
 interface AiVoiceAssistantDialogProps {
   open: boolean;
@@ -89,6 +89,8 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
       setApiKeyInput(current);
       if (!current) {
         setShowKeyEditor(true);
+      } else {
+        setShowKeyEditor(false);
       }
       setLiveTranscript("");
     } else {
@@ -471,17 +473,28 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                     <Key className="h-4 w-4 text-acc" />
                     Google Gemini API Key Setup
                   </span>
-                  <a
-                    href="https://aistudio.google.com/app/apikey"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] text-acc hover:underline flex items-center gap-1 font-semibold"
-                  >
-                    Get Free Key from Google AI Studio <ExternalLink className="h-3 w-3" />
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-acc hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      Get Free Key <ExternalLink className="h-3 w-3" />
+                    </a>
+                    {hasGeminiApiKey() && (
+                      <button
+                        type="button"
+                        onClick={() => setShowKeyEditor(false)}
+                        className="text-xs text-mute hover:text-ink font-semibold ml-1"
+                      >
+                        Hide
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-[11px] text-mute leading-relaxed">
-                  AI Voice Assistant uses Gemini 2.5 Flash to understand spoken Tamil and South Indian dishes. Your key is stored securely in your browser.
+                  AI Voice Assistant uses Google Gemini to understand spoken Tamil and South Indian dishes. A built-in system key is pre-configured and active.
                 </p>
                 <div className="flex gap-2">
                   <Input
@@ -502,6 +515,23 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
                   >
                     Save Key
                   </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setApiKeyInput(DEFAULT_GEMINI_API_KEY);
+                      setGeminiApiKey(DEFAULT_GEMINI_API_KEY);
+                      setShowKeyEditor(false);
+                      toast({
+                        title: "Default Key Restored",
+                        description: "Standard built-in Gemini API key is active.",
+                      });
+                    }}
+                    className="border-line text-ink font-medium px-2.5 rounded-lg text-xs shrink-0 h-9"
+                  >
+                    Reset Default
+                  </Button>
                 </div>
                 <div className="pt-1 flex items-center justify-end">
                   <button
@@ -517,7 +547,8 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
               <div className="flex items-center justify-between px-3.5 py-2 bg-surf-2 rounded-lg text-xs text-ink border border-line">
                 <span className="flex items-center gap-2 text-xs">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="font-medium">Gemini 2.5 Flash Voice Connected</span>
+                  <span className="font-medium text-emerald-700 dark:text-emerald-400">Gemini AI Voice Connected</span>
+                  <span className="text-mute hidden sm:inline">· Pre-configured & active</span>
                 </span>
                 <button
                   type="button"

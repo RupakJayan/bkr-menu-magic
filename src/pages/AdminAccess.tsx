@@ -22,6 +22,7 @@ export default function AdminAccess() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPasswordLogin, setShowPasswordLogin] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -105,12 +106,10 @@ export default function AdminAccess() {
           <LockKeyhole aria-hidden="true" />
         </div>
         <h1 className="mt-5 text-2xl font-semibold">
-          {configured ? "Admin login" : "Set up admin access"}
+          Admin Sign In
         </h1>
         <p className="mt-2 text-sm text-mute">
-          {configured
-            ? "Enter the password set for this browser to manage events and menus."
-            : "Create a password to protect the event planner and management tools on this browser."}
+          Sign in with your authorized Google Account to manage events, menus, and Google Drive syncing.
         </p>
 
         <div className="mt-6 space-y-3">
@@ -119,9 +118,9 @@ export default function AdminAccess() {
             variant="outline"
             onClick={handleGoogleSignIn}
             disabled={busy}
-            className="w-full flex items-center justify-center gap-2 border-2 border-line hover:bg-surf2 h-11"
+            className="w-full flex items-center justify-center gap-2 border-2 border-line hover:bg-surf2 h-12 text-sm font-medium shadow-theme-sm"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -144,76 +143,100 @@ export default function AdminAccess() {
           <div className="text-[11px] text-mute text-center px-1">
             Sign in with your authorized BKR Catering Google Account
           </div>
+          <div className="text-[10px] text-mute/80 text-center font-mono">
+            bkrcaters@gmail.com · rupakjayan22@gmail.com
+          </div>
 
-          <div className="relative flex py-1 items-center">
+          <div className="relative flex py-2 items-center">
             <div className="flex-grow border-t border-line"></div>
-            <span className="flex-shrink mx-3 text-xs text-mute uppercase font-medium">Or browser password</span>
+            <button
+              type="button"
+              onClick={() => setShowPasswordLogin(!showPasswordLogin)}
+              className="flex-shrink mx-3 text-xs text-mute hover:text-ink underline"
+            >
+              {showPasswordLogin ? "Hide offline password" : "Or use offline password"}
+            </button>
             <div className="flex-grow border-t border-line"></div>
           </div>
         </div>
 
-        <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-          <label className="block space-y-2 text-sm font-medium">
-            <div className="flex items-center justify-between">
-              <span>{configured ? "Admin password" : "Create password"}</span>
-              {configured && (
-                <button
-                  type="button"
-                  onClick={handleResetPassword}
-                  className="text-xs text-mute hover:text-acc underline font-normal"
-                >
-                  Reset password
-                </button>
-              )}
-            </div>
-            <Input
-              type="password"
-              autoComplete={configured ? "current-password" : "new-password"}
-              minLength={8}
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoFocus
-            />
-          </label>
-          {!configured && (
+        {showPasswordLogin && (
+          <form className="mt-4 space-y-4 animate-fade-in" onSubmit={handleSubmit}>
             <label className="block space-y-2 text-sm font-medium">
-              <span>Confirm password</span>
+              <div className="flex items-center justify-between">
+                <span>{configured ? "Offline password" : "Create offline password"}</span>
+                {configured && (
+                  <button
+                    type="button"
+                    onClick={handleResetPassword}
+                    className="text-xs text-mute hover:text-acc underline font-normal"
+                  >
+                    Reset password
+                  </button>
+                )}
+              </div>
               <Input
                 type="password"
-                autoComplete="new-password"
+                autoComplete={configured ? "current-password" : "new-password"}
                 minLength={8}
                 required
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoFocus
               />
             </label>
-          )}
-          {error && (
-            <div role="alert" className="flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-800">
-              <span>{error}</span>
-              <button
-                type="button"
-                onClick={() => setError("")}
-                className="text-red-600 hover:text-red-900 ml-2"
-                aria-label="Dismiss error"
-              >
-                ×
-              </button>
-            </div>
-          )}
-          <Button className="w-full" type="submit" disabled={busy}>
-            {busy
-              ? "Please wait…"
-              : configured
-                ? "Sign in to admin"
-                : "Save password and continue"}
-          </Button>
-        </form>
+            {!configured && (
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Confirm password</span>
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+              </label>
+            )}
+            {error && (
+              <div role="alert" className="flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-800">
+                <span>{error}</span>
+                <button
+                  type="button"
+                  onClick={() => setError("")}
+                  className="text-red-600 hover:text-red-900 ml-2"
+                  aria-label="Dismiss error"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            <Button className="w-full" type="submit" disabled={busy}>
+              {busy
+                ? "Please wait…"
+                : configured
+                  ? "Sign in with password"
+                  : "Save password and continue"}
+            </Button>
+          </form>
+        )}
+
+        {error && !showPasswordLogin && (
+          <div role="alert" className="mt-4 flex items-center justify-between rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-800">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-900 ml-2"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <p className="mt-5 border-t border-line pt-4 text-xs leading-relaxed text-mute">
-          This is a local access gate, not server-backed security. Admin data
-          and this password are stored in this browser only.
+          Authorized BKR Catering staff can sign in directly using Google Account or offline browser credentials.
         </p>
       </section>
     </main>
