@@ -8,7 +8,7 @@ import { BadgeCheck, Calendar, CalendarDays, Check, ChevronDown, ChevronUp, Clip
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
-import { saveEventMenu, updateDishInCatalog } from '@/services/localAdminService';
+import { saveEventMenu, updateDishInCatalog, addCustomDishToCatalog } from '@/services/localAdminService';
 import { registerDishToDictionary, fetchAiTamilTranslation } from '@/services/tamilTranslationService';
 import { clearGoogleToken, getStoredGoogleToken } from '@/services/googleAuthService';
 import { saveMenuToGoogleDrive } from '@/services/googleDriveService';
@@ -42,11 +42,85 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
   const [editDishCategory, setEditDishCategory] = useState('');
   const [isAiTranslatingDish, setIsAiTranslatingDish] = useState(false);
 
+  // State for adding a new custom dish manually during review
+  const [addingCustomDishSession, setAddingCustomDishSession] = useState<{
+    dayIndex: number;
+    sessionIndex: number;
+    sessionName: string;
+  } | null>(null);
+  const [customDishEn, setCustomDishEn] = useState('');
+  const [customDishTa, setCustomDishTa] = useState('');
+  const [customDishCategory, setCustomDishCategory] = useState('Special Dishes');
+  const [isTranslatingCustom, setIsTranslatingCustom] = useState(false);
+
   const startEditingDish = (dish: CatalogDish, selectionKey: string, dayIndex: number, sessionIndex: number) => {
     setEditingDish({ dish, selectionKey, dayIndex, sessionIndex });
-    setEditDishEn(dish.name_en || dish.name || '');
+    let nameEn = dish.name_en || dish.name || '';
+    // Guard against numeric timestamps (e.g. 1730729382104) showing up when editing
+    if (/^\d+$/.test(nameEn.trim())) {
+      nameEn = '';
+    }
+    setEditDishEn(nameEn);
     setEditDishTa(dish.name_ta || '');
-    setEditDishCategory(dish.category);
+    setEditDishCategory(dish.category || 'Special Dishes');
+  };
+
+  const handleTranslateCustomAi = async () => {
+    const clean = customDishEn.trim();
+    if (!clean) return;
+    setIsTranslatingCustom(true);
+    try {
+      const res = await fetchAiTamilTranslation(clean);
+      if (res.name_ta) setCustomDishTa(res.name_ta);
+      if (res.category && categories.includes(res.category as any)) setCustomDishCategory(res.category);
+    } finally {
+      setIsTranslatingCustom(false);
+    }
+  };
+
+  const handleSaveNewCustomDish = () => {
+    if (!addingCustomDishSession) return;
+    const nameEn = customDishEn.trim() || customDishTa.trim();
+    const nameTa = customDishTa.trim() || customDishEn.trim();
+
+    if (!nameEn && !nameTa) {
+      toast({
+        title: "Dish Name Required",
+        description: "Please enter the dish name in English or Tamil.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const category = customDishCategory.trim() || "Special Dishes";
+      const newCustomDish = addCustomDishToCatalog({
+        category,
+        name_en: nameEn,
+        name_ta: nameTa,
+        isVegetarian: true,
+      });
+
+      registerDishToDictionary(nameEn, nameTa, category);
+
+      const dishKey = buildDishKey(category, newCustomDish.id);
+      addDishToSession(addingCustomDishSession.dayIndex, addingCustomDishSession.sessionIndex, dishKey);
+
+      toast({
+        title: "Custom Dish Added! ✨",
+        description: `Added "${nameEn}" (${nameTa}) to ${addingCustomDishSession.sessionName}.`,
+      });
+
+      setCustomDishEn('');
+      setCustomDishTa('');
+      setAddingCustomDishSession(null);
+    } catch (err: any) {
+      toast({
+        title: "Could not add dish",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTranslateDishAi = async () => {
@@ -208,6 +282,18 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
           ...day,
           sessions: day.sessions.map((session, sessionIndexValue) => sessionIndexValue === sessionIndex
             ? { ...session, ratePerPerson: ratePerPerson === '' ? ('' as any) : Math.max(0, Number(ratePerPerson) || 0) }
+            : session),
+        }
+      : day);
+    onMenuChange({ ...menu, days: updatedDays, updatedAt: new Date() });
+  };
+
+  const updateSessionHeadCount = (dayIndex: number, sessionIndex: number, headCount: number | string) => {
+    const updatedDays = menu.days.map((day, index) => index === dayIndex
+      ? {
+          ...day,
+          sessions: day.sessions.map((session, sessionIndexValue) => sessionIndexValue === sessionIndex
+            ? { ...session, headCount: headCount === '' ? ('' as any) : Math.max(1, parseInt(String(headCount), 10) || 1) }
             : session),
         }
       : day);
@@ -417,11 +503,31 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                       </p>
                     </div>
 
-                    {/* Pricing Per Head Editor */}
-                    <div className="flex items-center gap-3 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 p-3 rounded-xl border-2 border-pink-300">
+                    {/* Guests & Pricing Per Head Editor */}
+                    <div className="flex flex-wrap items-center gap-3 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 p-3 rounded-xl border-2 border-pink-300">
                       <div>
                         <Label className="text-xs font-bold text-gray-700 block">
-                          Pricing per Head (₹ / plate)
+                          Guests / தலைக்கட்டு
+                        </Label>
+                        <div className="relative mt-1">
+                          <Input
+                            type="number"
+                            min="1"
+                            step="10"
+                            placeholder="50"
+                            value={session.headCount === undefined || session.headCount === null ? '' : session.headCount}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              updateSessionHeadCount(dayIndex, sessionIndex, val === '' ? '' : Math.max(1, parseInt(val, 10) || 1));
+                            }}
+                            className="w-28 font-bold text-base h-10 border-2 border-pink-300 focus:border-pink-500 rounded-lg bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs font-bold text-gray-700 block">
+                          Rate (₹ / plate)
                         </Label>
                         <div className="relative mt-1">
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-gray-500">₹</span>
@@ -435,16 +541,17 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                               const val = e.target.value;
                               updateSessionRate(dayIndex, sessionIndex, val === '' ? '' : Math.max(0, parseFloat(val) || 0));
                             }}
-                            className="w-32 pl-7 font-bold text-base h-10 border-2 border-pink-300 focus:border-pink-500 rounded-lg bg-white"
+                            className="w-28 pl-7 font-bold text-base h-10 border-2 border-pink-300 focus:border-pink-500 rounded-lg bg-white"
                           />
                         </div>
                       </div>
+
                       <div className="text-right pl-3 border-l border-pink-200 min-w-[130px]">
                         <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500">Session Quote</p>
                         <p className="text-xl font-bold text-pink-700">
                           ₹{sessionTotal.toLocaleString('en-IN')}
                         </p>
-                        <p className="text-[11px] text-gray-500">({session.headCount} × ₹{Number(session.ratePerPerson) || 0})</p>
+                        <p className="text-[11px] text-gray-500">({session.headCount || 0} × ₹{Number(session.ratePerPerson) || 0})</p>
                       </div>
                     </div>
                   </div>
@@ -526,17 +633,37 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                       </div>
 
 
-                      {/* Add More Dishes Dialog */}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full h-11 rounded-lg border-2 border-dashed border-pink-300 hover:bg-pink-50 text-pink-600 font-semibold"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add More Dishes to {session.name}
-                          </Button>
-                        </DialogTrigger>
+                      {/* Add Dishes Action Bar */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setAddingCustomDishSession({
+                              dayIndex,
+                              sessionIndex,
+                              sessionName: session.name,
+                            });
+                            setCustomDishEn('');
+                            setCustomDishTa('');
+                            setCustomDishCategory('Special Dishes');
+                          }}
+                          className="w-full h-11 rounded-lg border-2 border-dashed border-amber-400 bg-amber-50/60 hover:bg-amber-100 text-amber-900 font-bold text-sm shadow-xs flex items-center justify-center gap-2 transition-all"
+                        >
+                          <Plus className="h-4 w-4 text-amber-700" />
+                          <span>➕ Add Custom Dish Manually</span>
+                        </Button>
+
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full h-11 rounded-lg border-2 border-dashed border-pink-300 hover:bg-pink-50 text-pink-700 font-bold text-sm flex items-center justify-center gap-2"
+                            >
+                              <Utensils className="h-4 w-4 text-pink-600" />
+                              Browse & Pick from Catalog
+                            </Button>
+                          </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle className="text-2xl">Add Dishes to {session.name}</DialogTitle>
@@ -577,6 +704,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                           </div>
                         </DialogContent>
                       </Dialog>
+                      </div>
                     </div>
                   ) : (
                     <p className="text-center text-gray-500 italic py-4">No dishes selected for this session</p>
@@ -724,6 +852,95 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                 >
                   <Save className="h-4 w-4 mr-1.5" />
                   Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {/* Add Custom Dish Modal in Review Step */}
+      {addingCustomDishSession && (
+        <Dialog
+          open={!!addingCustomDishSession}
+          onOpenChange={(open) => !open && setAddingCustomDishSession(null)}
+        >
+          <DialogContent className="max-w-md p-5 bg-white rounded-2xl shadow-2xl border-2 border-amber-300">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Plus className="h-5 w-5 text-amber-600" />
+                Add Custom Dish to {addingCustomDishSession.sessionName}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label className="text-xs font-bold text-gray-700 block mb-1">
+                  English Dish Name / ஆங்கில பெயர்
+                </Label>
+                <Input
+                  value={customDishEn}
+                  onChange={(e) => setCustomDishEn(e.target.value)}
+                  placeholder="e.g. Special Elaneer Payasam"
+                  className="h-10 text-sm border-2 border-amber-200 focus:border-amber-500 rounded-lg"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-xs font-bold text-gray-700">
+                    Tamil Dish Name / தமிழ் பெயர்
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={handleTranslateCustomAi}
+                    disabled={isTranslatingCustom || !customDishEn.trim()}
+                    className="text-xs text-amber-700 hover:text-amber-900 font-bold flex items-center gap-1 disabled:opacity-40"
+                    title="Auto Translate English to Tamil with AI"
+                  >
+                    <Compass className={`h-3 w-3 ${isTranslatingCustom ? "animate-spin text-amber-600" : ""}`} />
+                    <span>{isTranslatingCustom ? "Translating..." : "✨ Auto Translate"}</span>
+                  </button>
+                </div>
+                <Input
+                  value={customDishTa}
+                  onChange={(e) => setCustomDishTa(e.target.value)}
+                  placeholder="எ.கா. சிறப்பு இளநீர் பாயாசம்"
+                  className="h-10 text-sm font-tamil border-2 border-amber-200 focus:border-amber-500 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-gray-700 block mb-1">Category</Label>
+                <select
+                  value={customDishCategory}
+                  onChange={(e) => setCustomDishCategory(e.target.value)}
+                  className="w-full h-10 px-3 text-sm rounded-lg border-2 border-amber-200 focus:border-amber-500 bg-white"
+                >
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAddingCustomDishSession(null)}
+                  className="h-9 px-4 rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveNewCustomDish}
+                  className="h-9 px-5 font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Add to Menu
                 </Button>
               </div>
             </div>

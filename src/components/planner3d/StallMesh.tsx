@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { StallItem } from "@/types/planner3d";
+import { assetUrl } from "@/utils/assetUrl";
 
 interface StallMeshProps {
   stall: StallItem;
@@ -162,7 +163,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
   useEffect(() => {
     if (stall.type === "bkr_video_wall") {
       const video = document.createElement("video");
-      video.src = "/bkr-logo-intro.mp4";
+      video.src = assetUrl("/bkr-logo-intro.mp4");
       video.crossOrigin = "anonymous";
       video.loop = true;
       video.muted = true;
