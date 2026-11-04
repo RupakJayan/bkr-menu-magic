@@ -366,8 +366,8 @@ export const PRESET_VENUES: MandapamVenue[] = [
     stagePosition: [0, 0, -14],
     entrancePosition: [0, 0, 16],
     handwashPosition: [-10, 0, 14],
-    timeOfDay: "sunset",
-    weather: "golden_hour",
+    timeOfDay: "morning",
+    weather: "clear",
     description:
       "Spacious pillarless convention hall with dedicated dining courtyard, dual wing power distribution, and perimeter service corridors.",
   },

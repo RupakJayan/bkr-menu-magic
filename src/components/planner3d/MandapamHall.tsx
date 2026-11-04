@@ -57,17 +57,17 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
 
   return (
     <group>
-      {/* 1. Main Ground Base Plane */}
+      {/* 1. Main Ground Base Plane (Italian Bianco Statuario Marble / Nero Marquina) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[w * 1.08, l * 1.08]} />
         <meshStandardMaterial
           color={
             isOutdoor
-              ? isDark ? "#0c1710" : "#244d20"
-              : isDark ? "#090b10" : "#e8e3dc"
+              ? isDark ? "#0b1510" : "#244d20"
+              : isDark ? "#12141c" : "#faf9f6"
           }
-          roughness={isOutdoor ? 0.9 : 0.25}
-          metalness={isOutdoor ? 0.05 : 0.15}
+          roughness={isOutdoor ? 0.9 : 0.2}
+          metalness={isOutdoor ? 0.05 : 0.08}
         />
       </mesh>
 
@@ -124,44 +124,49 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
       {/* 3. 3D Architectural Perimeter Shell & Walls */}
       {!isOutdoor ? (
         <group>
-          {/* West Architectural Wall */}
+          {/* West Architectural Wall (Limestone / Graphite Slate) */}
           <mesh position={[-w / 2, h / 2, 0]} receiveShadow castShadow>
             <boxGeometry args={[0.3, h, l]} />
             <meshStandardMaterial
-              color={isDark ? "#11141e" : "#ded7cc"}
-              roughness={0.8}
+              color={isDark ? "#1a1d27" : "#ece8df"}
+              roughness={0.7}
+              metalness={0.05}
             />
           </mesh>
           {/* East Architectural Wall */}
           <mesh position={[w / 2, h / 2, 0]} receiveShadow castShadow>
             <boxGeometry args={[0.3, h, l]} />
             <meshStandardMaterial
-              color={isDark ? "#11141e" : "#ded7cc"}
-              roughness={0.8}
+              color={isDark ? "#1a1d27" : "#ece8df"}
+              roughness={0.7}
+              metalness={0.05}
             />
           </mesh>
           {/* North Architectural Wall (Rear Stage Wall with acoustic texture) */}
           <mesh position={[0, h / 2, -l / 2]} receiveShadow castShadow>
             <boxGeometry args={[w, h, 0.3]} />
             <meshStandardMaterial
-              color={isDark ? "#0a0c12" : "#cfc8be"}
-              roughness={0.6}
+              color={isDark ? "#141721" : "#e4dfd5"}
+              roughness={0.65}
+              metalness={0.05}
             />
           </mesh>
           {/* South Wall Left Portal Segment */}
           <mesh position={[-w / 4 - 3, h / 2, l / 2]} receiveShadow castShadow>
             <boxGeometry args={[w / 2 - 6, h, 0.3]} />
             <meshStandardMaterial
-              color={isDark ? "#11141e" : "#ded7cc"}
-              roughness={0.8}
+              color={isDark ? "#1a1d27" : "#ece8df"}
+              roughness={0.7}
+              metalness={0.05}
             />
           </mesh>
           {/* South Wall Right Portal Segment */}
           <mesh position={[w / 4 + 3, h / 2, l / 2]} receiveShadow castShadow>
             <boxGeometry args={[w / 2 - 6, h, 0.3]} />
             <meshStandardMaterial
-              color={isDark ? "#11141e" : "#ded7cc"}
-              roughness={0.8}
+              color={isDark ? "#1a1d27" : "#ece8df"}
+              roughness={0.7}
+              metalness={0.05}
             />
           </mesh>
 
@@ -285,37 +290,37 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
         <mesh position={[0, 0.45, 0]} receiveShadow castShadow>
           <boxGeometry args={[Math.min(w * 0.65, 24), 0.9, 6.0]} />
           <meshStandardMaterial
-            color={isDark ? "#171a26" : "#681d27"}
+            color={isDark ? "#161924" : "#4a121a"}
             roughness={0.4}
           />
         </mesh>
         {/* Gold Trim Border */}
         <mesh position={[0, 0.91, 2.95]}>
           <boxGeometry args={[Math.min(w * 0.66, 24.2), 0.06, 0.12]} />
-          <meshStandardMaterial color="#c5a059" metalness={0.8} roughness={0.2} />
+          <meshStandardMaterial color={isDark ? "#f0c889" : "#b38238"} metalness={0.8} roughness={0.2} />
         </mesh>
         {/* Ceremonial Backdrop Screen */}
         <mesh position={[0, 3.2, -2.8]}>
           <boxGeometry args={[Math.min(w * 0.6, 22), 4.5, 0.2]} />
           <meshStandardMaterial
-            color={isDark ? "#090a0f" : "#fffdfa"}
+            color={isDark ? "#0c0e15" : "#fffdfa"}
             roughness={0.3}
           />
         </mesh>
         {/* Stage Golden Floral Arch */}
         <mesh position={[0, 4.8, -2.6]}>
           <torusGeometry args={[Math.min(w * 0.22, 8), 0.18, 16, 48, Math.PI]} />
-          <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
+          <meshStandardMaterial color={isDark ? "#f0c889" : "#b38238"} metalness={0.9} roughness={0.2} />
         </mesh>
         {/* Stage Light Accent */}
         <spotLight
           position={[0, 8.0, 1.5]}
           target-position={[0, 0.5, 0]}
-          intensity={2.2}
+          intensity={1.6}
           distance={20}
           angle={0.65}
           penumbra={0.4}
-          color="#fef08a"
+          color="#fff6e8"
         />
       </group>
 

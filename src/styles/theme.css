@@ -62,17 +62,17 @@
   --tp-img-tilt: 0deg;
   --tp-img-ar: 3 / 4;
 
-  --tp-bg: #f6f2ec;
-  --tp-canvas: #f6f2ec;
-  --tp-surf: #fffdf9;
-  --tp-surf-2: #eee6dd;
-  --tp-ink: #302526;
-  --tp-mute: #605456;
-  --tp-acc: #762934;
-  --tp-acc-2: #b78a4b;
-  --tp-acc-ink: #fffaf5;
-  --tp-line: #ded3c9;
-  --tp-grad: linear-gradient(135deg, #8a3540, #762934);
+  --tp-bg: #f8fafc;
+  --tp-canvas: #f8fafc;
+  --tp-surf: #ffffff;
+  --tp-surf-2: #f1f5f9;
+  --tp-ink: #0f172a;
+  --tp-mute: #64748b;
+  --tp-acc: #b38238;
+  --tp-acc-2: #946824;
+  --tp-acc-ink: #ffffff;
+  --tp-line: #e2e8f0;
+  --tp-grad: linear-gradient(135deg, #b38238, #946824);
 
   --tp-r: 2px;
   --tp-r-sm: 0px;
@@ -87,9 +87,9 @@
 
   --tp-font-display: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --tp-font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --tp-font-mono: 'JetBrains Mono', monospace;
-  --tp-w-display: 500;
-  --tp-track-display: 0.02em;
+  --tp-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --tp-w-display: 600;
+  --tp-track-display: -0.02em;
   --tp-case-display: none;
   --tp-hero: 84px;
 
@@ -98,30 +98,27 @@
   --tp-press: 0.99;
 }
 
-/* Evening variant of the same theme: identical token contract, dusk palette.
-   Keeps the invitation calm, only the paper changes. */
-/* Evening variant: Lusion Labs Deep Obsidian Void palette.
-   Deep space canvas, translucent glass surfaces, luminous cyan & liquid gold glow accents. */
+/* Evening variant: Google Obsidian Void & Champagne Titanium palette. */
 .dark {
   color-scheme: dark;
-  --tp-bg: #050508;
-  --tp-canvas: #050508;
-  --tp-surf: #0c0d16;
-  --tp-surf-2: #141624;
+  --tp-bg: #0b0d13;
+  --tp-canvas: #0b0d13;
+  --tp-surf: #11141c;
+  --tp-surf-2: #191c26;
   --tp-ink: #f8fafc;
   --tp-mute: #94a3b8;
-  --tp-acc: #e2c99a; /* Lusion luminous cyan */
-  --tp-acc-2: #d8b36d; /* Celestial gold */
+  --tp-acc: #f0c889; /* Google Champagne Titanium Gold */
+  --tp-acc-2: #d4a359; /* Celestial polished bronze gold */
   --tp-acc-ink: #040810;
   --tp-line: rgba(255, 255, 255, 0.09);
-  --tp-grad: linear-gradient(135deg, #e2c99a, #c5a059);
+  --tp-grad: linear-gradient(135deg, #f0c889, #d4a359);
   --tp-img-frame: 1px solid rgba(255, 255, 255, 0.1);
   --tp-img-filter: saturate(1.05) brightness(0.95);
   --tp-img-overlay-op: 0.1;
-  --tp-sh: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(226, 201, 154, 0.05);
+  --tp-sh: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(240, 200, 137, 0.05);
   --tp-sh-sm: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --tp-glow: 0 0 25px rgba(226, 201, 154, 0.25);
-  --tp-glow-gold: 0 0 25px rgba(216, 179, 109, 0.3);
+  --tp-glow: 0 0 25px rgba(240, 200, 137, 0.25);
+  --tp-glow-gold: 0 0 25px rgba(212, 163, 89, 0.3);
 }
 
 /* Lusion Labs Glassmorphism & Visual Effects Utility Classes */
@@ -140,17 +137,17 @@
 }
 
 .lusion-glow-cyan {
-  box-shadow: 0 0 30px rgba(226, 201, 154, 0.25);
+  box-shadow: 0 0 30px rgba(240, 200, 137, 0.25);
 }
 
 .lusion-glow-gold {
-  box-shadow: 0 0 30px rgba(216, 179, 109, 0.25);
+  box-shadow: 0 0 30px rgba(212, 163, 89, 0.25);
 }
 
 .lusion-radial-bg {
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(226, 201, 154, 0.08), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(216, 179, 109, 0.06), transparent 70%);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(240, 200, 137, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(212, 163, 89, 0.06), transparent 70%);
 }
 
 /* ---------------------------------------------------------------------------
@@ -211,10 +208,7 @@
   text-transform: uppercase;
   color: var(--tp-mute);
 }
-/* ---------------------------------------------------------------------------
-   Token proposal: the pack ships no error colour, so destructive UI is given
-   one here rather than hard-coding a red in a component.
-   -------------------------------------------------------------------------- */
+
 [data-theme="wedding-suite"] {
   --tp-danger: #9d3b32;
   --tp-danger-ink: #fffdf8;
@@ -248,181 +242,3 @@ body,
 .admin-dashboard .bg-gray-100 {
   background-color: var(--tp-surf-2) !important;
 }
-
-.admin-dashboard .border-gray-200,
-.admin-dashboard .border-gray-300,
-.admin-dashboard .border {
-  border-color: var(--tp-line);
-}
-
-.admin-dashboard .text-gray-900,
-.admin-dashboard .text-gray-800,
-.admin-dashboard .text-gray-700 {
-  color: var(--tp-ink);
-}
-
-.admin-dashboard .text-gray-600,
-.admin-dashboard .text-gray-500,
-.admin-dashboard .text-gray-400 {
-  color: var(--tp-mute);
-}
-
-.admin-dashboard .text-rose-700,
-.admin-dashboard .text-rose-600 {
-  color: var(--tp-acc);
-}
-
-.admin-dashboard .bg-rose-600 {
-  background-color: var(--tp-acc);
-  color: var(--tp-acc-ink);
-}
-
-.admin-dashboard .bg-rose-600.text-white {
-  color: var(--tp-acc-ink) !important;
-}
-
-.admin-dashboard .hover\:bg-rose-50:hover {
-  background-color: color-mix(in srgb, var(--tp-acc) 10%, var(--tp-surf));
-}
-
-.admin-dashboard input,
-.admin-dashboard textarea,
-.admin-dashboard select {
-  border-color: var(--tp-line);
-  background-color: var(--tp-surf);
-  color: var(--tp-ink);
-}
-
-.admin-dashboard input::placeholder,
-.admin-dashboard textarea::placeholder {
-  color: var(--tp-mute);
-  opacity: .82;
-}
-
-.admin-dashboard .bg-amber-100,
-.admin-dashboard .bg-blue-100,
-.admin-dashboard .bg-emerald-100,
-.admin-dashboard .bg-rose-100 {
-  background-color: var(--tp-surf-2);
-}
-
-.admin-dashboard .text-amber-800 {
-  color: #87551a;
-}
-
-.admin-dashboard .text-blue-800,
-.admin-dashboard .text-blue-900 {
-  color: #285a84;
-}
-
-.admin-dashboard .text-emerald-800 {
-  color: #286347;
-}
-
-.admin-dashboard .text-rose-900 {
-  color: #762934;
-}
-
-.dark .admin-dashboard .text-amber-800 {
-  color: #f0c77f;
-}
-
-.dark .admin-dashboard .text-blue-800,
-.dark .admin-dashboard .text-blue-900 {
-  color: #a6d0f2;
-}
-
-.dark .admin-dashboard .text-emerald-800 {
-  color: #9fd3b3;
-}
-
-.dark .admin-dashboard .text-rose-900 {
-  color: #f0b2b4;
-}
-
-.dark .admin-dashboard .bg-blue-50 {
-  color: #d8eafb;
-  background-color: #243647;
-  border-color: #41617d;
-}
-
-.dark .admin-dashboard .border-blue-200 {
-  border-color: #41617d;
-}
-
-.dark .admin-dashboard .border-emerald-300 {
-  border-color: #3b7a58;
-}
-
-.dark .admin-dashboard .hover\:bg-emerald-50:hover {
-  background-color: #1f382a;
-}
-
-.dark .admin-dashboard .bg-amber-100,
-.dark .admin-dashboard .bg-blue-100,
-.dark .admin-dashboard .bg-emerald-100,
-.dark .admin-dashboard .bg-rose-100 {
-  background-color: var(--tp-surf-2);
-}
-
-.dark .admin-dashboard .hover\:bg-rose-50:hover {
-  background-color: #44343a;
-}
-
-.dark .admin-dashboard .border-b,
-.dark .admin-dashboard .divide-y > :not([hidden]) ~ :not([hidden]) {
-  border-color: var(--tp-line);
-}
-
-.dark .admin-dashboard table {
-  color: var(--tp-ink);
-}
-
-.dark .admin-dashboard .bg-blue-500 {
-  background-color: #77b8e8;
-}
-
-.dark .admin-dashboard .bg-emerald-500 {
-  background-color: #79bf96;
-}
-
-.dark .admin-dashboard .bg-rose-500 {
-  background-color: #df8490;
-}
-
-.dark .admin-dashboard .bg-amber-500 {
-  background-color: #e4b65e;
-}
-
-.not-found-page {
-  color: var(--tp-ink);
-  background: var(--tp-bg);
-}
-
-.not-found-page a {
-  color: var(--tp-acc);
-}
-
-/* ============================================================================
-   Text selection styling: ensures highlighted words are sharp & readable
-   ========================================================================== */
-::selection {
-  background-color: #762934 !important;
-  color: #ffffff !important;
-}
-
-::-moz-selection {
-  background-color: #762934 !important;
-  color: #ffffff !important;
-}
-
-.dark ::selection {
-  background-color: #d8b36d !important;
-  color: #191719 !important;
-}
-
-.dark ::-moz-selection {
-  background-color: #d8b36d !important;
-  color: #191719 !important;
-}
-
