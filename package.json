@@ -1,0 +1,15 @@
+{
+  "name": "cater-capacity-engine",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pure TypeScript capacity, queue wait times, and live counter duplication calculation engine for catering events",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test tests/engine.test.js"
+  },
+  "keywords": ["catering", "capacity-planning", "queue-theory", "mandapam-buffet", "counter-duplication"],
+  "author": "Rupak Jayan B <rupakjayan22@gmail.com>",
+  "license": "MIT"
+}
