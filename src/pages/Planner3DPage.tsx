@@ -183,6 +183,14 @@ export const Planner3DPage: React.FC = () => {
   const [showMagneticGuides, setShowMagneticGuides] = useState(true);
   const [isAudioMutedState, setIsAudioMutedState] = useState(() => isMuted());
 
+  // Aggregate modal open flag to cleanly suppress 3D overlays and bottom inspectors when any dialog is active
+  const isAnyModalOpen =
+    isBriefingModalOpen ||
+    isGoogleMapsModalOpen ||
+    isVenueModalOpen ||
+    isCustomStallModalOpen ||
+    isCommandPaletteOpen;
+
   // Global Keyboard Shortcuts (Ctrl+K, Cmd+K, 2D/3D toggles, etc.)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -962,8 +970,40 @@ export const Planner3DPage: React.FC = () => {
             showMagneticGuides={showMagneticGuides}
             cinematicAutoRotate={isPitchMode}
             isDark={isDark}
+            isModalOpen={isAnyModalOpen}
             canvasRef={canvasRef}
           />
+
+          {/* Non-Occluding Active Stall Telemetry HUD (Pinned at top, completely clear of 3D objects) */}
+          {selectedStall && !isAnyModalOpen && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-20 flex items-center gap-2 font-mono text-[11px] animate-fadeIn">
+              <div className="px-3.5 py-1.5 rounded-xl bg-[#090b12]/90 border border-[#e2c99a]/50 text-white shadow-2xl backdrop-blur-xl flex items-center gap-2.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: selectedStall.accentColor }}
+                />
+                <span className="font-bold text-[#e2c99a] uppercase">
+                  {selectedStall.name}
+                </span>
+                <span className="text-neutral-500">|</span>
+                <span className="text-neutral-300">
+                  {selectedStall.width}m × {selectedStall.depth}m × {selectedStall.height}m
+                </span>
+                <span className="text-neutral-500">|</span>
+                <span className="text-sky-300 font-semibold">
+                  POS: [{selectedStall.position[0].toFixed(1)}, {selectedStall.position[2].toFixed(1)}]m
+                </span>
+                <span className="text-neutral-500">|</span>
+                <span className="text-neutral-400">
+                  {selectedStall.capacityPerHour} Pax/Hr
+                </span>
+                <span className="text-neutral-500">|</span>
+                <span className="text-amber-300/80 text-[10px]">
+                  Drag stall or click floor to relocate
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Floating Contextual Viewport HUD */}
           <div className="absolute top-4 right-4 pointer-events-none flex items-center gap-2 font-mono text-[10px]">
@@ -980,22 +1020,26 @@ export const Planner3DPage: React.FC = () => {
           </div>
 
           {/* Selected Stall Floating Inspector Card with 3D Gyro Physics Tilt */}
-          {selectedStall && (
+          {selectedStall && !isAnyModalOpen && (
             <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 w-min(92vw,480px)">
               <PhysicsCard maxTilt={7} specular={true}>
-                <div className="bg-[#12141c]/95 border border-[#e2c99a]/50 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl space-y-3 font-mono">
+                <div className={`p-4 rounded-2xl shadow-2xl backdrop-blur-2xl space-y-3 font-mono border ${
+                  isDark
+                    ? "bg-[#12141c]/95 border-[#e2c99a]/50 text-white"
+                    : "bg-white/95 border-slate-300 text-slate-900 shadow-2xl"
+                }`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full"
+                          className="w-3 h-3 rounded-full shrink-0"
                           style={{ backgroundColor: selectedStall.accentColor }}
                         />
-                        <h4 className="font-bold text-sm text-white font-display">
+                        <h4 className={`font-bold text-sm font-display ${isDark ? "text-white" : "text-slate-900"}`}>
                           {selectedStall.name}
                         </h4>
                       </div>
-                      <p className="text-xs text-[#e2c99a] font-medium font-mono">
+                      <p className={`text-xs font-medium font-mono ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`}>
                         {selectedStall.name_ta}
                       </p>
                     </div>
@@ -1005,7 +1049,11 @@ export const Planner3DPage: React.FC = () => {
                         size="sm"
                         variant="outline"
                         onClick={handleRotateSelected}
-                        className="h-8 px-2 text-xs border-white/15 text-white hover:text-[#e2c99a] hover:bg-white/10 rounded-lg flex items-center gap-1"
+                        className={`h-8 px-2 text-xs rounded-lg flex items-center gap-1 ${
+                          isDark
+                            ? "border-white/15 bg-white/5 text-white hover:text-[#f0c889] hover:bg-white/10"
+                            : "border-slate-300 bg-slate-100 text-slate-800 hover:text-[#b38238] hover:bg-slate-200"
+                        }`}
                         title="Rotate 45°"
                       >
                         <RotateCw className="h-3.5 w-3.5" />
@@ -1015,7 +1063,11 @@ export const Planner3DPage: React.FC = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDuplicateStall(selectedStall.id)}
-                        className="h-8 px-2 text-xs border-[#e2c99a]/40 text-[#e2c99a] hover:bg-[#e2c99a]/10 rounded-lg flex items-center gap-1 font-semibold"
+                        className={`h-8 px-2 text-xs rounded-lg flex items-center gap-1 font-semibold ${
+                          isDark
+                            ? "border-[#f0c889]/40 bg-[#f0c889]/10 text-[#f0c889] hover:bg-[#f0c889]/20"
+                            : "border-[#b38238]/40 bg-[#b38238]/10 text-[#b38238] hover:bg-[#b38238]/20"
+                        }`}
                         title="Duplicate to opposite wing"
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -1025,35 +1077,41 @@ export const Planner3DPage: React.FC = () => {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleRemoveStall(selectedStall.id)}
-                        className="h-8 px-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/20 rounded-lg"
+                        className={`h-8 px-2 text-xs rounded-lg ${
+                          isDark
+                            ? "text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
+                            : "text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                        }`}
                         title="Delete Stall"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                       <button
                         onClick={() => setSelectedStallId(null)}
-                        className="text-[#8e95a5] hover:text-white text-sm px-1.5"
+                        className={`text-sm px-1.5 ${isDark ? "text-neutral-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
                       >
                         ✕
                       </button>
                     </div>
                   </div>
 
-              {/* Specs & Power details */}
-              <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-white/[0.08] font-mono">
-                <div className="flex items-center gap-1 text-[#8e95a5]">
-                  <Zap className="h-3.5 w-3.5 text-amber-400" />
-                  <span>{selectedStall.powerRequiredKw} kW</span>
-                </div>
-                <div className="flex items-center gap-1 text-[#8e95a5]">
-                  <Droplet className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{selectedStall.waterRequired ? "Water Line" : "Dry Station"}</span>
-                </div>
-                <div className="flex items-center gap-1 text-[#8e95a5]">
-                  <Utensils className="h-3.5 w-3.5 text-[#e2c99a]" />
-                  <span>{selectedStall.capacityPerHour} pax/hr</span>
-                </div>
-              </div>
+                  {/* Specs & Power details */}
+                  <div className={`grid grid-cols-3 gap-2 text-[11px] pt-1 border-t font-mono ${
+                    isDark ? "border-white/[0.08] text-neutral-300" : "border-slate-200 text-slate-700"
+                  }`}>
+                    <div className="flex items-center gap-1">
+                      <Zap className="h-3.5 w-3.5 text-amber-500" />
+                      <span>{selectedStall.powerRequiredKw} kW</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Droplet className="h-3.5 w-3.5 text-sky-500" />
+                      <span>{selectedStall.waterRequired ? "Water Line" : "Dry Station"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Utensils className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+                      <span>{selectedStall.capacityPerHour} pax/hr</span>
+                    </div>
+                  </div>
 
               {/* Table Illusion & Dustbin Placement for Dining Tables */}
               {selectedStall.type === "dining_table" && (
