@@ -7,6 +7,9 @@ import { MandapamHall } from "./MandapamHall";
 import { StallMesh } from "./StallMesh";
 import { CrowdFlowSimulation } from "./CrowdFlowSimulation";
 import { CadAisleOverlay } from "./CadAisleOverlay";
+import { MagneticAlignmentOverlay } from "./MagneticAlignmentOverlay";
+import { CadBlueprintDimensionsOverlay } from "./CadBlueprintDimensionsOverlay";
+import { playMagneticSnap } from "@/utils/soundFeedback";
 
 interface ThreeCanvasProps {
   venue: MandapamVenue;
@@ -20,6 +23,7 @@ interface ThreeCanvasProps {
   showCrowdSimulation?: boolean;
   showCadAisles?: boolean;
   showFocusLights?: boolean;
+  showMagneticGuides?: boolean;
   cinematicAutoRotate?: boolean;
   isDark: boolean;
   canvasRef?: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -38,8 +42,8 @@ const CameraRig: React.FC<{
 
   useEffect(() => {
     if (viewMode === "top_down") {
-      // 2D Blueprint top-down orthographic view
-      camera.position.set(0, dim * 1.15, 0.01);
+      // 2D Blueprint top-down orthographic view looking directly down
+      camera.position.set(0, dim * 1.25, 0.01);
       camera.lookAt(0, 0, 0);
       if (controlsRef.current) {
         controlsRef.current.target.set(0, 0, 0);
@@ -78,7 +82,7 @@ const CameraRig: React.FC<{
       autoRotateSpeed={0.9}
       maxPolarAngle={viewMode === "top_down" ? 0.05 : Math.PI / 2 - 0.05}
       minDistance={4}
-      maxDistance={Math.max(120, dim * 2.5)}
+      maxDistance={Math.max(140, dim * 2.8)}
       dampingFactor={0.08}
     />
   );
@@ -117,12 +121,14 @@ const SceneEnvironment: React.FC<{
 
   return null;
 };
+
 const FloorPlaneClickCatcher: React.FC<{
   venue: MandapamVenue;
+  stalls: StallItem[];
   selectedStallId: string | null;
   onMoveStall: (id: string, newPos: [number, number, number]) => void;
   onDeselect: () => void;
-}> = ({ venue, selectedStallId, onMoveStall, onDeselect }) => {
+}> = ({ venue, stalls, selectedStallId, onMoveStall, onDeselect }) => {
   return (
     <mesh
       position={[0, 0, 0]}
@@ -134,8 +140,32 @@ const FloorPlaneClickCatcher: React.FC<{
           // Clamp inside venue bounds
           const halfW = venue.hallWidth / 2 - 2;
           const halfL = venue.hallLength / 2 - 2;
-          const clampedX = Math.max(-halfW, Math.min(halfW, Math.round(e.point.x * 2) / 2));
-          const clampedZ = Math.max(-halfL, Math.min(halfL, Math.round(e.point.z * 2) / 2));
+          let clampedX = Math.max(-halfW, Math.min(halfW, Math.round(e.point.x * 2) / 2));
+          let clampedZ = Math.max(-halfL, Math.min(halfL, Math.round(e.point.z * 2) / 2));
+
+          // Magnetic snapping:
+          // 1. Centerline snap: if |clampedX| <= 1.0m, snap to 0!
+          if (Math.abs(clampedX) <= 1.0) {
+            clampedX = 0;
+            playMagneticSnap(580);
+          } else {
+            // 2. Neighbor stall alignment snap
+            for (const other of stalls) {
+              if (other.id === selectedStallId) continue;
+              const [ox, , oz] = other.position;
+              if (Math.abs(clampedX - ox) <= 1.0) {
+                clampedX = ox;
+                playMagneticSnap(640);
+                break;
+              }
+              if (Math.abs(clampedZ - oz) <= 1.0) {
+                clampedZ = oz;
+                playMagneticSnap(640);
+                break;
+              }
+            }
+          }
+
           onMoveStall(selectedStallId, [clampedX, 0, clampedZ]);
         } else {
           onDeselect();
@@ -160,6 +190,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   showCrowdSimulation = false,
   showCadAisles = false,
   showFocusLights = true,
+  showMagneticGuides = true,
   cinematicAutoRotate = false,
   isDark,
   canvasRef,
@@ -246,6 +277,21 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           active={showCadAisles}
         />
 
+        {/* 2D Architectural CAD Blueprint Dimension Callouts */}
+        <CadBlueprintDimensionsOverlay
+          venue={venue}
+          stalls={stalls}
+          active={viewMode === "top_down"}
+        />
+
+        {/* Magnetic Alignment Snap-Lines & Live Caliper Dimension HUD */}
+        <MagneticAlignmentOverlay
+          venue={venue}
+          stalls={stalls}
+          selectedStallId={selectedStallId}
+          active={showMagneticGuides}
+        />
+
         {/* Interactive 3D Crowd Flow & Heatmap Simulator */}
         <CrowdFlowSimulation
           venue={venue}
@@ -268,6 +314,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {/* Floor click detection for interactive placement */}
         <FloorPlaneClickCatcher
           venue={venue}
+          stalls={stalls}
           selectedStallId={selectedStallId}
           onMoveStall={onMoveStall}
           onDeselect={() => onSelectStall(null)}
