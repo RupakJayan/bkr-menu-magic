@@ -24,6 +24,9 @@ import {
   Mic,
   Sliders,
   Image as ImageIcon,
+  Command,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -37,6 +40,15 @@ import {
 } from "@/components/planner3d/StudioEventBriefingModal";
 import { GoogleMapsVenueSearchDialog } from "@/components/planner3d/GoogleMapsVenueSearchDialog";
 import { PrecisionDimensionsInspector } from "@/components/planner3d/PrecisionDimensionsInspector";
+import { CommandPaletteDialog } from "@/components/planner3d/CommandPaletteDialog";
+import { PhysicsCard } from "@/components/ui/PhysicsCard";
+import {
+  playTactileClick,
+  playMagneticSnap,
+  playChimeSuccess,
+  toggleAudioMute,
+  isMuted,
+} from "@/utils/soundFeedback";
 import { VectorGridOverlay } from "@/components/effects/VectorGridOverlay";
 import {
   CrosshairVector,
@@ -165,6 +177,91 @@ export const Planner3DPage: React.FC = () => {
   const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(false);
   const [isGoogleMapsModalOpen, setIsGoogleMapsModalOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<"inspector" | "advisor">("inspector");
+
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [showMagneticGuides, setShowMagneticGuides] = useState(true);
+  const [isAudioMutedState, setIsAudioMutedState] = useState(() => isMuted());
+
+  // Global Keyboard Shortcuts (Ctrl+K, Cmd+K, 2D/3D toggles, etc.)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        playTactileClick(600);
+      } else if (!isInput && e.key === "2") {
+        e.preventDefault();
+        setViewMode("top_down");
+        playChimeSuccess();
+        toast.info("Switched to 2D CAD Blueprint Mode");
+      } else if (!isInput && e.key === "3") {
+        e.preventDefault();
+        setViewMode("orbit");
+        playChimeSuccess();
+        toast.info("Switched to 3D Cinematic Reality Mode");
+      } else if (!isInput && (e.key === "m" || e.key === "M")) {
+        e.preventDefault();
+        setIsGoogleMapsModalOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleAddStallFromCommand = (type: StallType) => {
+    const catalogItem = STALL_CATALOG[type] || STALL_CATALOG.dosa;
+    const newStall: StallItem = {
+      id: `stall_${Date.now()}`,
+      type,
+      name: catalogItem.name,
+      name_ta: catalogItem.name_ta,
+      category: catalogItem.category,
+      position: [0, 0, Math.round((Math.random() - 0.5) * (selectedVenue.hallLength * 0.4))],
+      rotation: 0,
+      width: catalogItem.width,
+      depth: catalogItem.depth,
+      height: catalogItem.height,
+      color: catalogItem.color,
+      accentColor: catalogItem.accentColor,
+      capacityPerHour: catalogItem.capacityPerHour,
+      unitCost: catalogItem.unitCost,
+      powerRequiredKw: catalogItem.powerRequiredKw,
+      waterRequired: catalogItem.waterRequired,
+      dishes: catalogItem.dishes,
+      dishes_ta: catalogItem.dishes_ta,
+      tag: catalogItem.tag,
+    };
+    setStalls((prev) => [...prev, newStall]);
+    setSelectedStallId(newStall.id);
+    playTactileClick(700);
+    toast.success(`Added ${newStall.name} to 3D stage layout`);
+  };
+
+  const handleToggleTimeOfDay = (time: "morning" | "afternoon" | "sunset" | "night") => {
+    setSelectedVenue((prev) => ({ ...prev, timeOfDay: time }));
+    playChimeSuccess();
+    toast.info(`Atmosphere switched to ${time.toUpperCase()}`);
+  };
+
+  const handleResetLayout = () => {
+    setStalls(getRecommendedStalls(headCount, "classic", selectedVenue));
+    setSelectedStallId(null);
+    playTactileClick(400);
+    toast.info("Venue layout reset to recommended arrangement");
+  };
+
+  const toggleSound = () => {
+    const muted = toggleAudioMute();
+    setIsAudioMutedState(muted);
+    toast.info(muted ? "Sound Muted" : "Tactile Audio Feedback Enabled");
+  };
 
   // Planning state (Default: 3,500 guests, 2 Dosa counters)
   const [headCount, setHeadCount] = useState<number>(3500);
@@ -641,6 +738,88 @@ export const Planner3DPage: React.FC = () => {
             </span>
           </button>
 
+          {/* Master Dual-View Switch [ 📐 2D CAD Blueprint | 🌐 3D Reality ] */}
+          <div className="flex items-center p-0.5 rounded-xl bg-[#10121a] border border-white/10 shadow-sm font-mono text-xs">
+            <button
+              onClick={() => {
+                setViewMode("top_down");
+                playChimeSuccess();
+                toast.info("2D Architectural CAD Blueprint Mode");
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-xs ${
+                viewMode === "top_down"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
+                  : "text-neutral-400 hover:text-white"
+              }`}
+              title="2D Top-Down CAD Blueprint (Shortcut: 2)"
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">2D CAD</span>
+            </button>
+            <button
+              onClick={() => {
+                setViewMode("orbit");
+                playChimeSuccess();
+                toast.info("3D Cinematic Reality Mode");
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-xs ${
+                viewMode === "orbit" || viewMode === "walkthrough"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
+                  : "text-neutral-400 hover:text-white"
+              }`}
+              title="3D Cinematic Orbit (Shortcut: 3)"
+            >
+              <Compass className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">3D Reality</span>
+            </button>
+          </div>
+
+          {/* Magnetic CAD Snapping Toggle */}
+          <button
+            onClick={() => {
+              setShowMagneticGuides((prev) => !prev);
+              playTactileClick(540);
+              toast.info(!showMagneticGuides ? "Magnetic Snapping & Calipers Active" : "Magnetic Snapping Disabled");
+            }}
+            title="Toggle Magnetic Alignment & Live 3D Calipers"
+            className={`h-8 px-2.5 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-all ${
+              showMagneticGuides
+                ? "bg-[#222530] border-[#e2c99a]/60 text-[#e2c99a]"
+                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
+            }`}
+          >
+            <CrosshairVector size={13} />
+            <span className="hidden xl:inline text-[11px] font-semibold">Magnetic Snap</span>
+          </button>
+
+          {/* Command Palette Button (Ctrl+K / Cmd+K) */}
+          <button
+            onClick={() => {
+              setIsCommandPaletteOpen(true);
+              playTactileClick(600);
+            }}
+            className="h-8 px-2.5 rounded-xl bg-[#1c1f2b] border border-white/10 hover:border-[#e2c99a]/50 text-xs font-mono text-neutral-300 hover:text-[#e2c99a] flex items-center gap-1.5 transition-all shadow-sm"
+          >
+            <Command className="h-3.5 w-3.5 text-[#e2c99a]" />
+            <span className="hidden md:inline">Commands</span>
+            <kbd className="text-[9px] px-1 py-0.2 rounded bg-black/40 border border-white/10 text-neutral-400">
+              ⌘K
+            </kbd>
+          </button>
+
+          {/* Tactile Sound Feedback Toggle */}
+          <button
+            onClick={toggleSound}
+            title={isAudioMutedState ? "Unmute Tactile Sound Effects" : "Mute Sound"}
+            className="h-8 w-8 rounded-xl bg-[#161822] border border-white/[0.08] text-neutral-400 hover:text-white flex items-center justify-center transition-colors"
+          >
+            {isAudioMutedState ? (
+              <VolumeX className="h-3.5 w-3.5 text-neutral-500" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5 text-[#e2c99a]" />
+            )}
+          </button>
+
           {/* Grid Toggle */}
           <button
             onClick={() => setShowGrid((g) => !g)}
@@ -919,76 +1098,85 @@ export const Planner3DPage: React.FC = () => {
             showCrowdSimulation={showCrowdSimulation}
             showCadAisles={showCadAisles}
             showFocusLights={showFocusLights}
+            showMagneticGuides={showMagneticGuides}
             cinematicAutoRotate={isPitchMode}
             isDark={isDark}
             canvasRef={canvasRef}
           />
 
-          {/* Floating Instructions HUD */}
-          <div className="absolute top-4 right-4 pointer-events-none bg-black/60 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-white/10 text-[11px] text-white/80 space-y-0.5 font-mono">
-            <p>• Left Click + Drag to rotate 3D view</p>
-            <p>• Scroll to zoom in / out</p>
-            <p>• Click any stall to select, rotate or duplicate</p>
-            <p>• Click floor to relocate selected stall</p>
+          {/* Floating Contextual Viewport HUD */}
+          <div className="absolute top-4 right-4 pointer-events-none flex items-center gap-2 font-mono text-[10px]">
+            <div className="bg-black/75 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/10 text-white/90 shadow-xl flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${viewMode === "top_down" ? "bg-sky-400" : "bg-[#e2c99a] animate-pulse"}`} />
+              <span className="font-bold tracking-wider uppercase">
+                {viewMode === "top_down" ? "2D CAD BLUEPRINT SCHEMATIC" : "3D CINEMATIC REALITY VIEWPORT"}
+              </span>
+              <span className="text-neutral-500">•</span>
+              <span className="text-neutral-400">
+                {showMagneticGuides ? "MAGNETIC SNAP: ON" : "SNAP: OFF"}
+              </span>
+            </div>
           </div>
 
-          {/* Selected Stall Floating Inspector Card */}
+          {/* Selected Stall Floating Inspector Card with 3D Gyro Physics Tilt */}
           {selectedStall && (
-            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 bg-[#161822]/95 border border-[#e2c99a]/40 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl w-min(90vw,480px) space-y-3 animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: selectedStall.accentColor }}
-                    />
-                    <h4 className="font-bold text-sm text-white font-display">
-                      {selectedStall.name}
-                    </h4>
-                  </div>
-                  <p className="text-xs text-[#e2c99a] font-medium font-mono">
-                    {selectedStall.name_ta}
-                  </p>
-                </div>
+            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 w-min(92vw,480px)">
+              <PhysicsCard maxTilt={7} specular={true}>
+                <div className="bg-[#12141c]/95 border border-[#e2c99a]/50 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl space-y-3 font-mono">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: selectedStall.accentColor }}
+                        />
+                        <h4 className="font-bold text-sm text-white font-display">
+                          {selectedStall.name}
+                        </h4>
+                      </div>
+                      <p className="text-xs text-[#e2c99a] font-medium font-mono">
+                        {selectedStall.name_ta}
+                      </p>
+                    </div>
 
-                <div className="flex items-center gap-1.5 font-mono">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRotateSelected}
-                    className="h-8 px-2 text-xs border-white/15 text-white hover:text-[#e2c99a] hover:bg-white/10 rounded-lg flex items-center gap-1"
-                    title="Rotate 45°"
-                  >
-                    <RotateCw className="h-3.5 w-3.5" />
-                    Rotate
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDuplicateStall(selectedStall.id)}
-                    className="h-8 px-2 text-xs border-[#e2c99a]/40 text-[#e2c99a] hover:bg-[#e2c99a]/10 rounded-lg flex items-center gap-1 font-semibold"
-                    title="Duplicate to opposite wing"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    Duplicate
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleRemoveStall(selectedStall.id)}
-                    className="h-8 px-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/20 rounded-lg"
-                    title="Delete Stall"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <button
-                    onClick={() => setSelectedStallId(null)}
-                    className="text-[#8e95a5] hover:text-white text-sm px-1.5"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRotateSelected}
+                        className="h-8 px-2 text-xs border-white/15 text-white hover:text-[#e2c99a] hover:bg-white/10 rounded-lg flex items-center gap-1"
+                        title="Rotate 45°"
+                      >
+                        <RotateCw className="h-3.5 w-3.5" />
+                        Rotate
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDuplicateStall(selectedStall.id)}
+                        className="h-8 px-2 text-xs border-[#e2c99a]/40 text-[#e2c99a] hover:bg-[#e2c99a]/10 rounded-lg flex items-center gap-1 font-semibold"
+                        title="Duplicate to opposite wing"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        Duplicate
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRemoveStall(selectedStall.id)}
+                        className="h-8 px-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/20 rounded-lg"
+                        title="Delete Stall"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <button
+                        onClick={() => setSelectedStallId(null)}
+                        className="text-[#8e95a5] hover:text-white text-sm px-1.5"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
 
               {/* Specs & Power details */}
               <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-white/[0.08] font-mono">
@@ -1079,6 +1267,8 @@ export const Planner3DPage: React.FC = () => {
                   </div>
                 </div>
               )}
+                </div>
+              </PhysicsCard>
             </div>
           )}
         </main>
@@ -1163,6 +1353,27 @@ export const Planner3DPage: React.FC = () => {
           setSelectedVenue(v);
           setStalls(getRecommendedStalls(headCount, "classic", v));
         }}
+      />
+
+      {/* Linear-Style Command Palette Spotlight Modal (Ctrl+K / Cmd+K) */}
+      <CommandPaletteDialog
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onAddStall={handleAddStallFromCommand}
+        onSetViewMode={(m) => {
+          setViewMode(m);
+          playChimeSuccess();
+        }}
+        onToggleTimeOfDay={handleToggleTimeOfDay}
+        onOpenGoogleMaps={() => setIsGoogleMapsModalOpen(true)}
+        onOpenInspector={() => {
+          setIsSidebarOpen(true);
+          setSidebarTab("inspector");
+        }}
+        onToggleCrowdSimulation={() => setShowCrowdSimulation((p) => !p)}
+        onToggleCadAisles={() => setShowCadAisles((p) => !p)}
+        onExportSnapshot={handleExportSnapshot}
+        onResetLayout={handleResetLayout}
       />
     </div>
   );
