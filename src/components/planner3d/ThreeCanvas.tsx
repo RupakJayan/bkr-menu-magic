@@ -26,6 +26,7 @@ interface ThreeCanvasProps {
   showMagneticGuides?: boolean;
   cinematicAutoRotate?: boolean;
   isDark: boolean;
+  isModalOpen?: boolean;
   canvasRef?: React.MutableRefObject<HTMLCanvasElement | null>;
 }
 
@@ -34,7 +35,8 @@ const CameraRig: React.FC<{
   viewMode: CameraViewMode;
   venue: MandapamVenue;
   cinematicAutoRotate?: boolean;
-}> = ({ viewMode, venue, cinematicAutoRotate = false }) => {
+  isOrbitEnabled?: boolean;
+}> = ({ viewMode, venue, cinematicAutoRotate = false, isOrbitEnabled = true }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
@@ -78,7 +80,8 @@ const CameraRig: React.FC<{
     <OrbitControls
       ref={controlsRef}
       makeDefault
-      autoRotate={cinematicAutoRotate}
+      enabled={isOrbitEnabled}
+      autoRotate={cinematicAutoRotate && isOrbitEnabled}
       autoRotateSpeed={0.9}
       maxPolarAngle={viewMode === "top_down" ? 0.05 : Math.PI / 2 - 0.05}
       minDistance={4}
@@ -122,57 +125,97 @@ const SceneEnvironment: React.FC<{
   return null;
 };
 
-const FloorPlaneClickCatcher: React.FC<{
+// Floor Plane supporting both Click-to-Place and Direct Real-time Pointer Dragging
+const FloorPlaneDragCatcher: React.FC<{
   venue: MandapamVenue;
   stalls: StallItem[];
   selectedStallId: string | null;
+  draggingStallId: string | null;
+  onEndDrag: () => void;
   onMoveStall: (id: string, newPos: [number, number, number]) => void;
   onDeselect: () => void;
-}> = ({ venue, stalls, selectedStallId, onMoveStall, onDeselect }) => {
+}> = ({
+  venue,
+  stalls,
+  selectedStallId,
+  draggingStallId,
+  onEndDrag,
+  onMoveStall,
+  onDeselect,
+}) => {
+  // Global pointer up fallback so drag release is 100% reliable
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      if (draggingStallId) {
+        onEndDrag();
+      }
+    };
+    window.addEventListener("pointerup", handleGlobalPointerUp);
+    return () => window.removeEventListener("pointerup", handleGlobalPointerUp);
+  }, [draggingStallId, onEndDrag]);
+
+  const snapAndMove = (stallId: string, pointX: number, pointZ: number, playSound = false) => {
+    const halfW = venue.hallWidth / 2 - 2;
+    const halfL = venue.hallLength / 2 - 2;
+    let clampedX = Math.max(-halfW, Math.min(halfW, Math.round(pointX * 2) / 2));
+    let clampedZ = Math.max(-halfL, Math.min(halfL, Math.round(pointZ * 2) / 2));
+
+    // Magnetic snaps:
+    // 1. Centerline snap: if |clampedX| <= 1.0m, snap to 0!
+    if (Math.abs(clampedX) <= 1.0) {
+      clampedX = 0;
+      if (playSound) playMagneticSnap(580);
+    } else {
+      // 2. Neighbor stall alignment snap
+      for (const other of stalls) {
+        if (other.id === stallId) continue;
+        const [ox, , oz] = other.position;
+        if (Math.abs(clampedX - ox) <= 1.0) {
+          clampedX = ox;
+          if (playSound) playMagneticSnap(640);
+          break;
+        }
+        if (Math.abs(clampedZ - oz) <= 1.0) {
+          clampedZ = oz;
+          if (playSound) playMagneticSnap(640);
+          break;
+        }
+      }
+    }
+
+    onMoveStall(stallId, [clampedX, 0, clampedZ]);
+  };
+
   return (
     <mesh
       position={[0, 0, 0]}
       rotation={[-Math.PI / 2, 0, 0]}
       visible={false}
+      onPointerMove={(e) => {
+        if (!draggingStallId || !e.point) return;
+        e.stopPropagation();
+        snapAndMove(draggingStallId, e.point.x, e.point.z, false);
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        if (draggingStallId) {
+          onEndDrag();
+        }
+      }}
       onClick={(e) => {
         e.stopPropagation();
+        if (draggingStallId) {
+          onEndDrag();
+          return;
+        }
         if (selectedStallId && e.point) {
-          // Clamp inside venue bounds
-          const halfW = venue.hallWidth / 2 - 2;
-          const halfL = venue.hallLength / 2 - 2;
-          let clampedX = Math.max(-halfW, Math.min(halfW, Math.round(e.point.x * 2) / 2));
-          let clampedZ = Math.max(-halfL, Math.min(halfL, Math.round(e.point.z * 2) / 2));
-
-          // Magnetic snapping:
-          // 1. Centerline snap: if |clampedX| <= 1.0m, snap to 0!
-          if (Math.abs(clampedX) <= 1.0) {
-            clampedX = 0;
-            playMagneticSnap(580);
-          } else {
-            // 2. Neighbor stall alignment snap
-            for (const other of stalls) {
-              if (other.id === selectedStallId) continue;
-              const [ox, , oz] = other.position;
-              if (Math.abs(clampedX - ox) <= 1.0) {
-                clampedX = ox;
-                playMagneticSnap(640);
-                break;
-              }
-              if (Math.abs(clampedZ - oz) <= 1.0) {
-                clampedZ = oz;
-                playMagneticSnap(640);
-                break;
-              }
-            }
-          }
-
-          onMoveStall(selectedStallId, [clampedX, 0, clampedZ]);
+          snapAndMove(selectedStallId, e.point.x, e.point.z, true);
         } else {
           onDeselect();
         }
       }}
     >
-      <planeGeometry args={[venue.hallWidth * 1.5, venue.hallLength * 1.5]} />
+      <planeGeometry args={[venue.hallWidth * 2.5, venue.hallLength * 2.5]} />
       <meshBasicMaterial transparent opacity={0} />
     </mesh>
   );
@@ -193,8 +236,24 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   showMagneticGuides = true,
   cinematicAutoRotate = false,
   isDark,
+  isModalOpen = false,
   canvasRef,
 }) => {
+  const [draggingStallId, setDraggingStallId] = React.useState<string | null>(null);
+
+  const handleStartDrag = (id: string) => {
+    setDraggingStallId(id);
+    document.body.style.cursor = "grabbing";
+  };
+
+  const handleEndDrag = () => {
+    if (draggingStallId) {
+      playMagneticSnap(580);
+      setDraggingStallId(null);
+      document.body.style.cursor = "default";
+    }
+  };
+
   return (
     <div className="relative w-full h-full bg-[#050508] overflow-hidden select-none">
       <Canvas
@@ -211,6 +270,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           viewMode={viewMode}
           venue={venue}
           cinematicAutoRotate={cinematicAutoRotate}
+          isOrbitEnabled={!draggingStallId}
         />
 
         <SceneEnvironment venue={venue} isDark={isDark} />
@@ -290,12 +350,13 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           active={viewMode === "top_down"}
         />
 
-        {/* Magnetic Alignment Snap-Lines & Live Caliper Dimension HUD */}
+        {/* Magnetic Alignment Snap-Lines (Pure 3D Floor Guides, Zero Modal Bleed) */}
         <MagneticAlignmentOverlay
           venue={venue}
           stalls={stalls}
-          selectedStallId={selectedStallId}
+          selectedStallId={selectedStallId || draggingStallId}
           active={showMagneticGuides}
+          isModalOpen={isModalOpen}
         />
 
         {/* Interactive 3D Crowd Flow & Heatmap Simulator */}
@@ -311,17 +372,21 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             key={stall.id}
             stall={stall}
             isSelected={stall.id === selectedStallId}
+            isDragging={stall.id === draggingStallId}
             onSelect={onSelectStall}
+            onStartDrag={handleStartDrag}
             onMove={onMoveStall}
             showFocusLights={showFocusLights}
           />
         ))}
 
-        {/* Floor click detection for interactive placement */}
-        <FloorPlaneClickCatcher
+        {/* Floor click and drag detection for interactive placement */}
+        <FloorPlaneDragCatcher
           venue={venue}
           stalls={stalls}
           selectedStallId={selectedStallId}
+          draggingStallId={draggingStallId}
+          onEndDrag={handleEndDrag}
           onMoveStall={onMoveStall}
           onDeselect={() => onSelectStall(null)}
         />

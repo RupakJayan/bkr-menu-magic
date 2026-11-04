@@ -1,5 +1,5 @@
 import React from "react";
-import { Line, Html } from "@react-three/drei";
+import { Line, Text } from "@react-three/drei";
 import { MandapamVenue, StallItem } from "@/types/planner3d";
 
 interface CadBlueprintDimensionsOverlayProps {
@@ -10,7 +10,6 @@ interface CadBlueprintDimensionsOverlayProps {
 
 export const CadBlueprintDimensionsOverlay: React.FC<CadBlueprintDimensionsOverlayProps> = ({
   venue,
-  stalls,
   active = true,
 }) => {
   if (!active) return null;
@@ -52,11 +51,16 @@ export const CadBlueprintDimensionsOverlay: React.FC<CadBlueprintDimensionsOverl
         color="#e2c99a"
         lineWidth={1}
       />
-      <Html position={[0, 0.2, topOffset]} center>
-        <div className="px-2 py-0.5 rounded bg-black/90 border border-[#e2c99a] text-[#e2c99a] font-mono text-[10px] font-bold shadow-md whitespace-nowrap">
-          WIDTH: {w.toFixed(1)}m
-        </div>
-      </Html>
+      <Text
+        position={[0, 0.15, topOffset]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.4}
+        color="#e2c99a"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {`WIDTH: ${w.toFixed(1)}m`}
+      </Text>
 
       {/* 2. LEFT LENGTH DIMENSION LEADER LINE */}
       <Line
@@ -84,11 +88,16 @@ export const CadBlueprintDimensionsOverlay: React.FC<CadBlueprintDimensionsOverl
         color="#e2c99a"
         lineWidth={1}
       />
-      <Html position={[leftOffset, 0.2, 0]} center>
-        <div className="px-2 py-0.5 rounded bg-black/90 border border-[#e2c99a] text-[#e2c99a] font-mono text-[10px] font-bold shadow-md whitespace-nowrap -rotate-90">
-          LENGTH: {l.toFixed(1)}m
-        </div>
-      </Html>
+      <Text
+        position={[leftOffset, 0.15, 0]}
+        rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+        fontSize={0.4}
+        color="#e2c99a"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {`LENGTH: ${l.toFixed(1)}m`}
+      </Text>
 
       {/* 3. FOUR CORNER CAD DATUM CROSSHAIRS */}
       {[
@@ -136,11 +145,16 @@ export const CadBlueprintDimensionsOverlay: React.FC<CadBlueprintDimensionsOverl
           color="#38bdf8"
           lineWidth={2.5}
         />
-        <Html position={[0, 0.2, -3]} center>
-          <div className="text-[10px] font-mono font-bold text-sky-400 bg-black/80 px-1 rounded border border-sky-400/50">
-            N
-          </div>
-        </Html>
+        <Text
+          position={[0, 0.15, -3]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={0.5}
+          color="#38bdf8"
+          anchorX="center"
+          anchorY="middle"
+        >
+          N
+        </Text>
       </group>
     </group>
   );
