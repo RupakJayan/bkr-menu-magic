@@ -62,17 +62,17 @@
   --tp-img-tilt: 0deg;
   --tp-img-ar: 3 / 4;
 
-  --tp-bg: #f6f2ec;
-  --tp-canvas: #f6f2ec;
-  --tp-surf: #fffdf9;
-  --tp-surf-2: #eee6dd;
-  --tp-ink: #302526;
-  --tp-mute: #605456;
-  --tp-acc: #762934;
-  --tp-acc-2: #b78a4b;
-  --tp-acc-ink: #fffaf5;
-  --tp-line: #ded3c9;
-  --tp-grad: linear-gradient(135deg, #8a3540, #762934);
+  --tp-bg: #f8fafc;
+  --tp-canvas: #f8fafc;
+  --tp-surf: #ffffff;
+  --tp-surf-2: #f1f5f9;
+  --tp-ink: #0f172a;
+  --tp-mute: #64748b;
+  --tp-acc: #b38238;
+  --tp-acc-2: #946824;
+  --tp-acc-ink: #ffffff;
+  --tp-line: #e2e8f0;
+  --tp-grad: linear-gradient(135deg, #b38238, #946824);
 
   --tp-r: 2px;
   --tp-r-sm: 0px;
@@ -104,24 +104,24 @@
    Deep space canvas, translucent glass surfaces, luminous cyan & liquid gold glow accents. */
 .dark {
   color-scheme: dark;
-  --tp-bg: #090a0d;
-  --tp-canvas: #090a0d;
-  --tp-surf: #111318;
-  --tp-surf-2: #181b22;
+  --tp-bg: #0b0d13;
+  --tp-canvas: #0b0d13;
+  --tp-surf: #11141c;
+  --tp-surf-2: #191c26;
   --tp-ink: #f8fafc;
-  --tp-mute: #8e95a5;
-  --tp-acc: #e2c99a; /* Lusion luminous cyan */
-  --tp-acc-2: #d8b36d; /* Celestial gold */
+  --tp-mute: #94a3b8;
+  --tp-acc: #f0c889; /* Google Champagne Titanium Gold */
+  --tp-acc-2: #d4a359; /* Celestial polished bronze gold */
   --tp-acc-ink: #040810;
   --tp-line: rgba(255, 255, 255, 0.09);
-  --tp-grad: linear-gradient(135deg, #e2c99a, #c5a059);
+  --tp-grad: linear-gradient(135deg, #f0c889, #d4a359);
   --tp-img-frame: 1px solid rgba(255, 255, 255, 0.1);
   --tp-img-filter: saturate(1.05) brightness(0.95);
   --tp-img-overlay-op: 0.1;
-  --tp-sh: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(226, 201, 154, 0.05);
+  --tp-sh: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(240, 200, 137, 0.05);
   --tp-sh-sm: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --tp-glow: 0 0 25px rgba(226, 201, 154, 0.25);
-  --tp-glow-gold: 0 0 25px rgba(216, 179, 109, 0.3);
+  --tp-glow: 0 0 25px rgba(240, 200, 137, 0.25);
+  --tp-glow-gold: 0 0 25px rgba(212, 163, 89, 0.3);
 }
 
 /* Lusion Labs Glassmorphism & Visual Effects Utility Classes */

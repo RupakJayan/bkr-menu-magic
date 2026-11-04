@@ -27,6 +27,7 @@ import {
   Command,
   Volume2,
   VolumeX,
+  Sparkles,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -623,14 +624,22 @@ export const Planner3DPage: React.FC = () => {
       {/* Precision CAD Vector Grid & Coordinate Tracking */}
       <VectorGridOverlay opacity={0.25} showCoordinates={true} />
 
-      {/* 1. STUDIO TOP HUD HEADER */}
-      <header className="relative z-30 flex items-center justify-between px-4 py-2 border-b border-white/[0.08] bg-[#111318]/90 backdrop-blur-2xl">
+      {/* 1. SINGLE STUDIO TOP NAV BAR (GOOGLE STUDIO EXECUTIVE GRADE - NO CONGESTION) */}
+      <header className={`relative z-30 flex items-center justify-between px-4 py-2 border-b backdrop-blur-2xl transition-colors ${
+        isDark
+          ? "border-white/[0.08] bg-[#11131a]/95 text-white"
+          : "border-slate-200 bg-white/95 text-slate-900 shadow-sm"
+      }`}>
         
-        {/* Brand & Return */}
+        {/* Left: Brand + Active Venue Pill */}
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+            className={`p-1.5 rounded-lg border transition-colors ${
+              isDark
+                ? "bg-white/5 border-white/10 text-neutral-300 hover:text-white hover:bg-white/10"
+                : "bg-slate-100 border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-200"
+            }`}
             title="Back to Home"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -638,384 +647,223 @@ export const Planner3DPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold tracking-wider text-xs font-mono text-white">
+              <span className="font-bold tracking-wider text-xs font-mono">
                 BKR // 3D STAGE PLANNER
               </span>
-              <span className="bg-[#222530] text-[#e2c99a] border border-white/10 text-[9px] font-mono font-semibold px-2 py-0.5 rounded">
-                VIEWPORT ACTIVE
+              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
+                isDark
+                  ? "bg-[#1f2433] text-[#f0c889] border-white/10"
+                  : "bg-slate-100 text-[#b38238] border-slate-300"
+              }`}>
+                Studio CAD
               </span>
             </div>
-            <p className="text-[10px] text-neutral-400 hidden sm:block font-mono">
-              Orthographic Mandapam &amp; Live Counter Spatial Engine
-            </p>
+            <button
+              onClick={() => setIsVenueModalOpen(true)}
+              className={`text-[10px] text-left hidden sm:flex items-center gap-1 font-mono transition-colors ${
+                isDark ? "text-neutral-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <span>{selectedVenue.name}</span>
+              <span className="text-neutral-500">•</span>
+              <span>{selectedVenue.hallWidth}m × {selectedVenue.hallLength}m</span>
+            </button>
           </div>
         </div>
 
-        {/* Center: Studio Event Briefing Trigger (Quick Edit) */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsBriefingModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a]/60 transition-all text-xs group"
-            title="Re-open Voice Speech & Custom Intake Console"
-          >
-            <div className="w-5 h-5 rounded-md bg-[#222530] text-[#e2c99a] flex items-center justify-center border border-white/10">
-              <Mic className="h-3 w-3" />
-            </div>
-            <div className="text-left">
-              <span className="font-bold text-white block flex items-center gap-1 font-mono text-xs group-hover:text-[#e2c99a] transition-colors">
-                Event Intake [Briefing]
-              </span>
-              <span className="text-[10px] text-neutral-400 block font-mono">
-                {headCount.toLocaleString("en-IN")} Pax • {stalls.filter((s) => s.type === "dosa").length}x Dosa Counters
-              </span>
-            </div>
-          </button>
-
-          {/* Venue Selector */}
-          <button
-            onClick={() => setIsVenueModalOpen(true)}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a]/50 transition-all text-xs"
-          >
-            <MapPin className="h-3.5 w-3.5 text-[#e2c99a]" />
-            <div className="text-left">
-              <span className="font-bold text-white block font-mono text-xs">{selectedVenue.name}</span>
-              <span className="text-[10px] text-neutral-400 block font-mono">
-                {selectedVenue.hallWidth}m × {selectedVenue.hallLength}m
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* Camera Views & Studio Controls */}
-        <div className="flex items-center gap-2">
-          {/* Camera View Mode Toggle */}
-          <div className="flex items-center p-1 rounded-xl bg-[#161822] border border-white/[0.08] font-mono">
-            <button
-              onClick={() => setViewMode("orbit")}
-              className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                viewMode === "orbit"
-                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              3D Orbit
-            </button>
-            <button
-              onClick={() => setViewMode("top_down")}
-              className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                viewMode === "top_down"
-                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              2D Plan
-            </button>
-            <button
-              onClick={() => setViewMode("walkthrough")}
-              className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                viewMode === "walkthrough"
-                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              Walkthrough
-            </button>
-          </div>
-
-          {/* Blueprint Opacity Toggle */}
-          <button
-            onClick={() => setBlueprintOpacity((prev) => (prev > 0 ? 0 : 0.45))}
-            title="Toggle Blueprint Projection Overlay"
-            className={`p-2 rounded-xl border transition-all text-xs flex items-center gap-1.5 ${
-              blueprintOpacity > 0
-                ? "bg-[#222530] border-[#e2c99a] text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
-            }`}
-          >
-            <Eye className="h-4 w-4" />
-            <span className="hidden md:inline font-mono text-[11px]">
-              {blueprintOpacity > 0 ? `${Math.round(blueprintOpacity * 100)}%` : "Map Off"}
-            </span>
-          </button>
-
-          {/* Master Dual-View Switch [ 📐 2D CAD Blueprint | 🌐 3D Reality ] */}
-          <div className="flex items-center p-0.5 rounded-xl bg-[#10121a] border border-white/10 shadow-sm font-mono text-xs">
-            <button
-              onClick={() => {
-                setViewMode("top_down");
-                playChimeSuccess();
-                toast.info("2D Architectural CAD Blueprint Mode");
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-xs ${
-                viewMode === "top_down"
-                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-              title="2D Top-Down CAD Blueprint (Shortcut: 2)"
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">2D CAD</span>
-            </button>
-            <button
-              onClick={() => {
-                setViewMode("orbit");
-                playChimeSuccess();
-                toast.info("3D Cinematic Reality Mode");
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-xs ${
-                viewMode === "orbit" || viewMode === "walkthrough"
-                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-              title="3D Cinematic Orbit (Shortcut: 3)"
-            >
-              <Compass className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">3D Reality</span>
-            </button>
-          </div>
-
-          {/* Magnetic CAD Snapping Toggle */}
+        {/* Center: Unified Master View Switcher [ 📐 2D CAD Blueprint | 🌐 3D Reality | 👁️ Walkthrough ] */}
+        <div className={`flex items-center p-0.5 rounded-xl border font-mono text-xs shadow-inner ${
+          isDark
+            ? "bg-[#090b10] border-white/10"
+            : "bg-slate-100 border-slate-300"
+        }`}>
           <button
             onClick={() => {
-              setShowMagneticGuides((prev) => !prev);
-              playTactileClick(540);
-              toast.info(!showMagneticGuides ? "Magnetic Snapping & Calipers Active" : "Magnetic Snapping Disabled");
+              setViewMode("top_down");
+              playChimeSuccess();
+              toast.info("2D Architectural CAD Blueprint Mode");
             }}
-            title="Toggle Magnetic Alignment & Live 3D Calipers"
-            className={`h-8 px-2.5 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-all ${
-              showMagneticGuides
-                ? "bg-[#222530] border-[#e2c99a]/60 text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold ${
+              viewMode === "top_down"
+                ? isDark
+                  ? "bg-[#f0c889] text-black font-bold shadow-sm"
+                  : "bg-[#b38238] text-white font-bold shadow-sm"
+                : isDark
+                ? "text-neutral-400 hover:text-white"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <CrosshairVector size={13} />
-            <span className="hidden xl:inline text-[11px] font-semibold">Magnetic Snap</span>
+            <Layers className="h-3.5 w-3.5" />
+            <span>2D CAD Blueprint</span>
           </button>
 
-          {/* Command Palette Button (Ctrl+K / Cmd+K) */}
+          <button
+            onClick={() => {
+              setViewMode("orbit");
+              playChimeSuccess();
+              toast.info("3D Reality Viewport Mode");
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold ${
+              viewMode === "orbit"
+                ? isDark
+                  ? "bg-[#f0c889] text-black font-bold shadow-sm"
+                  : "bg-[#b38238] text-white font-bold shadow-sm"
+                : isDark
+                ? "text-neutral-400 hover:text-white"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Compass className="h-3.5 w-3.5" />
+            <span>3D Reality</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setViewMode("walkthrough");
+              playChimeSuccess();
+              toast.info("First-Person Eye-Level Walkthrough Mode");
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold ${
+              viewMode === "walkthrough"
+                ? isDark
+                  ? "bg-[#f0c889] text-black font-bold shadow-sm"
+                  : "bg-[#b38238] text-white font-bold shadow-sm"
+                : isDark
+                ? "text-neutral-400 hover:text-white"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Walkthrough</span>
+          </button>
+        </div>
+
+        {/* Right: Actions, Modals, Tools */}
+        <div className="flex items-center gap-2 font-mono">
+          {/* Voice & Text Venue Synthesizer (Compact Google search input) */}
+          <div className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl border ${
+            isDark
+              ? "bg-[#161924] border-white/10"
+              : "bg-slate-100 border-slate-300"
+          }`}>
+            <button
+              onClick={toggleTopBarListening}
+              className={`p-1 rounded-md transition-all ${
+                isTopBarListening
+                  ? "bg-rose-500 text-white animate-pulse"
+                  : isDark
+                  ? "text-[#f0c889] hover:text-white"
+                  : "text-[#b38238] hover:text-slate-900"
+              }`}
+              title="Voice Synthesize Venue"
+            >
+              <Mic className="h-3 w-3" />
+            </button>
+            <input
+              type="text"
+              value={venueQueryInput}
+              onChange={(e) => setVenueQueryInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSynthesizeTopBarVenue()}
+              placeholder="Search or synthesize venue..."
+              className={`w-44 bg-transparent text-xs placeholder-neutral-500 focus:outline-none ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+            />
+          </div>
+
+          {/* Event Briefing Modal Trigger */}
+          <button
+            onClick={() => setIsBriefingModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+              isDark
+                ? "bg-[#161924] border-white/10 text-white hover:border-[#f0c889]/60"
+                : "bg-slate-100 border-slate-300 text-slate-900 hover:border-[#b38238]"
+            }`}
+            title="Open Event Briefing Intake Console"
+          >
+            <Mic className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+            <span className="hidden md:inline font-bold">Briefing [{headCount.toLocaleString("en-IN")}]</span>
+          </button>
+
+          {/* Google Maps Venue Search */}
+          <button
+            onClick={() => setIsGoogleMapsModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+              isDark
+                ? "bg-[#161924] border-white/10 text-[#f0c889] hover:border-[#f0c889]"
+                : "bg-slate-100 border-slate-300 text-[#b38238] hover:border-[#b38238]"
+            }`}
+            title="Search Google Maps Mahal Photos"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            <span className="hidden xl:inline">Maps</span>
+          </button>
+
+          {/* Command Palette */}
           <button
             onClick={() => {
               setIsCommandPaletteOpen(true);
               playTactileClick(600);
             }}
-            className="h-8 px-2.5 rounded-xl bg-[#1c1f2b] border border-white/10 hover:border-[#e2c99a]/50 text-xs font-mono text-neutral-300 hover:text-[#e2c99a] flex items-center gap-1.5 transition-all shadow-sm"
-          >
-            <Command className="h-3.5 w-3.5 text-[#e2c99a]" />
-            <span className="hidden md:inline">Commands</span>
-            <kbd className="text-[9px] px-1 py-0.2 rounded bg-black/40 border border-white/10 text-neutral-400">
-              ⌘K
-            </kbd>
-          </button>
-
-          {/* Tactile Sound Feedback Toggle */}
-          <button
-            onClick={toggleSound}
-            title={isAudioMutedState ? "Unmute Tactile Sound Effects" : "Mute Sound"}
-            className="h-8 w-8 rounded-xl bg-[#161822] border border-white/[0.08] text-neutral-400 hover:text-white flex items-center justify-center transition-colors"
-          >
-            {isAudioMutedState ? (
-              <VolumeX className="h-3.5 w-3.5 text-neutral-500" />
-            ) : (
-              <Volume2 className="h-3.5 w-3.5 text-[#e2c99a]" />
-            )}
-          </button>
-
-          {/* Grid Toggle */}
-          <button
-            onClick={() => setShowGrid((g) => !g)}
-            title="Toggle Floor Grid"
-            className={`p-2 rounded-xl border transition-all ${
-              showGrid
-                ? "bg-[#222530] border-[#e2c99a]/50 text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
+            className={`h-8 px-2 rounded-xl border text-xs flex items-center gap-1 transition-all ${
+              isDark
+                ? "bg-[#161924] border-white/10 text-neutral-300 hover:text-white"
+                : "bg-slate-100 border-slate-300 text-slate-700 hover:text-slate-900"
             }`}
+            title="Command Palette (Ctrl+K)"
           >
-            <Grid className="h-4 w-4" />
+            <Command className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+            <kbd className="text-[9px] px-1 py-0.5 rounded bg-black/40 border border-white/10 text-neutral-400">⌘K</kbd>
           </button>
 
-          {/* CAD Clearance Aisles Toggle */}
-          <button
-            onClick={() => setShowCadAisles((prev) => !prev)}
-            title="Toggle CAD Aisle Widths & Safety Clearances"
-            className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
-              showCadAisles
-                ? "bg-[#c5a059]/20 border-[#c5a059] text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
-            }`}
-          >
-            <Compass className="h-4 w-4" />
-            <span className="hidden xl:inline text-[11px] font-semibold font-mono">CAD Aisles</span>
-          </button>
-
-          {/* Live Stall Focus Lights Toggle */}
-          <button
-            onClick={() => {
-              setShowFocusLights((f) => !f);
-              toast.info(!showFocusLights ? "Focus Spotlights Activated" : "Focus Lights Off");
-            }}
-            title="Toggle Focus Lights on Live Stalls"
-            className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
-              showFocusLights
-                ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
-            }`}
-          >
-            <Lightbulb className="h-4 w-4" />
-            <span className="hidden xl:inline text-[11px] font-semibold font-mono">Focus Lights</span>
-          </button>
-
-          {/* Interactive Crowd Flow Simulation Toggle */}
-          <button
-            onClick={() => {
-              setShowCrowdSimulation((prev) => !prev);
-              toast.info(
-                !showCrowdSimulation ? "Simulating Peak Guest Flow" : "Crowd simulation paused"
-              );
-            }}
-            title="Simulate Peak Muhurtham Crowd Movement"
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all font-mono ${
-              showCrowdSimulation
-                ? "bg-[#e2c99a] text-black font-bold shadow-md"
-                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{showCrowdSimulation ? "Crowd Active" : "Simulate Flow"}</span>
-          </button>
-
-          {/* Presentation Mode Toggle */}
-          <Button
-            size="sm"
-            onClick={() => {
-              const nextState = !isPitchMode;
-              setIsPitchMode(nextState);
-              if (nextState) {
-                setIsSidebarOpen(false);
-                setShowCrowdSimulation(true);
-                toast.success("Studio Presentation Mode Activated");
-              } else {
-                setIsSidebarOpen(true);
-              }
-            }}
-            className={`h-8 text-xs font-mono font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all ${
-              isPitchMode
-                ? "bg-[#e2c99a] text-black"
-                : "bg-[#161822] border border-white/[0.08] text-white hover:text-[#e2c99a]"
-            }`}
-          >
-            <Maximize2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{isPitchMode ? "Exit Presentation" : "Present 3D"}</span>
-          </Button>
-
-          {/* Export Snapshot */}
+          {/* Export PNG */}
           <Button
             size="sm"
             onClick={handleExportSnapshot}
-            className="h-8 text-xs bg-[#e2c99a] hover:bg-[#c5a059] text-black font-mono font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95"
+            className={`h-8 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 ${
+              isDark
+                ? "bg-[#f0c889] hover:bg-[#d4a359] text-black"
+                : "bg-[#b38238] hover:bg-[#946824] text-white"
+            }`}
           >
             <Camera className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Export PNG</span>
+            <span className="hidden sm:inline">Export</span>
           </Button>
 
           <ThemeToggle />
         </div>
       </header>
 
-      {/* 1.5 INSTANT 3D VENUE SYNTHESIZER & IMAGE-TO-3D PROJECTION BAR */}
-      <div className="relative z-20 px-4 py-2 bg-[#141722]/95 border-b border-white/[0.08] backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 font-mono">
-        <div className="flex items-center gap-2 flex-1 min-w-[320px]">
-          {/* Quick Voice Mic for Venue */}
-          <button
-            onClick={toggleTopBarListening}
-            className={`p-2 rounded-xl border transition-all flex items-center justify-center ${
-              isTopBarListening
-                ? "bg-rose-500 text-white border-rose-400 animate-pulse"
-                : "bg-[#222530] text-[#e2c99a] border-white/10 hover:border-[#e2c99a]"
-            }`}
-            title={isTopBarListening ? "Stop Listening" : "Speak Venue Name"}
-          >
-            <Mic className="h-4 w-4" />
-          </button>
-
-          {/* Text Input for Venue Synthesis */}
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={venueQueryInput}
-              onChange={(e) => setVenueQueryInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSynthesizeTopBarVenue()}
-              placeholder="Synthesize 3D venue: e.g. 'Codissia Hall E', 'ITC Grand Chola', '1-Acre Lawn', 'Taj Coromandel 40x25m'..."
-              className="w-full px-3.5 py-1.5 rounded-xl bg-[#090b12] border border-white/10 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#e2c99a]"
-            />
-          </div>
-
-          <Button
-            size="sm"
-            onClick={() => handleSynthesizeTopBarVenue()}
-            className="h-8 px-3 text-xs bg-[#e2c99a] text-black font-bold hover:bg-[#c5a059]"
-          >
-            Synthesize 3D
-          </Button>
-
-          {/* Upload Image to 3D Button */}
-          <label className="cursor-pointer h-8 px-3 rounded-xl bg-[#222530] border border-white/10 hover:border-[#e2c99a]/50 text-xs text-white hover:text-[#e2c99a] flex items-center gap-1.5 transition-colors">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleDirectImageUpload}
-              className="hidden"
-            />
-            <ImageIcon className="h-3.5 w-3.5 text-[#e2c99a]" />
-            <span className="hidden sm:inline">Upload Image to 3D</span>
-          </label>
-
-          {/* Google Maps Search Button */}
-          <button
-            onClick={() => setIsGoogleMapsModalOpen(true)}
-            className="h-8 px-3 rounded-xl bg-[#222530] border border-[#e2c99a]/50 hover:border-[#e2c99a] text-xs text-[#e2c99a] flex items-center gap-1.5 transition-all shadow-sm font-bold shrink-0"
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            <span>Google Maps Mahal Search</span>
-          </button>
-        </div>
-
-        {/* Quick Venue Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto text-[10px]">
-          <span className="text-neutral-500 uppercase mr-1 hidden lg:inline">Presets:</span>
-          {PRESET_VENUES.slice(0, 5).map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => handleSelectPresetVenue(preset)}
-              className={`px-2.5 py-1 rounded-lg border transition-all ${
-                selectedVenue.id === preset.id
-                  ? "bg-[#e2c99a] text-black font-bold border-[#e2c99a]"
-                  : "bg-[#222530] border-white/10 text-neutral-300 hover:text-white hover:border-[#e2c99a]/40"
-              }`}
-            >
-              {preset.name.split(" (")[0]} ({preset.hallWidth}×{preset.hallLength}m)
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* 2. MAIN 3D WORKSPACE VIEWPORT */}
       <div className="relative flex-1 flex overflow-hidden">
         
         {/* Left Drawer: Precision CAD Inspector & Smart Counter Advisor */}
         <aside
-          className={`relative z-20 transition-all duration-300 ease-in-out border-r border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl flex flex-col ${
+          className={`relative z-20 transition-all duration-300 ease-in-out border-r flex flex-col ${
+            isDark
+              ? "border-white/[0.08] bg-[#11131a]/95 text-white"
+              : "border-slate-200 bg-white/95 text-slate-900 shadow-xl"
+          } backdrop-blur-2xl ${
             isSidebarOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden border-none"
           }`}
         >
           {/* Tab Selector between Inspector and Advisor */}
-          <div className="flex items-center justify-between p-2 border-b border-white/[0.08] bg-[#161820] font-mono text-xs">
+          <div
+            className={`flex items-center justify-between p-2 border-b font-mono text-xs ${
+              isDark ? "border-white/[0.08] bg-[#161922]" : "border-slate-200 bg-slate-50"
+            }`}
+          >
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setSidebarTab("inspector")}
                 className={`px-3 py-1 rounded-lg font-bold transition-all text-xs ${
                   sidebarTab === "inspector"
-                    ? "bg-[#e2c99a] text-black shadow-sm"
-                    : "text-neutral-400 hover:text-white"
+                    ? isDark
+                      ? "bg-[#f0c889] text-black shadow-sm"
+                      : "bg-[#b38238] text-white shadow-sm"
+                    : isDark
+                    ? "text-neutral-400 hover:text-white"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 CAD Inspector
@@ -1024,8 +872,12 @@ export const Planner3DPage: React.FC = () => {
                 onClick={() => setSidebarTab("advisor")}
                 className={`px-3 py-1 rounded-lg font-bold transition-all text-xs ${
                   sidebarTab === "advisor"
-                    ? "bg-[#e2c99a] text-black shadow-sm"
-                    : "text-neutral-400 hover:text-white"
+                    ? isDark
+                      ? "bg-[#f0c889] text-black shadow-sm"
+                      : "bg-[#b38238] text-white shadow-sm"
+                    : isDark
+                    ? "text-neutral-400 hover:text-white"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 Queue Advisor
@@ -1033,7 +885,9 @@ export const Planner3DPage: React.FC = () => {
             </div>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="text-neutral-400 hover:text-white p-1 rounded-lg text-sm"
+              className={`p-1 rounded-lg text-sm transition-colors ${
+                isDark ? "text-neutral-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
+              }`}
             >
               ×
             </button>
@@ -1050,11 +904,14 @@ export const Planner3DPage: React.FC = () => {
                 venue={selectedVenue}
                 onUpdateVenue={(v) => {
                   setSelectedVenue(v);
-                  setStalls(getRecommendedStalls(headCount, "classic", v));
                 }}
                 headCount={headCount}
                 onUpdateHeadCount={setHeadCount}
                 onOpenGoogleMapsSearch={() => setIsGoogleMapsModalOpen(true)}
+                stalls={stalls}
+                onSelectStall={(id) => setSelectedStallId(id)}
+                onAddStall={handleAddStall}
+                isDark={isDark}
               />
             ) : (
               <SmartCounterAdvisor
@@ -1077,7 +934,11 @@ export const Planner3DPage: React.FC = () => {
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="absolute left-3 top-3 z-30 p-2.5 rounded-xl bg-[#161822] border border-white/[0.1] text-[#e2c99a] shadow-xl hover:scale-105 transition-transform"
+            className={`absolute left-3 top-3 z-30 p-2.5 rounded-xl border shadow-xl hover:scale-105 transition-transform ${
+              isDark
+                ? "bg-[#161922] border-white/[0.1] text-[#f0c889]"
+                : "bg-white border-slate-300 text-[#b38238]"
+            }`}
             title="Open Capacity Advisor"
           >
             <CrosshairVector size={18} />
@@ -1271,23 +1132,165 @@ export const Planner3DPage: React.FC = () => {
               </PhysicsCard>
             </div>
           )}
-        </main>
+                  {/* FLOATING VIEWPORT HUD DOCK (BOTTOM CENTER OF 3D CANVAS - ZERO TOP CONGESTION) */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 p-1 rounded-2xl bg-[#11131a]/90 dark:bg-[#11131a]/90 bg-white/95 backdrop-blur-2xl border border-white/10 dark:border-white/10 border-slate-300 shadow-2xl font-mono text-xs select-none">
+            {/* Magnetic Snap */}
+            <button
+              onClick={() => {
+                setShowMagneticGuides((prev) => !prev);
+                playTactileClick(540);
+                toast.info(!showMagneticGuides ? "Magnetic Snapping Active" : "Snapping Off");
+              }}
+              title="Toggle Magnetic Snapping & Live Calipers"
+              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
+                showMagneticGuides
+                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889] font-bold"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <CrosshairVector size={13} />
+              <span className="hidden sm:inline text-[11px]">Snap</span>
+            </button>
+
+            {/* CAD Clearance Aisles */}
+            <button
+              onClick={() => setShowCadAisles((prev) => !prev)}
+              title="Toggle CAD Egress Aisle Widths"
+              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
+                showCadAisles
+                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889] font-bold"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Compass className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-[11px]">Aisles</span>
+            </button>
+
+            {/* Focus Lights */}
+            <button
+              onClick={() => setShowFocusLights((prev) => !prev)}
+              title="Toggle Counter Focus Lights"
+              className={`p-1.5 rounded-xl border transition-all ${
+                showFocusLights
+                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889]"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Crowd Simulation Flow */}
+            <button
+              onClick={() => {
+                setShowCrowdSimulation((prev) => !prev);
+                toast.info(!showCrowdSimulation ? "Simulating Guest Movement" : "Flow Paused");
+              }}
+              title="Simulate Peak Muhurtham Crowd Flow"
+              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
+                showCrowdSimulation
+                  ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400 font-bold"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-[11px]">Crowd Flow</span>
+            </button>
+
+            {/* Floor Grid */}
+            <button
+              onClick={() => setShowGrid((g) => !g)}
+              title="Toggle Floor Coordinate Grid"
+              className={`p-1.5 rounded-xl border transition-all ${
+                showGrid
+                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889]"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Grid className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Blueprint Opacity */}
+            <button
+              onClick={() => setBlueprintOpacity((prev) => (prev > 0 ? 0 : 0.45))}
+              title="Toggle Blueprint Map Projection"
+              className={`px-2 py-1.5 rounded-xl border text-xs flex items-center gap-1 transition-all ${
+                blueprintOpacity > 0
+                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889]"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden md:inline text-[10px]">
+                {blueprintOpacity > 0 ? `${Math.round(blueprintOpacity * 100)}%` : "Map Off"}
+              </span>
+            </button>
+
+            {/* Audio Toggle */}
+            <button
+              onClick={toggleSound}
+              title={isAudioMutedState ? "Unmute Sound Feedback" : "Mute Sound"}
+              className="p-1.5 rounded-xl border border-transparent text-neutral-400 hover:text-white transition-colors"
+            >
+              {isAudioMutedState ? (
+                <VolumeX className="h-3.5 w-3.5 text-neutral-500" />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5 text-[#f0c889]" />
+              )}
+            </button>
+
+            {/* Presentation Mode */}
+            <button
+              onClick={() => {
+                const nextState = !isPitchMode;
+                setIsPitchMode(nextState);
+                if (nextState) {
+                  setIsSidebarOpen(false);
+                  setShowCrowdSimulation(true);
+                  toast.success("Studio Presentation Mode Activated");
+                } else {
+                  setIsSidebarOpen(true);
+                }
+              }}
+              title="Fullscreen Studio Presentation Mode"
+              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1 transition-all ${
+                isPitchMode
+                  ? "bg-[#f0c889] text-black font-bold"
+                  : "border-transparent text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline text-[11px]">{isPitchMode ? "Exit" : "Present"}</span>
+            </button>
+          </div>
+</main>
       </div>
 
       {/* 3. BOTTOM FLOATING STALL CATALOG DRAWER */}
-      <footer className="relative z-30 px-4 py-2 border-t border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl">
+      <footer
+        className={`relative z-30 px-4 py-2 border-t backdrop-blur-2xl transition-colors ${
+          isDark
+            ? "border-white/[0.08] bg-[#11131a]/95 text-[#f1f3f7]"
+            : "border-slate-200 bg-white/95 text-slate-900 shadow-md"
+        }`}
+      >
         <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin pb-1">
           <Button
             size="sm"
             onClick={() => setIsCustomStallModalOpen(true)}
-            className="h-8 text-xs font-mono font-semibold bg-[#222530] border border-white/10 hover:border-[#e2c99a] text-[#e2c99a] rounded-lg shadow-sm flex items-center gap-1.5 shrink-0"
+            className={`h-8 text-xs font-mono font-semibold rounded-lg shadow-sm flex items-center gap-1.5 shrink-0 border ${
+              isDark
+                ? "bg-[#1f2433] border-white/10 hover:border-[#f0c889] text-[#f0c889]"
+                : "bg-slate-100 border-slate-300 hover:border-[#b38238] text-[#b38238]"
+            }`}
           >
             <ImageIcon className="h-3.5 w-3.5" />
             <span>Photo-to-3D Stall</span>
           </Button>
 
-          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 shrink-0 flex items-center gap-1.5 font-mono">
-            <Plus className="h-3.5 w-3.5 text-[#e2c99a]" />
+          <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 flex items-center gap-1.5 font-mono ${
+            isDark ? "text-neutral-400" : "text-slate-500"
+          }`}>
+            <Plus className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
             DEPLOY COUNTER:
           </span>
 
@@ -1297,14 +1300,18 @@ export const Planner3DPage: React.FC = () => {
               <button
                 key={type}
                 onClick={() => handleAddStall(type)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a] hover:bg-white/5 transition-all text-xs shrink-0 group font-mono"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-xs shrink-0 group font-mono ${
+                  isDark
+                    ? "bg-[#161924] border-white/[0.08] hover:border-[#f0c889] hover:bg-white/5 text-white"
+                    : "bg-slate-50 border-slate-200 hover:border-[#b38238] hover:bg-white text-slate-800"
+                }`}
               >
                 <div
                   className="w-2 h-2 rounded-full group-hover:scale-125 transition-transform"
                   style={{ backgroundColor: item.accentColor }}
                 />
-                <span className="font-semibold text-white">{item.name}</span>
-                <span className="text-[10px] text-neutral-400">
+                <span className="font-semibold">{item.name}</span>
+                <span className={`text-[10px] ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
                   [{item.capacityPerHour}/hr]
                 </span>
               </button>
@@ -1312,8 +1319,7 @@ export const Planner3DPage: React.FC = () => {
           })}
         </div>
       </footer>
-
-      {/* STARTING STEP: Studio Event Briefing Modal (Voice Speech & Custom Input) */}
+{/* STARTING STEP: Studio Event Briefing Modal (Voice Speech & Custom Input) */}
       <StudioEventBriefingModal
         isOpen={isBriefingModalOpen}
         onClose={() => setIsBriefingModalOpen(false)}
