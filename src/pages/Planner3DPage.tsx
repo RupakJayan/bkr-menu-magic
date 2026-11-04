@@ -1158,6 +1158,7 @@ export const Planner3DPage: React.FC = () => {
       <GoogleMapsVenueSearchDialog
         isOpen={isGoogleMapsModalOpen}
         onClose={() => setIsGoogleMapsModalOpen(false)}
+        initialQuery={venueQueryInput}
         onSelectVenue={(v) => {
           setSelectedVenue(v);
           setStalls(getRecommendedStalls(headCount, "classic", v));
