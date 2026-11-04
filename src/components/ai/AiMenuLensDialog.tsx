@@ -8,8 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Upload, Compass, CheckCircle2, AlertCircle, Trash2, ArrowRight, RefreshCw, FileImage, Utensils, Calendar, User, MapPin, X } from "lucide-react";
+import { Camera, Upload, Compass, CheckCircle2, AlertCircle, Trash2, ArrowRight, RefreshCw, FileImage, Utensils, Calendar, User, MapPin, X, Plus } from "lucide-react";
 import {
   compressImageFileToBase64,
   extractMenuFromHandwrittenImages,
@@ -45,6 +47,46 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingStatus, setProcessingStatus] = useState<string>("");
   const [extractedData, setExtractedData] = useState<ExtractedMenuData | null>(null);
+  const [newDishInputs, setNewDishInputs] = useState<Record<number, { en: string; ta: string }>>({});
+
+  const handleAddDishToSession = (sIdx: number) => {
+    if (!extractedData) return;
+    const input = newDishInputs[sIdx];
+    const en = input?.en?.trim() || "";
+    const ta = input?.ta?.trim() || "";
+    if (!en && !ta) {
+      toast({
+        title: "Dish Name Required",
+        description: "Please enter dish name in English or Tamil.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedSessions = [...extractedData.sessions];
+    updatedSessions[sIdx].dishes.push({
+      rawText: en || ta,
+      name_en: en || ta,
+      name_ta: ta || en,
+      category: "Special Dishes",
+      isCatalogMatch: true,
+      isVegetarian: true,
+    });
+
+    setExtractedData({ ...extractedData, sessions: updatedSessions });
+    setNewDishInputs({ ...newDishInputs, [sIdx]: { en: "", ta: "" } });
+    toast({
+      title: "Dish Added to Session",
+      description: `Added "${en || ta}" to ${updatedSessions[sIdx].name}.`,
+    });
+  };
+
+  const handleRemoveDishFromSession = (sIdx: number, dIdx: number) => {
+    if (!extractedData) return;
+    const updatedSessions = [...extractedData.sessions];
+    updatedSessions[sIdx].dishes = updatedSessions[sIdx].dishes.filter((_, i) => i !== dIdx);
+    setExtractedData({ ...extractedData, sessions: updatedSessions });
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -418,19 +460,45 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-xs">
-                          <span className="font-semibold text-mute">
-                            Guests: <b className="text-acc">{sess.headCount}</b>
-                          </span>
-                          {sess.ratePerPerson > 0 && (
-                            <span className="font-semibold text-mute">
-                              Rate: <b className="text-acc">₹{sess.ratePerPerson}/plate</b>
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-mute">Guests:</span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={sess.headCount}
+                              onChange={(e) => {
+                                const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                                const updatedSessions = [...extractedData.sessions];
+                                updatedSessions[sIdx] = { ...updatedSessions[sIdx], headCount: val };
+                                setExtractedData({ ...extractedData, sessions: updatedSessions });
+                              }}
+                              className="w-20 px-2 py-0.5 text-xs font-bold rounded border border-line bg-surf text-ink text-center"
+                              title="Click to edit number of guests"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-mute">Rate:</span>
+                            <span className="text-mute font-bold">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={sess.ratePerPerson || ""}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseFloat(e.target.value) || 0);
+                                const updatedSessions = [...extractedData.sessions];
+                                updatedSessions[sIdx] = { ...updatedSessions[sIdx], ratePerPerson: val };
+                                setExtractedData({ ...extractedData, sessions: updatedSessions });
+                              }}
+                              className="w-16 px-1.5 py-0.5 text-xs font-bold rounded border border-line bg-surf text-ink text-center"
+                              title="Rate per person (₹)"
+                            />
+                          </div>
                         </div>
                       </div>
 
                       {/* Dishes in this session */}
-                      <div className="p-3">
+                      <div className="p-3 space-y-3">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {sess.dishes.map((dish, dIdx) => (
                             <div
@@ -458,7 +526,7 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
                                   </p>
                                 </div>
                               </div>
-                              <div className="shrink-0 pl-2">
+                              <div className="flex items-center gap-1.5 shrink-0 pl-2">
                                 {dish.isCatalogMatch ? (
                                   <Badge
                                     variant="outline"
@@ -474,9 +542,54 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
                                     Custom Item
                                   </Badge>
                                 )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveDishFromSession(sIdx, dIdx)}
+                                  className="text-mute hover:text-red-500 p-1 rounded hover:bg-surf2 transition-colors"
+                                  title="Remove dish"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
                               </div>
                             </div>
                           ))}
+                        </div>
+
+                        {/* Add Missing Dish Row */}
+                        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-line/60">
+                          <input
+                            type="text"
+                            placeholder="English dish name (e.g. Pineapple Rava Kesari)"
+                            value={newDishInputs[sIdx]?.en || ""}
+                            onChange={(e) =>
+                              setNewDishInputs({
+                                ...newDishInputs,
+                                [sIdx]: { ...(newDishInputs[sIdx] || { en: "", ta: "" }), en: e.target.value },
+                              })
+                            }
+                            className="flex-1 h-8 px-2.5 text-xs rounded border border-line bg-surf text-ink placeholder:text-mute focus:border-acc"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Tamil dish name (எ.கா. அன்னாசி கேசரி)"
+                            value={newDishInputs[sIdx]?.ta || ""}
+                            onChange={(e) =>
+                              setNewDishInputs({
+                                ...newDishInputs,
+                                [sIdx]: { ...(newDishInputs[sIdx] || { en: "", ta: "" }), ta: e.target.value },
+                              })
+                            }
+                            className="flex-1 h-8 px-2.5 text-xs rounded border border-line bg-surf text-ink placeholder:text-mute focus:border-acc font-tamil"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleAddDishToSession(sIdx)}
+                            className="h-8 px-3 text-xs font-bold bg-acc text-accink hover:opacity-90 rounded shrink-0 flex items-center gap-1"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>Add Item</span>
+                          </Button>
                         </div>
                       </div>
                     </div>
