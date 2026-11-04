@@ -26,6 +26,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ThreeCanvas } from "@/components/planner3d/ThreeCanvas";
 import { SmartCounterAdvisor } from "@/components/planner3d/SmartCounterAdvisor";
 import { MandapamSelectorModal } from "@/components/planner3d/MandapamSelectorModal";
+import { CustomStallCreatorModal } from "@/components/planner3d/CustomStallCreatorModal";
 import { LusionParticles } from "@/components/effects/LusionParticles";
 import {
   StallItem,
@@ -51,6 +52,7 @@ export const Planner3DPage: React.FC = () => {
   // Venue state
   const [selectedVenue, setSelectedVenue] = useState<MandapamVenue>(PRESET_VENUES[0]);
   const [isVenueModalOpen, setIsVenueModalOpen] = useState(false);
+  const [isCustomStallModalOpen, setIsCustomStallModalOpen] = useState(false);
 
   // Planning state
   const [headCount, setHeadCount] = useState<number>(350);
@@ -110,6 +112,18 @@ export const Planner3DPage: React.FC = () => {
     toast.info(`Added ${catalogItem.name}`, {
       description: "Click on floor to position or drag to relocate.",
     });
+  };
+
+  // Add custom stall generated from photo
+  const handleSaveCustomStall = (newStall: StallItem) => {
+    const offset = (stalls.length % 4) * 3 - 4.5;
+    const placedStall: StallItem = {
+      ...newStall,
+      position: [offset, 0, offset > 0 ? 5 : -5],
+      wing: offset < 0 ? "North" : "South",
+    };
+    setStalls((prev) => [...prev, placedStall]);
+    setSelectedStallId(placedStall.id);
   };
 
   // Duplicate specific stall (e.g. duplicate Dosa counter)
@@ -402,6 +416,7 @@ export const Planner3DPage: React.FC = () => {
             onDuplicateStall={handleDuplicateStall}
             onRemoveStall={handleRemoveStall}
             onApplyOptimalLayout={handleApplyOptimalLayout}
+            onOpenCustomStallModal={() => setIsCustomStallModalOpen(true)}
           />
         </aside>
 
@@ -538,6 +553,15 @@ export const Planner3DPage: React.FC = () => {
       {/* 3. BOTTOM FLOATING STALL CATALOG DRAWER */}
       <footer className="relative z-30 px-4 py-2.5 border-t border-line bg-[#0c0d16]/90 backdrop-blur-2xl">
         <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin pb-1">
+          <Button
+            size="sm"
+            onClick={() => setIsCustomStallModalOpen(true)}
+            className="h-8 text-xs bg-gradient-to-r from-[#8b5cf6] to-[#00f5d4] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5 shrink-0"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Photo-to-3D Stall
+          </Button>
+
           <span className="text-xs font-bold uppercase tracking-wider text-mute shrink-0 flex items-center gap-1.5">
             <Plus className="h-3.5 w-3.5 text-[#00f5d4]" />
             Add Stalls:
@@ -577,6 +601,13 @@ export const Planner3DPage: React.FC = () => {
         blueprintOpacity={blueprintOpacity}
         onBlueprintOpacityChange={setBlueprintOpacity}
         onCustomBlueprintUpload={handleCustomBlueprintUpload}
+      />
+
+      {/* On-The-Spot 3D Stall Generator Modal */}
+      <CustomStallCreatorModal
+        open={isCustomStallModalOpen}
+        onOpenChange={setIsCustomStallModalOpen}
+        onSaveCustomStall={handleSaveCustomStall}
       />
     </div>
   );

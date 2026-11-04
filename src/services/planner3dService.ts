@@ -19,9 +19,9 @@ export const STALL_CATALOG: Record<
     width: 3.2,
     depth: 1.6,
     height: 2.2,
-    color: "#f59e0b", // Golden Tawa
+    color: "#f59e0b",
     accentColor: "#ef4444",
-    capacityPerHour: 80, // ~80 dosas / hr per station
+    capacityPerHour: 80,
     unitCost: 18000,
     powerRequiredKw: 6.0,
     waterRequired: true,
@@ -51,7 +51,7 @@ export const STALL_CATALOG: Record<
     width: 2.4,
     depth: 1.4,
     height: 2.0,
-    color: "#e2e8f0", // Clean Steam White
+    color: "#e2e8f0",
     accentColor: "#10b981",
     capacityPerHour: 150,
     unitCost: 12000,
@@ -79,7 +79,7 @@ export const STALL_CATALOG: Record<
     width: 2.8,
     depth: 1.5,
     height: 2.1,
-    color: "#d97706", // Amber Halwa Brass
+    color: "#d97706",
     accentColor: "#b45309",
     capacityPerHour: 140,
     unitCost: 22000,
@@ -107,7 +107,7 @@ export const STALL_CATALOG: Record<
     width: 3.0,
     depth: 1.5,
     height: 2.2,
-    color: "#0284c7", // Sapphire Modern
+    color: "#0284c7",
     accentColor: "#38bdf8",
     capacityPerHour: 90,
     unitCost: 25000,
@@ -135,7 +135,7 @@ export const STALL_CATALOG: Record<
     width: 2.6,
     depth: 1.4,
     height: 2.1,
-    color: "#16a34a", // Mint Emerald
+    color: "#16a34a",
     accentColor: "#22c55e",
     capacityPerHour: 120,
     unitCost: 15000,
@@ -163,7 +163,7 @@ export const STALL_CATALOG: Record<
     width: 2.5,
     depth: 1.4,
     height: 2.3,
-    color: "#854d0e", // Rich Roasted Brass
+    color: "#854d0e",
     accentColor: "#eab308",
     capacityPerHour: 200,
     unitCost: 14000,
@@ -191,7 +191,7 @@ export const STALL_CATALOG: Record<
     width: 5.5,
     depth: 1.8,
     height: 2.2,
-    color: "#762934", // BKR Imperial Burgundy
+    color: "#762934",
     accentColor: "#d8b36d",
     capacityPerHour: 250,
     unitCost: 35000,
@@ -221,7 +221,7 @@ export const STALL_CATALOG: Record<
     width: 2.4,
     depth: 1.4,
     height: 2.1,
-    color: "#ec4899", // Raspberry Pink
+    color: "#ec4899",
     accentColor: "#f472b6",
     capacityPerHour: 180,
     unitCost: 16000,
@@ -240,6 +240,60 @@ export const STALL_CATALOG: Record<
       "பழ டார்ட்லெட்",
     ],
     tag: "Grand Finale Station",
+  },
+  handwash_station: {
+    type: "handwash_station",
+    name: "Pedal Handwash & Towel Station",
+    name_ta: "பாரம்பரிய கை கழுவும் இடம்",
+    category: "Hygiene & Sanitation",
+    width: 3.0,
+    depth: 1.2,
+    height: 1.8,
+    color: "#0f766e",
+    accentColor: "#14b8a6",
+    capacityPerHour: 350,
+    unitCost: 8500,
+    powerRequiredKw: 1.0,
+    waterRequired: true,
+    dishes: ["Herbal Vetiver Handwash", "Warm Cotton Hand Towels"],
+    dishes_ta: ["வெட்டிவேர் கை கழுவும் நீர்", "பருத்தி கை துண்டுகள்"],
+    tag: "Mandatory Entrance & Exit Station",
+  },
+  tamboolam_beeda: {
+    type: "tamboolam_beeda",
+    name: "Tamboolam Bag & Sweet Beeda Stall",
+    name_ta: "தாம்பூல பை & இனிப்பு பீடா அரங்கம்",
+    category: "Exit Reception",
+    width: 2.4,
+    depth: 1.3,
+    height: 2.0,
+    color: "#831843",
+    accentColor: "#f43f5e",
+    capacityPerHour: 300,
+    unitCost: 11000,
+    powerRequiredKw: 1.0,
+    waterRequired: false,
+    dishes: ["Calcutta Meetha Paan (No Tobacco)", "Traditional Tamboolam Bag with Coconut"],
+    dishes_ta: ["கல்கத்தா இனிப்பு பீடா", "பாரம்பரிய தாம்பூல பை"],
+    tag: "Auspicious Departure Gift Counter",
+  },
+  custom_stall: {
+    type: "custom_stall",
+    name: "Custom Generated 3D Stall",
+    name_ta: "தனிப்பயன் 3D அரங்கம்",
+    category: "Custom Specialty",
+    width: 2.8,
+    depth: 1.5,
+    height: 2.2,
+    color: "#8b5cf6",
+    accentColor: "#a855f7",
+    capacityPerHour: 100,
+    unitCost: 20000,
+    powerRequiredKw: 4.0,
+    waterRequired: true,
+    dishes: ["Specialty Live Preparation"],
+    dishes_ta: ["சிறப்பு நேரடி உணவு தயாரிப்பு"],
+    tag: "Photo-Generated Custom Stall",
   },
   dining_table: {
     type: "dining_table",
@@ -264,54 +318,87 @@ export const STALL_CATALOG: Record<
 export const PRESET_VENUES: MandapamVenue[] = [
   {
     id: "krishna_pollachi",
-    name: "Sri Krishna Kalyana Mandapam",
+    name: "Sri Krishna Kalyana Mandapam (AC Hall)",
     name_ta: "ஸ்ரீ கிருஷ்ணா கல்யாண மண்டபம்",
     location: "Pollachi Main Road, Coimbatore",
-    hallLength: 36, // meters
-    hallWidth: 24, // meters
+    terrainType: "hall",
+    hallLength: 36,
+    hallWidth: 24,
     hallHeight: 6.5,
     defaultCapacity: 600,
     blueprintUrl: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80",
     stagePosition: [0, 0, -14],
     entrancePosition: [0, 0, 16],
+    handwashPosition: [-10, 0, 14],
+    timeOfDay: "sunset",
+    weather: "golden_hour",
     description:
-      "Spacious pillarless convention hall with dedicated dining courtyard, dual wing power distribution, and perimeter service corridors. Popular for 400-800 guest weddings.",
+      "Spacious pillarless convention hall with dedicated dining courtyard, dual wing power distribution, and perimeter service corridors.",
   },
   {
-    id: "anaimalai_palace",
-    name: "Anaimalai Royal Palace & Banquet",
-    name_ta: "ஆனைமலை ராயல் அரண்மனை மண்டபம்",
-    location: "Anaimalai Foothills Highway",
-    hallLength: 42,
-    hallWidth: 28,
-    hallHeight: 7.2,
-    defaultCapacity: 1000,
+    id: "pollachi_open_lawn",
+    name: "Green Meadows 1-Acre Open Banquet Lawn",
+    name_ta: "கிரீன் மெடோஸ் 1 ஏக்கர் திறந்தவெளி அரங்கம்",
+    location: "Pollachi - Udumalpet Highway",
+    terrainType: "open_lawn",
+    hallLength: 64, // ~1 acre dimension (64m x 64m)
+    hallWidth: 64,
+    hallHeight: 12.0,
+    acreage: 1.0,
+    defaultCapacity: 3500,
     blueprintUrl: "https://images.unsplash.com/photo-1545232979-fbf6c615ad8e?auto=format&fit=crop&w=1200&q=80",
-    stagePosition: [0, 0, -17],
-    entrancePosition: [0, 0, 19],
+    stagePosition: [0, 0, -26],
+    entrancePosition: [0, 0, 28],
+    handwashPosition: [-18, 0, 26],
+    timeOfDay: "night",
+    weather: "festive_serial_lights",
     description:
-      "Grand imperial mandapam featuring an ornate center courtyard, marble aisles, and dual symmetrical service wings suitable for live cooking stations.",
+      "Exquisite 1-acre open-air lawn under night starlight and serial fairy lights. Unrestricted crowd capacity with perimeter live cooking islands.",
   },
   {
-    id: "coimbatore_grand",
-    name: "Coimbatore Grand Convention Center",
-    name_ta: "கோயம்புத்தூர் கிராண்ட் மாநாட்டு மையம்",
-    location: "Avinashi Road, Peelamedu, Coimbatore",
-    hallLength: 48,
-    hallWidth: 32,
-    hallHeight: 8.0,
-    defaultCapacity: 1500,
+    id: "anaimalai_mega_ground",
+    name: "Anaimalai Foothills 2.5-Acre Mega Ground",
+    name_ta: "ஆனைமலை 2.5 ஏக்கர் மெகா மைதானம்",
+    location: "Anaimalai Sanctuary Road",
+    terrainType: "mega_ground",
+    hallLength: 100, // ~2.5 acres (100m x 100m)
+    hallWidth: 100,
+    hallHeight: 15.0,
+    acreage: 2.5,
+    defaultCapacity: 15000,
     blueprintUrl: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
-    stagePosition: [0, 0, -20],
-    entrancePosition: [0, 0, 22],
+    stagePosition: [0, 0, -42],
+    entrancePosition: [0, 0, 44],
+    handwashPosition: [-24, 0, 40],
+    timeOfDay: "morning",
+    weather: "clear",
     description:
-      "Ultra-modern mega convention hall with integrated heavy 3-phase power dropouts, commercial kitchen docks, and capacity for 1000+ guest grand receptions.",
+      "Expansive 2.5-acre outdoor grounds configured for grand receptions, community conferences, and mega gatherings from 5,000 up to 1 Lakh (1,00,000) people.",
   },
 ];
 
 /**
- * Calculates serving capacity, queue bottleneck metrics, and automatically detects
- * when counters like Live Dosa MUST be duplicated (e.g. 2x Dosa stations for >200 guests).
+ * Format Indian currency amounts into Lakhs or Crores cleanly.
+ */
+export function formatInrCurrency(amount: number): string {
+  if (amount >= 10000000) {
+    return `₹${(amount / 10000000).toFixed(2)} Crores`;
+  } else if (amount >= 100000) {
+    return `₹${(amount / 100000).toFixed(2)} Lakhs`;
+  }
+  return `₹${amount.toLocaleString("en-IN")}`;
+}
+
+export function formatIndianNumber(num: number): string {
+  if (num >= 100000) {
+    return `${(num / 100000).toFixed(1)} Lakh`;
+  }
+  return num.toLocaleString("en-IN");
+}
+
+/**
+ * Calculates serving throughput, bottleneck queue wait times, and triggers
+ * automatic counter duplication for South Indian wedding and buffet venues.
  */
 export function calculateCapacityAnalysis(
   headCount: number,
@@ -324,37 +411,45 @@ export function calculateCapacityAnalysis(
   const dosaCounters = stalls.filter((s) => s.type === "dosa");
   const dosaCount = dosaCounters.length;
 
-  // Calculate live Dosa queue dynamics
-  // Each Dosa counter produces ~75 dosas/hour peak.
-  // In a 90-minute peak buffet window, 1 counter serves ~115 guests.
+  const handwashCounters = stalls.filter((s) => s.type === "handwash_station");
+  const handwashCount = handwashCounters.length;
+  const recommendedHandwash = Math.max(1, Math.ceil(safeHeadCount / 300));
+
+  // Rate per plate in Indian Rupees (₹)
+  const costPerPlateInr =
+    budgetTier === "economy" ? 380 : budgetTier === "classic" ? 650 : 1250;
+  const totalBudgetInr = safeHeadCount * costPerPlateInr;
+  const totalBudgetFormatted = formatInrCurrency(totalBudgetInr);
+
+  // Dosa throughput: ~80 dosas/hr per station
   const dosaThroughputPerHour = Math.max(1, dosaCount * 80);
   const dosaWaitMinutes = Math.round(
     ((safeHeadCount * 0.7) / (dosaThroughputPerHour / 60)) * (1 / Math.max(1, dosaCount))
   );
 
-  // Recommend optimal Dosa counters based on headcount:
-  // <180 guests -> 1 counter
-  // 181-450 guests -> 2 counters (North & South wing)
-  // 451-900 guests -> 3 counters
-  // >900 guests -> 4+ counters
+  // Scalable Dosa counter recommendation (supporting up to 1,00,000 guests)
   let recommendedDosaCounters = 1;
-  if (safeHeadCount > 850) {
+  if (safeHeadCount >= 10000) {
+    recommendedDosaCounters = Math.min(24, Math.ceil(safeHeadCount / 600));
+  } else if (safeHeadCount >= 2500) {
+    recommendedDosaCounters = 6;
+  } else if (safeHeadCount > 850) {
     recommendedDosaCounters = 4;
   } else if (safeHeadCount > 450) {
     recommendedDosaCounters = 3;
   } else if (safeHeadCount > 180) {
-    recommendedDosaCounters = 2;
+    recommendedDosaCounters = 2; // North & South wings
   }
 
-  // Calculate total hall food capacity per hour
+  // Hall food throughput per hour
   const totalServingCapacityPerHour = stalls.reduce(
-    (sum, s) => sum + (s.type === "dining_table" ? 0 : s.capacityPerHour),
+    (sum, s) => sum + (s.type === "dining_table" || s.type === "handwash_station" ? 0 : s.capacityPerHour),
     0
   );
 
   const estimatedWaitMinutes = Math.min(
     45,
-    Math.max(2, Math.round((safeHeadCount / Math.max(100, totalServingCapacityPerHour)) * 42))
+    Math.max(2, Math.round((safeHeadCount / Math.max(100, totalServingCapacityPerHour)) * 36))
   );
 
   let queueStatus: "optimal" | "moderate" | "congested" = "optimal";
@@ -364,75 +459,52 @@ export function calculateCapacityAnalysis(
     queueStatus = "moderate";
   }
 
-  // Generate actionable advice
   const adviceList: RecommendationAdvice[] = [];
+
+  // Handwash ritual advice (first ritual for South Indian feasts)
+  if (handwashCount < recommendedHandwash) {
+    adviceList.push({
+      type: "warning",
+      title: `Sanitation Alert: Handwash Station Needed (${handwashCount} active vs ${recommendedHandwash} recommended)`,
+      description: `For ${formatIndianNumber(safeHeadCount)} guests, South Indian tradition demands handwashing before and after meals. Add dedicated pedal-operated washbasins near the entrance concourse.`,
+      actionLabel: `Add Handwash Station`,
+      stallTypeToAdd: "handwash_station",
+    });
+  }
 
   // Dosa counter bottleneck advice
   if (dosaCount < recommendedDosaCounters) {
     adviceList.push({
       type: "warning",
       title: `Critical Bottleneck: Duplicate Live Dosa Counter (${dosaCount} active vs ${recommendedDosaCounters} needed)`,
-      description: `With ${safeHeadCount} guests, a single Dosa counter causes an estimated ${dosaWaitMinutes}-minute wait line! We strongly recommend placing a 2nd Dosa station in the opposite wing (North + South) to keep waiting under 4 minutes.`,
+      description: `With ${formatIndianNumber(safeHeadCount)} guests, single/insufficient Dosa stations cause an estimated ${dosaWaitMinutes}-minute wait line! We strongly recommend duplicating into symmetrical wings (North + South) to keep waiting under 4 minutes.`,
       actionLabel: `Add ${recommendedDosaCounters - dosaCount}x Dosa Counter`,
       stallTypeToAdd: "dosa",
     });
   } else {
     adviceList.push({
       type: "tip",
-      title: `Excellent Dosa Throughput (${dosaCount} Stations Deployed)`,
-      description: `Your ${dosaCount} live tawa stations can serve up to ${dosaCount * 80} dosas per hour, guaranteeing fluid crowd movement without bottlenecking the aisles.`,
+      title: `Optimal Dosa Balance (${dosaCount} Stations Deployed)`,
+      description: `Your ${dosaCount} live tawa stations can serve up to ${dosaCount * 80} dosas/hr across balanced wings, guaranteeing zero crowd congestion.`,
     });
   }
 
-  // Sweet/Halwa reception advice
-  const sweetCount = stalls.filter((s) => s.type === "sweet_halwa").length;
-  if (sweetCount === 0) {
+  // Tamboolam Bag exit counter
+  const tamboolamCount = stalls.filter((s) => s.type === "tamboolam_beeda").length;
+  if (tamboolamCount === 0 && safeHeadCount > 250) {
     adviceList.push({
       type: "tip",
-      title: "Add Live Halwa Kadai at Mandapam Entrance",
+      title: "Add Tamboolam & Sweet Beeda Station at Exit",
       description:
-        "South Indian wedding guests look for a sweet welcome. Placing a piping hot Wheat Halwa kadai right near the entrance walkway disperses incoming crowd pressure.",
-      actionLabel: "Add Halwa Kadai",
-      stallTypeToAdd: "sweet_halwa",
-    });
-  } else if (safeHeadCount > 400 && sweetCount === 1) {
-    adviceList.push({
-      type: "upgrade",
-      title: "Recommend 2x Sweet & Beverage Pods for High Head Count",
-      description: `At ${safeHeadCount} guests, duplicate the hot sweet station across both sides of the hall.`,
-      actionLabel: "Duplicate Sweet Counter",
-      stallTypeToAdd: "sweet_halwa",
-    });
-  }
-
-  // Continental live station advice based on budget tier
-  const continentalCount = stalls.filter((s) => s.type === "continental_pasta").length;
-  if (budgetTier === "grandeur" && continentalCount === 0) {
-    adviceList.push({
-      type: "upgrade",
-      title: "Grandeur Package: Live Italian Pasta & Grill Station",
-      description:
-        "Young guests and children flock to customized live pasta. Adding a dedicated continental counter elevates the dining ambiance to 5-star resort tier.",
-      actionLabel: "Add Continental Pasta",
-      stallTypeToAdd: "continental_pasta",
-    });
-  }
-
-  // Chaat corner advice
-  const chaatCount = stalls.filter((s) => s.type === "chaat").length;
-  if (safeHeadCount > 300 && chaatCount === 0) {
-    adviceList.push({
-      type: "tip",
-      title: "Add 4-Flavour Live Chaat & Pani Puri Corner",
-      description:
-        "High crowd density before the main muhurtham or reception dinner is ideally handled by interactive Pani Puri counters.",
-      actionLabel: "Add Live Chaat",
-      stallTypeToAdd: "chaat",
+        "Provide a memorable departure experience with fresh Calcutta sweet beeda and auspicious Tamboolam gift bags at the exit arch.",
+      actionLabel: "Add Tamboolam Stall",
+      stallTypeToAdd: "tamboolam_beeda",
     });
   }
 
   return {
     headCount: safeHeadCount,
+    headCountFormatted: formatIndianNumber(safeHeadCount),
     totalServingCapacityPerHour,
     estimatedWaitMinutes,
     queueStatus,
@@ -440,13 +512,18 @@ export function calculateCapacityAnalysis(
     dosaWaitMinutes,
     recommendedDosaCounters,
     budgetTier,
+    costPerPlateInr,
+    totalBudgetInr,
+    totalBudgetFormatted,
+    handwashRequiredCount: recommendedHandwash,
+    activeHandwashCount: handwashCount,
     adviceList,
   };
 }
 
 /**
  * Generates an intelligent, ready-to-render initial layout of 3D stalls tailored
- * to the venue geometry, guest headcount (with automatic counter duplication), and budget.
+ * to the venue geometry, guest headcount, and budget.
  */
 export function getRecommendedStalls(
   headCount: number,
@@ -454,13 +531,23 @@ export function getRecommendedStalls(
   venue: MandapamVenue
 ): StallItem[] {
   const result: StallItem[] = [];
-  const halfW = venue.hallWidth / 2 - 2.5; // distance from center line to side walls
-  const halfL = venue.hallLength / 2 - 3.5;
+  const halfW = venue.hallWidth / 2 - 3;
+  const halfL = venue.hallLength / 2 - 4;
 
   let stallCounter = 1;
   const makeId = (type: string) => `${type}-${stallCounter++}`;
 
-  // 1. Royal Grand Buffet Spread (Center-Rear island)
+  // 1. Mandatory Entrance Handwash Station (The first ritual stop!)
+  result.push({
+    ...STALL_CATALOG.handwash_station,
+    id: makeId("handwash-entry"),
+    position: [-halfW + 2, 0, halfL - 2],
+    rotation: 0,
+    wing: "West",
+    tag: "Entrance Handwash",
+  });
+
+  // 2. Royal Grand Buffet Spread (Center island)
   result.push({
     ...STALL_CATALOG.buffet_spread,
     id: makeId("buffet"),
@@ -470,64 +557,73 @@ export function getRecommendedStalls(
     tag: "Dual-Sided Main Island Buffet",
   });
 
-  // 2. Live Dosa Station #1 (North / Left Wing)
+  // 3. Live Dosa Station #1 (North / Left Wing)
   result.push({
     ...STALL_CATALOG.dosa,
     id: makeId("dosa-north"),
     name: "Live Dosa Station (North Wing)",
     position: [-halfW, 0, -4],
-    rotation: Math.PI / 2, // Facing inside toward center aisle
+    rotation: Math.PI / 2,
     wing: "North",
     tag: "Counter #1",
   });
 
-  // 3. Automatically duplicate Dosa Counter if headcount > 180!
+  // 4. Automatically duplicate Dosa Counter if headcount > 180!
   if (headCount > 180) {
     result.push({
       ...STALL_CATALOG.dosa,
       id: makeId("dosa-south"),
       name: "Live Dosa Station (South Wing - Duplicate)",
       position: [halfW, 0, -4],
-      rotation: -Math.PI / 2, // Facing inside
+      rotation: -Math.PI / 2,
       wing: "South",
       tag: "Counter #2 (Crowd Balancer)",
     });
   }
 
-  // For very large headcounts (>500), add a 3rd Dosa Station
-  if (headCount > 500) {
+  // Mega crowd duplication for >1000 guests
+  if (headCount > 1000) {
     result.push({
       ...STALL_CATALOG.dosa,
       id: makeId("dosa-east"),
-      name: "Live Dosa Station (Express Counter #3)",
+      name: "Live Dosa Station (East Wing - Counter #3)",
       position: [-halfW, 0, 4],
       rotation: Math.PI / 2,
       wing: "East",
-      tag: "Counter #3 (Express)",
+      tag: "Counter #3",
+    });
+    result.push({
+      ...STALL_CATALOG.dosa,
+      id: makeId("dosa-west"),
+      name: "Live Dosa Station (West Wing - Counter #4)",
+      position: [halfW, 0, 4],
+      rotation: -Math.PI / 2,
+      wing: "West",
+      tag: "Counter #4",
     });
   }
 
-  // 4. Live Halwa & Sweet Kadai (Near Entrance to welcome guests)
+  // 5. Live Halwa & Sweet Kadai (Welcome station)
   result.push({
     ...STALL_CATALOG.sweet_halwa,
     id: makeId("halwa"),
-    position: [-halfW + 1.5, 0, halfL - 2],
+    position: [-halfW + 4, 0, halfL - 3],
     rotation: 0,
     wing: "West",
     tag: "Welcome Sweet Counter",
   });
 
-  // 5. Filter Coffee & Mocktail Bar (Opposite entrance)
+  // 6. Filter Coffee & Mocktail Bar (Opposite entrance)
   result.push({
     ...STALL_CATALOG.beverage_bar,
     id: makeId("beverage"),
-    position: [halfW - 1.5, 0, halfL - 2],
+    position: [halfW - 2, 0, halfL - 2],
     rotation: 0,
     wing: "East",
     tag: "Aroma Coffee Counter",
   });
 
-  // 6. Idli Steamer Bar (Alongside Left Wing)
+  // 7. Idli Steamer Bar (Left Wing)
   result.push({
     ...STALL_CATALOG.idli,
     id: makeId("idli"),
@@ -536,7 +632,7 @@ export function getRecommendedStalls(
     wing: "North",
   });
 
-  // 7. Live Chaat Corner (Right Wing)
+  // 8. Live Chaat Corner (Right Wing)
   result.push({
     ...STALL_CATALOG.chaat,
     id: makeId("chaat"),
@@ -545,7 +641,7 @@ export function getRecommendedStalls(
     wing: "South",
   });
 
-  // 8. Dessert & Ice Cream Parlour
+  // 9. Dessert & Cold Stone Ice Cream Parlour
   result.push({
     ...STALL_CATALOG.dessert_icecream,
     id: makeId("dessert"),
@@ -554,7 +650,17 @@ export function getRecommendedStalls(
     wing: "South",
   });
 
-  // 9. Grandeur or Classic Add-ons (Continental Pasta)
+  // 10. Tamboolam & Sweet Beeda Station at exit
+  result.push({
+    ...STALL_CATALOG.tamboolam_beeda,
+    id: makeId("tamboolam"),
+    position: [halfW - 4, 0, halfL - 3],
+    rotation: 0,
+    wing: "East",
+    tag: "Auspicious Departure Gift",
+  });
+
+  // 11. Grandeur Add-on (Continental Pasta)
   if (budgetTier !== "economy") {
     result.push({
       ...STALL_CATALOG.continental_pasta,
@@ -566,7 +672,7 @@ export function getRecommendedStalls(
     });
   }
 
-  // 10. Banquet Dining Tables distributed neatly in open floor zones
+  // 12. Banquet Dining Tables distributed neatly in open floor zones
   const tablePositions: [number, number, number][] = [
     [-6, 0, -8],
     [6, 0, -8],

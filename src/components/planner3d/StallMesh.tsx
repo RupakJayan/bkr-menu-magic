@@ -44,6 +44,16 @@ export const StallMesh: React.FC<StallMeshProps> = ({
     return pos;
   }, [w, d]);
 
+  // Custom photo billboard texture if stall was generated from uploaded photo
+  const customTexture = React.useMemo(() => {
+    if (!stall.customPhotoUrl) return null;
+    const loader = new THREE.TextureLoader();
+    const tex = loader.load(stall.customPhotoUrl);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    return tex;
+  }, [stall.customPhotoUrl]);
+
   return (
     <group
       position={stall.position}
@@ -247,6 +257,120 @@ export const StallMesh: React.FC<StallMeshProps> = ({
               </group>
             );
           })}
+        </group>
+      )}
+
+      {/* 5. Traditional Handwash Station (கை கழுவும் இடம்) */}
+      {stall.type === "handwash_station" && (
+        <group position={[0, 0.94, 0]}>
+          {/* Dual Brass / Chrome Sinks */}
+          {[-0.6, 0.6].map((xOffset, i) => (
+            <group key={i} position={[xOffset, 0, 0]}>
+              {/* Wash Basin */}
+              <mesh position={[0, 0.05, 0]}>
+                <cylinderGeometry args={[0.26, 0.18, 0.22, 24]} />
+                <meshStandardMaterial color="#d8b36d" metalness={0.9} roughness={0.2} />
+              </mesh>
+              {/* Water in Basin */}
+              <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[0.22, 20]} />
+                <meshStandardMaterial color="#38bdf8" roughness={0.1} transparent opacity={0.7} />
+              </mesh>
+              {/* Swan-Neck Tap */}
+              <mesh position={[0, 0.26, -0.18]}>
+                <cylinderGeometry args={[0.02, 0.02, 0.28, 8]} />
+                <meshStandardMaterial color="#cbd5e1" metalness={0.95} />
+              </mesh>
+            </group>
+          ))}
+          {/* Towel Hanger Bar */}
+          <mesh position={[0, 0.35, 0.35]}>
+            <boxGeometry args={[1.6, 0.03, 0.03]} />
+            <meshStandardMaterial color="#d8b36d" metalness={0.8} />
+          </mesh>
+          {/* Clean Cotton Hand Towels */}
+          <mesh position={[-0.3, 0.2, 0.36]}>
+            <boxGeometry args={[0.25, 0.32, 0.04]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+          </mesh>
+          <mesh position={[0.3, 0.2, 0.36]}>
+            <boxGeometry args={[0.25, 0.32, 0.04]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+          </mesh>
+        </group>
+      )}
+
+      {/* 6. Traditional Tamboolam Bag & Sweet Beeda Counter */}
+      {stall.type === "tamboolam_beeda" && (
+        <group position={[0, 0.94, 0]}>
+          {/* Center Brass Thamboolam Uruli / Tray */}
+          <mesh position={[-0.5, 0.06, 0]}>
+            <cylinderGeometry args={[0.32, 0.28, 0.08, 24]} />
+            <meshStandardMaterial color="#d8b36d" metalness={0.9} roughness={0.2} />
+          </mesh>
+          {/* Fresh Betel Leaves (வெற்றிலை பாக்கு) */}
+          <mesh position={[-0.5, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.28, 20]} />
+            <meshStandardMaterial color="#15803d" roughness={0.5} />
+          </mesh>
+          {/* Meetha Sweet Beeda Pyramids */}
+          {[-0.1, 0.1].map((bz, bi) => (
+            <mesh key={bi} position={[-0.5, 0.15, bz]} rotation={[0, bi * 0.5, 0]}>
+              <coneGeometry args={[0.06, 0.1, 4]} />
+              <meshStandardMaterial color="#166534" roughness={0.3} />
+            </mesh>
+          ))}
+          {/* Silk / Jute Tamboolam Gift Bags (மஞ்சள் குங்குமம் தேங்காய் பை) */}
+          {[-0.2, 0.15, 0.5, 0.85].map((bx, bi) => (
+            <group key={bi} position={[bx, 0.18, 0]}>
+              <mesh position={[0, 0, 0]}>
+                <boxGeometry args={[0.22, 0.32, 0.14]} />
+                <meshStandardMaterial
+                  color={bi % 2 === 0 ? "#eab308" : "#ec4899"} // Auspicious Yellow & Pink silk bags
+                  roughness={0.6}
+                />
+              </mesh>
+              {/* Bag String Handles */}
+              <mesh position={[0, 0.2, 0]}>
+                <torusGeometry args={[0.06, 0.012, 8, 16, Math.PI]} />
+                <meshStandardMaterial color="#d8b36d" metalness={0.8} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      )}
+
+      {/* 7. Custom Photo-Generated 3D Stall Billboard */}
+      {stall.type === "custom_stall" && (
+        <group position={[0, 0.95, 0]}>
+          {/* Front Facade Photo Billboard Display */}
+          {customTexture ? (
+            <mesh position={[0, -0.45, d / 2 + 0.02]}>
+              <planeGeometry args={[w * 0.92, 0.8]} />
+              <meshBasicMaterial map={customTexture} side={THREE.DoubleSide} />
+            </mesh>
+          ) : (
+            /* Holographic Neon Badge */
+            <mesh position={[0, -0.45, d / 2 + 0.02]}>
+              <planeGeometry args={[w * 0.85, 0.7]} />
+              <meshStandardMaterial
+                color="#0c0d16"
+                emissive="#8b5cf6"
+                emissiveIntensity={0.3}
+              />
+            </mesh>
+          )}
+          {/* Top Specialty Food Showcase Dome */}
+          <mesh position={[0, 0.2, 0]}>
+            <sphereGeometry args={[0.38, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial
+              color="#a855f7"
+              roughness={0.2}
+              transparent
+              opacity={0.7}
+              metalness={0.6}
+            />
+          </mesh>
         </group>
       )}
 
