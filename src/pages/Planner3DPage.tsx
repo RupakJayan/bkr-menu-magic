@@ -307,7 +307,27 @@ export const Planner3DPage: React.FC = () => {
   const [showCadAisles, setShowCadAisles] = useState<boolean>(false);
   const [showFocusLights, setShowFocusLights] = useState<boolean>(true);
   const [isPitchMode, setIsPitchMode] = useState<boolean>(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isDeployMenuOpen, setIsDeployMenuOpen] = useState<boolean>(false);
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState<boolean>(false);
+  const [deployCategory, setDeployCategory] = useState<"cooking" | "dining" | "utilities" | "media">("cooking");
+
+  const getFilteredStallsByCategory = (cat: "cooking" | "dining" | "utilities" | "media"): StallType[] => {
+    switch (cat) {
+      case "cooking":
+        return (["dosa", "idli", "sweet_halwa", "continental_pasta", "chaat", "dessert_icecream"] as StallType[]).filter(
+          (t) => STALL_CATALOG[t]
+        );
+      case "dining":
+        return (["dining_table", "buffet_spread"] as StallType[]).filter((t) => STALL_CATALOG[t]);
+      case "utilities":
+        return (["handwash_station", "dustbin", "beverage_bar"] as StallType[]).filter((t) => STALL_CATALOG[t]);
+      case "media":
+        return (["bkr_video_wall", "tamboolam_beeda"] as StallType[]).filter((t) => STALL_CATALOG[t]);
+      default:
+        return Object.keys(STALL_CATALOG) as StallType[];
+    }
+  };
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -628,7 +648,11 @@ export const Planner3DPage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#090a0d] text-[#f4efe6] font-sans flex flex-col select-none">
+    <div
+      className={`relative w-screen h-screen overflow-hidden font-sans flex flex-col select-none transition-colors duration-200 ${
+        isDark ? "bg-[#090a0f] text-[#f1f4f9]" : "bg-[#f8fafc] text-[#0f172a]"
+      }`}
+    >
       {/* Precision CAD Vector Grid & Coordinate Tracking */}
       <VectorGridOverlay opacity={0.25} showCoordinates={true} />
 
@@ -845,14 +869,14 @@ export const Planner3DPage: React.FC = () => {
       {/* 2. MAIN 3D WORKSPACE VIEWPORT */}
       <div className="relative flex-1 flex overflow-hidden">
         
-        {/* Left Drawer: Precision CAD Inspector & Smart Counter Advisor */}
+        {/* Left Drawer: Precision CAD Inspector & Smart Counter Advisor (Slide-over overlay drawer) */}
         <aside
-          className={`relative z-20 transition-all duration-300 ease-in-out border-r flex flex-col ${
+          className={`absolute left-0 top-0 bottom-0 z-30 transition-all duration-300 ease-in-out border-r flex flex-col shadow-2xl backdrop-blur-2xl ${
             isDark
               ? "border-white/[0.08] bg-[#11131a]/95 text-white"
               : "border-slate-200 bg-white/95 text-slate-900 shadow-xl"
-          } backdrop-blur-2xl ${
-            isSidebarOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden border-none"
+          } ${
+            isSidebarOpen ? "w-80 sm:w-96 translate-x-0" : "-translate-x-full pointer-events-none"
           }`}
         >
           {/* Tab Selector between Inspector and Advisor */}
@@ -933,6 +957,7 @@ export const Planner3DPage: React.FC = () => {
                 onApplyOptimalLayout={handleApplyOptimalLayout}
                 onOpenCustomStallModal={() => setIsCustomStallModalOpen(true)}
                 onOpenBriefingModal={() => setIsBriefingModalOpen(true)}
+                isDark={isDark}
               />
             )}
           </div>
@@ -942,14 +967,24 @@ export const Planner3DPage: React.FC = () => {
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className={`absolute left-3 top-3 z-30 p-2.5 rounded-xl border shadow-xl hover:scale-105 transition-transform ${
+            className={`absolute left-4 top-4 z-20 px-3 py-1.5 rounded-xl border shadow-xl hover:scale-105 transition-all flex items-center gap-2 font-mono text-xs ${
               isDark
-                ? "bg-[#161922] border-white/[0.1] text-[#f0c889]"
-                : "bg-white border-slate-300 text-[#b38238]"
+                ? "bg-[#11131a]/90 border-white/10 text-white hover:border-[#f0c889]"
+                : "bg-white/95 border-slate-300 text-slate-900 hover:border-[#b38238]"
             }`}
-            title="Open Capacity Advisor"
+            title="Open Studio CAD Inspector & Venue Specs"
           >
-            <CrosshairVector size={18} />
+            <Sliders className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+            <span className="font-bold">CAD Inspector</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                isDark
+                  ? "bg-[#222736] text-[#f0c889] border border-white/10"
+                  : "bg-slate-100 text-[#b38238] border border-slate-200"
+              }`}
+            >
+              {stalls.length}
+            </span>
           </button>
         )}
 
@@ -1115,9 +1150,9 @@ export const Planner3DPage: React.FC = () => {
 
               {/* Table Illusion & Dustbin Placement for Dining Tables */}
               {selectedStall.type === "dining_table" && (
-                <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+                <div className={`space-y-2 pt-2 border-t ${isDark ? "border-white/[0.08]" : "border-slate-200"}`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-white font-display">
+                    <span className={`text-[11px] font-bold font-display ${isDark ? "text-white" : "text-slate-900"}`}>
                       Tablecloth & 3D Illusion Linen
                     </span>
                     <Button
@@ -1151,8 +1186,12 @@ export const Planner3DPage: React.FC = () => {
                         onClick={() => handleSetTableTexture(selectedStall.id, pattern.url)}
                         className={`p-1 text-[10px] font-medium rounded border transition-all text-center ${
                           selectedStall.customTableTextureUrl === pattern.url
-                            ? "bg-[#222530] border-[#e2c99a] text-[#e2c99a] font-bold"
-                            : "bg-[#0e1017] border-white/10 text-[#8e95a5] hover:text-white"
+                            ? isDark
+                              ? "bg-[#222530] border-[#f0c889] text-[#f0c889] font-bold"
+                              : "bg-amber-100 border-[#b38238] text-[#b38238] font-bold"
+                            : isDark
+                            ? "bg-[#0e1017] border-white/10 text-[#8e95a5] hover:text-white"
+                            : "bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-900"
                         }`}
                       >
                         {pattern.label}
@@ -1164,13 +1203,13 @@ export const Planner3DPage: React.FC = () => {
 
               {/* BKR Video Wall & Instagram Reel Display */}
               {selectedStall.type === "bkr_video_wall" && (
-                <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+                <div className={`space-y-2 pt-2 border-t ${isDark ? "border-white/[0.08]" : "border-slate-200"}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-bold text-white block font-display">
+                      <span className={`text-xs font-bold block font-display ${isDark ? "text-white" : "text-slate-900"}`}>
                         BKR Catering Media Wall
                       </span>
-                      <span className="text-[10px] text-[#8e95a5] block">
+                      <span className={`text-[10px] block ${isDark ? "text-[#8e95a5]" : "text-slate-500"}`}>
                         Continuous 30-sec Instagram Reel stream featuring signature wedding feasts & decor
                       </span>
                     </div>
@@ -1190,193 +1229,403 @@ export const Planner3DPage: React.FC = () => {
               </PhysicsCard>
             </div>
           )}
-                  {/* FLOATING VIEWPORT HUD DOCK (BOTTOM CENTER OF 3D CANVAS - ZERO TOP CONGESTION) */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 p-1 rounded-2xl bg-[#11131a]/90 dark:bg-[#11131a]/90 bg-white/95 backdrop-blur-2xl border border-white/10 dark:border-white/10 border-slate-300 shadow-2xl font-mono text-xs select-none">
-            {/* Magnetic Snap */}
-            <button
-              onClick={() => {
-                setShowMagneticGuides((prev) => !prev);
-                playTactileClick(540);
-                toast.info(!showMagneticGuides ? "Magnetic Snapping Active" : "Snapping Off");
-              }}
-              title="Toggle Magnetic Snapping & Live Calipers"
-              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
-                showMagneticGuides
-                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889] font-bold"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <CrosshairVector size={13} />
-              <span className="hidden sm:inline text-[11px]">Snap</span>
-            </button>
-
-            {/* CAD Clearance Aisles */}
-            <button
-              onClick={() => setShowCadAisles((prev) => !prev)}
-              title="Toggle CAD Egress Aisle Widths"
-              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
-                showCadAisles
-                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889] font-bold"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Compass className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-[11px]">Aisles</span>
-            </button>
-
-            {/* Focus Lights */}
-            <button
-              onClick={() => setShowFocusLights((prev) => !prev)}
-              title="Toggle Counter Focus Lights"
-              className={`p-1.5 rounded-xl border transition-all ${
-                showFocusLights
-                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889]"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-            </button>
-
-            {/* Crowd Simulation Flow */}
-            <button
-              onClick={() => {
-                setShowCrowdSimulation((prev) => !prev);
-                toast.info(!showCrowdSimulation ? "Simulating Guest Movement" : "Flow Paused");
-              }}
-              title="Simulate Peak Muhurtham Crowd Flow"
-              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
-                showCrowdSimulation
-                  ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400 font-bold"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-[11px]">Crowd Flow</span>
-            </button>
-
-            {/* Floor Grid */}
-            <button
-              onClick={() => setShowGrid((g) => !g)}
-              title="Toggle Floor Coordinate Grid"
-              className={`p-1.5 rounded-xl border transition-all ${
-                showGrid
-                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889]"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Grid className="h-3.5 w-3.5" />
-            </button>
-
-            {/* Blueprint Opacity */}
-            <button
-              onClick={() => setBlueprintOpacity((prev) => (prev > 0 ? 0 : 0.45))}
-              title="Toggle Blueprint Map Projection"
-              className={`px-2 py-1.5 rounded-xl border text-xs flex items-center gap-1 transition-all ${
-                blueprintOpacity > 0
-                  ? "bg-[#222736] border-[#f0c889]/60 text-[#f0c889]"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              <span className="hidden md:inline text-[10px]">
-                {blueprintOpacity > 0 ? `${Math.round(blueprintOpacity * 100)}%` : "Map Off"}
-              </span>
-            </button>
-
-            {/* Audio Toggle */}
-            <button
-              onClick={toggleSound}
-              title={isAudioMutedState ? "Unmute Sound Feedback" : "Mute Sound"}
-              className="p-1.5 rounded-xl border border-transparent text-neutral-400 hover:text-white transition-colors"
-            >
-              {isAudioMutedState ? (
-                <VolumeX className="h-3.5 w-3.5 text-neutral-500" />
-              ) : (
-                <Volume2 className="h-3.5 w-3.5 text-[#f0c889]" />
-              )}
-            </button>
-
-            {/* Presentation Mode */}
-            <button
-              onClick={() => {
-                const nextState = !isPitchMode;
-                setIsPitchMode(nextState);
-                if (nextState) {
-                  setIsSidebarOpen(false);
-                  setShowCrowdSimulation(true);
-                  toast.success("Studio Presentation Mode Activated");
-                } else {
-                  setIsSidebarOpen(true);
-                }
-              }}
-              title="Fullscreen Studio Presentation Mode"
-              className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1 transition-all ${
-                isPitchMode
-                  ? "bg-[#f0c889] text-black font-bold"
-                  : "border-transparent text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-              <span className="hidden lg:inline text-[11px]">{isPitchMode ? "Exit" : "Present"}</span>
-            </button>
-          </div>
-</main>
-      </div>
-
-      {/* 3. BOTTOM FLOATING STALL CATALOG DRAWER */}
-      <footer
-        className={`relative z-30 px-4 py-2 border-t backdrop-blur-2xl transition-colors ${
-          isDark
-            ? "border-white/[0.08] bg-[#11131a]/95 text-[#f1f3f7]"
-            : "border-slate-200 bg-white/95 text-slate-900 shadow-md"
-        }`}
-      >
-        <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin pb-1">
-          <Button
-            size="sm"
-            onClick={() => setIsCustomStallModalOpen(true)}
-            className={`h-8 text-xs font-mono font-semibold rounded-lg shadow-sm flex items-center gap-1.5 shrink-0 border ${
-              isDark
-                ? "bg-[#1f2433] border-white/10 hover:border-[#f0c889] text-[#f0c889]"
-                : "bg-slate-100 border-slate-300 hover:border-[#b38238] text-[#b38238]"
-            }`}
-          >
-            <ImageIcon className="h-3.5 w-3.5" />
-            <span>Photo-to-3D Stall</span>
-          </Button>
-
-          <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 flex items-center gap-1.5 font-mono ${
-            isDark ? "text-neutral-400" : "text-slate-500"
-          }`}>
-            <Plus className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
-            DEPLOY COUNTER:
-          </span>
-
-          {(Object.keys(STALL_CATALOG) as StallType[]).map((type) => {
-            const item = STALL_CATALOG[type];
-            return (
-              <button
-                key={type}
-                onClick={() => handleAddStall(type)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-xs shrink-0 group font-mono ${
+          {/* 3. UNIFIED DYNAMIC EXPANDING STUDIO BAR (BOTTOM CENTER - ZERO CLUTTER) */}
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none font-mono">
+            {/* A. EXPANDING DEPLOY COUNTER TRAY */}
+            {isDeployMenuOpen && (
+              <div
+                className={`mb-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl w-[92vw] max-w-2xl space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
                   isDark
-                    ? "bg-[#161924] border-white/[0.08] hover:border-[#f0c889] hover:bg-white/5 text-white"
-                    : "bg-slate-50 border-slate-200 hover:border-[#b38238] hover:bg-white text-slate-800"
+                    ? "bg-[#11131a]/95 border-white/10 text-white"
+                    : "bg-white/98 border-slate-300 text-slate-900"
                 }`}
               >
+                {/* Header & Tabs */}
+                <div className="flex items-center justify-between border-b pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Plus className={`h-4 w-4 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+                    <span className="font-bold text-xs uppercase tracking-wider">DEPLOY CATERING COUNTER</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setIsDeployMenuOpen(false);
+                        setIsCustomStallModalOpen(true);
+                      }}
+                      className={`h-7 px-2.5 text-[11px] rounded-lg border font-mono font-semibold flex items-center gap-1 ${
+                        isDark
+                          ? "bg-[#1f2433] border-white/10 text-[#f0c889] hover:bg-white/10"
+                          : "bg-slate-100 border-slate-300 text-[#b38238] hover:bg-slate-200"
+                      }`}
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      <span>Photo-to-3D</span>
+                    </Button>
+                    <button
+                      onClick={() => setIsDeployMenuOpen(false)}
+                      className={`p-1 rounded-lg text-sm ${isDark ? "text-neutral-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* Category Tabs */}
                 <div
-                  className="w-2 h-2 rounded-full group-hover:scale-125 transition-transform"
-                  style={{ backgroundColor: item.accentColor }}
-                />
-                <span className="font-semibold">{item.name}</span>
-                <span className={`text-[10px] ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
-                  [{item.capacityPerHour}/hr]
+                  className={`flex items-center gap-1 p-1 rounded-xl border text-[11px] ${
+                    isDark ? "bg-[#090b10] border-white/10" : "bg-slate-100 border-slate-200"
+                  }`}
+                >
+                  {[
+                    { id: "cooking", label: "🍳 Live Cooking" },
+                    { id: "dining", label: "🪑 Dining Tables" },
+                    { id: "utilities", label: "🚰 Utilities" },
+                    { id: "media", label: "📺 Media & Decor" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setDeployCategory(cat.id as any)}
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold transition-all text-center ${
+                        deployCategory === cat.id
+                          ? isDark
+                            ? "bg-[#f0c889] text-black shadow-sm"
+                            : "bg-[#b38238] text-white shadow-sm"
+                          : isDark
+                          ? "text-neutral-400 hover:text-white"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Counter Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
+                  {getFilteredStallsByCategory(deployCategory).map((type) => {
+                    const item = STALL_CATALOG[type];
+                    if (!item) return null;
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          handleAddStall(type);
+                          setIsDeployMenuOpen(false);
+                        }}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border transition-all text-left group ${
+                          isDark
+                            ? "bg-[#161924] border-white/[0.08] hover:border-[#f0c889] hover:bg-white/5"
+                            : "bg-slate-50 border-slate-200 hover:border-[#b38238] hover:bg-white shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0 group-hover:scale-125 transition-transform"
+                            style={{ backgroundColor: item.accentColor }}
+                          />
+                          <div className="min-w-0">
+                            <div className="font-bold text-xs truncate">{item.name}</div>
+                            <div className={`text-[10px] truncate ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
+                              {item.name_ta} • {item.width}m × {item.depth}m
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 pl-2">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                              isDark
+                                ? "bg-[#222736] text-[#f0c889] border-white/10"
+                                : "bg-amber-50 text-[#b38238] border-amber-200"
+                            }`}
+                          >
+                            +{item.capacityPerHour}/hr
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* B. EXPANDING STUDIO TOOLS PALETTE */}
+            {isToolsMenuOpen && (
+              <div
+                className={`mb-3 p-3.5 rounded-2xl border shadow-2xl backdrop-blur-2xl w-[92vw] max-w-lg space-y-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
+                  isDark
+                    ? "bg-[#11131a]/95 border-white/10 text-white"
+                    : "bg-white/98 border-slate-300 text-slate-900"
+                }`}
+              >
+                <div className="flex items-center justify-between border-b pb-2">
+                  <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+                    STUDIO CAD &amp; VIEWPORT TOOLS
+                  </span>
+                  <button
+                    onClick={() => setIsToolsMenuOpen(false)}
+                    className={`p-1 rounded-lg text-sm ${isDark ? "text-neutral-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+                  {/* Snap */}
+                  <button
+                    onClick={() => {
+                      setShowMagneticGuides((prev) => !prev);
+                      playTactileClick(540);
+                    }}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      showMagneticGuides
+                        ? isDark
+                          ? "bg-[#222736] border-[#f0c889] text-[#f0c889] font-bold"
+                          : "bg-amber-50 border-[#b38238] text-[#b38238] font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <CrosshairVector size={16} />
+                    <span className="text-[11px]">Magnetic Snap</span>
+                    <span className="text-[9px] opacity-75">{showMagneticGuides ? "ON" : "OFF"}</span>
+                  </button>
+
+                  {/* Aisles */}
+                  <button
+                    onClick={() => setShowCadAisles((prev) => !prev)}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      showCadAisles
+                        ? isDark
+                          ? "bg-[#222736] border-[#f0c889] text-[#f0c889] font-bold"
+                          : "bg-amber-50 border-[#b38238] text-[#b38238] font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Compass className="h-4 w-4" />
+                    <span className="text-[11px]">CAD Aisles</span>
+                    <span className="text-[9px] opacity-75">{showCadAisles ? "VISIBLE" : "HIDDEN"}</span>
+                  </button>
+
+                  {/* Crowd Flow */}
+                  <button
+                    onClick={() => setShowCrowdSimulation((prev) => !prev)}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      showCrowdSimulation
+                        ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-500 font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="text-[11px]">Crowd Flow</span>
+                    <span className="text-[9px] opacity-75">{showCrowdSimulation ? "SIMULATING" : "PAUSED"}</span>
+                  </button>
+
+                  {/* Focus Lights */}
+                  <button
+                    onClick={() => setShowFocusLights((prev) => !prev)}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      showFocusLights
+                        ? isDark
+                          ? "bg-[#222736] border-[#f0c889] text-[#f0c889] font-bold"
+                          : "bg-amber-50 border-[#b38238] text-[#b38238] font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-[11px]">Focus Lights</span>
+                    <span className="text-[9px] opacity-75">{showFocusLights ? "ON" : "OFF"}</span>
+                  </button>
+
+                  {/* Floor Grid */}
+                  <button
+                    onClick={() => setShowGrid((g) => !g)}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      showGrid
+                        ? isDark
+                          ? "bg-[#222736] border-[#f0c889] text-[#f0c889] font-bold"
+                          : "bg-amber-50 border-[#b38238] text-[#b38238] font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Grid className="h-4 w-4" />
+                    <span className="text-[11px]">Floor Grid</span>
+                    <span className="text-[9px] opacity-75">{showGrid ? "ON" : "OFF"}</span>
+                  </button>
+
+                  {/* Blueprint Opacity */}
+                  <button
+                    onClick={() => setBlueprintOpacity((prev) => (prev > 0 ? 0 : 0.45))}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      blueprintOpacity > 0
+                        ? isDark
+                          ? "bg-[#222736] border-[#f0c889] text-[#f0c889] font-bold"
+                          : "bg-amber-50 border-[#b38238] text-[#b38238] font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="text-[11px]">Map Overlay</span>
+                    <span className="text-[9px] opacity-75">
+                      {blueprintOpacity > 0 ? `${Math.round(blueprintOpacity * 100)}%` : "OFF"}
+                    </span>
+                  </button>
+
+                  {/* Audio Toggle */}
+                  <button
+                    onClick={toggleSound}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      !isAudioMutedState
+                        ? isDark
+                          ? "bg-[#222736] border-[#f0c889] text-[#f0c889] font-bold"
+                          : "bg-amber-50 border-[#b38238] text-[#b38238] font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    {isAudioMutedState ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    <span className="text-[11px]">Audio Cues</span>
+                    <span className="text-[9px] opacity-75">{isAudioMutedState ? "MUTED" : "ACTIVE"}</span>
+                  </button>
+
+                  {/* Presentation Mode */}
+                  <button
+                    onClick={() => {
+                      const nextState = !isPitchMode;
+                      setIsPitchMode(nextState);
+                      setIsToolsMenuOpen(false);
+                      if (nextState) {
+                        setIsSidebarOpen(false);
+                        setShowCrowdSimulation(true);
+                        toast.success("Studio Presentation Mode Activated");
+                      }
+                    }}
+                    className={`p-2 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                      isPitchMode
+                        ? isDark
+                          ? "bg-[#f0c889] text-black font-bold"
+                          : "bg-[#b38238] text-white font-bold"
+                        : isDark
+                        ? "bg-[#161924] border-white/10 text-neutral-400 hover:text-white"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                    <span className="text-[11px]">Present</span>
+                    <span className="text-[9px] opacity-75">{isPitchMode ? "EXIT" : "FULL"}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* C. COMPACT FLOATING DYNAMIC ISLAND PILL */}
+            <div
+              className={`flex items-center gap-1.5 p-1.5 rounded-2xl border shadow-2xl backdrop-blur-2xl transition-colors ${
+                isDark
+                  ? "bg-[#11131a]/95 border-white/10 text-white"
+                  : "bg-white/95 border-slate-300 text-slate-900 shadow-xl"
+              }`}
+            >
+              {/* Deploy Counter Pill Button */}
+              <button
+                onClick={() => {
+                  setIsDeployMenuOpen((prev) => !prev);
+                  setIsToolsMenuOpen(false);
+                  playTactileClick(620);
+                }}
+                className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 transition-all ${
+                  isDeployMenuOpen
+                    ? isDark
+                      ? "bg-[#f0c889] text-black border-[#f0c889]"
+                      : "bg-[#b38238] text-white border-[#b38238]"
+                    : isDark
+                    ? "bg-[#161924] border-white/10 text-[#f0c889] hover:bg-white/5"
+                    : "bg-amber-50/80 border-amber-200 text-[#b38238] hover:bg-amber-100/60"
+                }`}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Deploy Counter</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                    isDeployMenuOpen
+                      ? isDark
+                        ? "bg-black/20 text-black"
+                        : "bg-white/20 text-white"
+                      : isDark
+                      ? "bg-[#222736] text-[#f0c889]"
+                      : "bg-white text-[#b38238] border border-amber-200"
+                  }`}
+                >
+                  {stalls.length}
                 </span>
               </button>
-            );
-          })}
-        </div>
-      </footer>
+
+              {/* Photo-to-3D Stall */}
+              <button
+                onClick={() => setIsCustomStallModalOpen(true)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  isDark
+                    ? "bg-[#161924] border-white/10 text-neutral-300 hover:text-white hover:bg-white/5"
+                    : "bg-slate-100 border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-200"
+                }`}
+                title="Upload photo to construct 3D counter"
+              >
+                <ImageIcon className={`h-3.5 w-3.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+                <span className="hidden sm:inline">Photo-to-3D</span>
+              </button>
+
+              {/* Google Maps Search */}
+              <button
+                onClick={() => setIsGoogleMapsModalOpen(true)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  isDark
+                    ? "bg-[#161924] border-white/10 text-[#f0c889] hover:bg-white/5"
+                    : "bg-slate-100 border-slate-300 text-[#b38238] hover:bg-slate-200"
+                }`}
+                title="Search Google Maps Venues & Photos"
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Google Maps</span>
+              </button>
+
+              {/* Studio Tools Toggle */}
+              <button
+                onClick={() => {
+                  setIsToolsMenuOpen((prev) => !prev);
+                  setIsDeployMenuOpen(false);
+                  playTactileClick(560);
+                }}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  isToolsMenuOpen
+                    ? isDark
+                      ? "bg-[#f0c889] text-black border-[#f0c889] font-bold"
+                      : "bg-[#b38238] text-white border-[#b38238] font-bold"
+                    : isDark
+                    ? "bg-[#161924] border-white/10 text-neutral-300 hover:text-white hover:bg-white/5"
+                    : "bg-slate-100 border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-200"
+                }`}
+                title="Toggle Studio Viewport Tools"
+              >
+                <Compass className={`h-3.5 w-3.5 ${isToolsMenuOpen ? "" : isDark ? "text-[#f0c889]" : "text-[#b38238]"}`} />
+                <span>Tools</span>
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
 {/* STARTING STEP: Studio Event Briefing Modal (Voice Speech & Custom Input) */}
       <StudioEventBriefingModal
         isOpen={isBriefingModalOpen}

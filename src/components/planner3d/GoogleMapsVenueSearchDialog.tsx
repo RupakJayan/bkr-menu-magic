@@ -40,12 +40,15 @@ interface GoogleMapsVenueSearchDialogProps {
 }
 
 const POPULAR_SUGGESTIONS = [
+  { label: "Vasavi Temple Anaimalai", query: "Vasavi Kanyaka Parameswari Temple Anaimalai" },
+  { label: "Masani Amman Anaimalai", query: "Masani Amman Temple Anaimalai" },
   { label: "Codissia Coimbatore", query: "Codissia Trade Fair Complex Coimbatore" },
-  { label: "Mayor Ramanathan Hall", query: "Mayor Ramanathan Chettiar Hall Chennai" },
+  { label: "MRC Hall Chennai", query: "Mayor Ramanathan Chettiar Hall Chennai" },
   { label: "ITC Grand Chola", query: "ITC Grand Chola Guindy Chennai" },
-  { label: "Sri Krishna Mandapam", query: "Sri Krishna Kalyana Mandapam Pollachi" },
-  { label: "Green Meadows Lawn", query: "Green Meadows Lawn Pollachi" },
-  { label: "Chennai Trade Centre", query: "Chennai Trade Centre Nandambakkam" },
+  { label: "Sri Krishna Pollachi", query: "Sri Krishna Kalyana Mandapam Pollachi" },
+  { label: "Padmavathi Ammal CBE", query: "Padmavathi Ammal Kalyana Mandapam Coimbatore" },
+  { label: "Subham Palace Tiruppur", query: "Subham Palace Tiruppur" },
+  { label: "Meenakshi Amman Madurai", query: "Madurai Meenakshi Amman Temple Hall" },
 ];
 
 export const GoogleMapsVenueSearchDialog: React.FC<GoogleMapsVenueSearchDialogProps> = ({
@@ -165,9 +168,9 @@ export const GoogleMapsVenueSearchDialog: React.FC<GoogleMapsVenueSearchDialogPr
 
   // Google Maps embed URL with toggleable satellite (k) vs roadmap (m)
   const embedUrl = selectedVenue
-    ? `https://maps.google.com/maps?q=${selectedVenue.lat},${selectedVenue.lng}&z=18&t=${
-        mapViewMode === "satellite" ? "k" : "m"
-      }&output=embed`
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(
+        `${selectedVenue.name}, ${selectedVenue.formattedAddress}`
+      )}&z=18&t=${mapViewMode === "satellite" ? "k" : "m"}&output=embed`
     : "";
 
   return (

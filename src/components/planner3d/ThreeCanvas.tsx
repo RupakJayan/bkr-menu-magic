@@ -255,7 +255,9 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full bg-[#050508] overflow-hidden select-none">
+    <div className={`relative w-full h-full overflow-hidden select-none transition-colors duration-300 ${
+      isDark ? "bg-[#07090e]" : "bg-[#f4f6fa]"
+    }`}>
       <Canvas
         shadows
         gl={{ preserveDrawingBuffer: true, antialias: true }}
