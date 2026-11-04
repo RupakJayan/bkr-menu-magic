@@ -1,0 +1,9 @@
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\layout\AppLayout.tsx:24: interface AppLayoutProps {
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\layout\AppLayout.tsx:39: export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\MenuEditor.tsx:3: import { calculateMenuSummary, updateMenuItem, removeMenuItem, addMenuItem } from '@/services/menuCalculationService';
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\MenuEditor.tsx:4: import { generateMenuPDF } from '@/services/pdfExportService';
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\MenuEditor.tsx:14: interface MenuEditorProps {
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\MenuEditor.tsx:27: export const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onMenuChange }) => {
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\MenuEditor.tsx:34: const summary = calculateMenuSummary(menu);
+C:\Users\rupak\Downloads\bkr-menu-magic\src\components\MenuEditor.tsx:119: generateMenuPDF(menu);
+C:\Users\rupak\Downloads\bkr-menu-magic\src\services\menuCalculationService.ts:5: export const calculateMenuSummary = (menu: EventMenu): MenuSummary => {

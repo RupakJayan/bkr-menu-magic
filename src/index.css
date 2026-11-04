@@ -1,0 +1,207 @@
+@import './styles/theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: var(--tp-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--tp-bg);
+    color: var(--tp-ink);
+    font-family: var(--tp-font-body);
+    font-size: 1rem;
+    line-height: 1.55;
+    font-weight: 400;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--tp-font-display);
+    font-weight: var(--tp-w-display);
+    letter-spacing: var(--tp-track-display);
+    line-height: 1.12;
+    color: var(--tp-ink);
+  }
+
+  /* Numerals and dates read as engraved figures, not headings */
+  table,
+  input,
+  textarea,
+  select,
+  button {
+    font-family: var(--tp-font-body);
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--tp-acc);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--tp-acc);
+    color: var(--tp-acc-ink);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tp-line) transparent;
+  }
+}
+
+@layer utilities {
+  /* Page shell */
+  .tp-container {
+    width: 100%;
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .tp-container {
+      padding-inline: 2rem;
+    }
+  }
+
+  .tp-rule {
+    height: var(--tp-bw);
+    background-color: var(--tp-line);
+  }
+
+  /* Keeps text legible over photography without a solid plate */
+  .tp-scrim-bottom {
+    background-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--tp-canvas) 100%
+    );
+  }
+
+  .tp-scrim-top {
+    background-image: linear-gradient(
+      180deg,
+      var(--tp-canvas) 0%,
+      transparent 100%
+    );
+  }
+
+  /* Engraved numerals for counts and totals */
+  .tp-figure {
+    font-family: var(--tp-font-display);
+    font-variant-numeric: lining-nums tabular-nums;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+}
+
+.bkr-brand-logo {
+  display: block;
+  height: auto;
+  object-fit: contain;
+}
+
+.admin-access-brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-access-brand .bkr-brand-logo {
+  width: 176px;
+  max-height: 94px;
+}
+
+.admin-dashboard-brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-dashboard-brand .bkr-brand-logo {
+  width: 122px;
+  max-height: 64px;
+}
+
+.not-found-brand {
+  display: inline-flex;
+  width: 176px;
+  margin-bottom: 24px;
+}
+
+.bkr-opening-loader {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--tp-ink);
+  background: var(--tp-bg);
+}
+
+.bkr-opening-content {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(100%, 720px);
+  text-align: center;
+}
+
+.bkr-opening-video-frame {
+  position: relative;
+  width: min(100%, 640px);
+  max-height: 68svh;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #171717;
+  box-shadow: var(--tp-sh);
+}
+
+.bkr-opening-video {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #171717;
+}
+
+.bkr-opening-static-logo {
+  width: min(88%, 560px);
+  max-height: min(58svh, 300px);
+  object-fit: contain;
+}
+
+.bkr-opening-content p {
+  margin: 0;
+  color: var(--tp-mute);
+  font-family: var(--tp-font-display);
+  font-size: clamp(20px, 4vw, 28px);
+}
+
+.bkr-opening-skip {
+  position: absolute;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  min-height: 44px;
+  padding: 0 18px;
+  color: var(--tp-ink);
+  background: var(--tp-surf);
+  border: 1px solid var(--tp-line);
+  border-radius: var(--tp-r-btn);
+  cursor: pointer;
+}

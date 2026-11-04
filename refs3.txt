@@ -1,0 +1,2 @@
+10  ghost
+9  outline
