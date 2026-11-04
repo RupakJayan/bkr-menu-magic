@@ -221,9 +221,10 @@ Respond ONLY with a valid JSON array:
 `;
 
   const modelsToTry = [
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
-    "gemini-2.5-flash",
+    "gemini-3.6-flash",
+    "gemini-3.7-flash",
+    "gemini-3.8-flash",
+    "gemini-3.5-flash",
     "gemini-flash-latest",
   ];
   let lastError: Error | null = null;
@@ -277,7 +278,8 @@ Respond ONLY with a valid JSON array:
         throw new Error("No text response from Gemini.");
       }
 
-      const parsed: Array<{ name_en: string; name_ta: string; category: string }> = JSON.parse(rawText);
+      const cleanedText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+      const parsed: Array<{ name_en: string; name_ta: string; category: string }> = JSON.parse(cleanedText);
 
       // Match each recognized dish to the active catalog
       const results: RecognizedVoiceDish[] = parsed.map((item) => {

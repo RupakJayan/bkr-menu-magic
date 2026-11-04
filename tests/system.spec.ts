@@ -505,4 +505,42 @@ test.describe("ST - System / End-to-End Tests", () => {
     const updatedTa = page.locator('text=கிராண்ட் நெய் பொங்கல்').first();
     await expect(updatedTa).toBeVisible();
   });
+
+  test("ST-11: AI Menu Lens Dialog has pre-configured Gemini API key and shows ready status without prompt", async ({ page }) => {
+    // Authenticate admin session
+    await page.goto("/bkr-menu-magic/#/admin");
+    await page.evaluate(() => {
+      sessionStorage.setItem("bkr-admin-session", "authenticated");
+    });
+
+    // Open Menu Creator
+    await page.goto("/bkr-menu-magic/#/menu-creator");
+    await page.waitForTimeout(600);
+
+    // Click AI Menu Lens in topbar
+    const aiLensBtn = page.locator('button:has-text("AI Menu Lens")').first();
+    await expect(aiLensBtn).toBeVisible();
+    await aiLensBtn.click();
+    await page.waitForTimeout(400);
+
+    // Verify AI Menu Lens Dialog opens
+    const lensDialog = page.locator('[role="dialog"]').filter({ hasText: "AI Menu Lens" }).first();
+    await expect(lensDialog).toBeVisible();
+
+    // Verify "Gemini AI Vision Ready" is displayed
+    const readyBadge = lensDialog.locator('text=Gemini AI Vision Ready').first();
+    await expect(readyBadge).toBeVisible();
+
+    // Verify "Paste AI Studio API key" is NOT displayed by default
+    const pasteKeyInput = lensDialog.locator('input[placeholder*="Paste AI Studio API key"]');
+    await expect(pasteKeyInput).toHaveCount(0);
+
+    // Verify Take Photo and Upload Photo options are present and ready
+    await expect(lensDialog.locator('text=Take Photo with Camera')).toBeVisible();
+    await expect(lensDialog.locator('text=Upload Picture(s)')).toBeVisible();
+
+    // Close Dialog
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  });
 });

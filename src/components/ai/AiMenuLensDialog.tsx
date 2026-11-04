@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import {
+  DEFAULT_GEMINI_API_KEY,
   getGeminiApiKey,
   setGeminiApiKey,
   hasGeminiApiKey,
@@ -72,6 +73,15 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync API key state and reset dialog state when opened
+  useEffect(() => {
+    if (open) {
+      const current = getGeminiApiKey();
+      setApiKeyInput(current);
+      setShowKeyEditor(!current);
+    }
+  }, [open]);
 
   const handleSaveApiKey = () => {
     if (!apiKey.trim()) {
@@ -219,25 +229,36 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
         </div>
 
         <div className="p-6 space-y-6">
-          {/* API Key Banner / Editor */}
+          {/* API Key Status / Editor */}
           {showKeyEditor ? (
-            <div className="p-4 rounded-xl border border-line bg-surf2 space-y-3">
+            <div className="p-4 rounded-xl border border-line bg-surf2 space-y-3 animate-fade-in">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-ink flex items-center gap-2">
                   <Key className="h-4 w-4 text-acc" />
                   Google Gemini API Key Setup
                 </span>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-acc hover:underline flex items-center gap-1 font-semibold"
-                >
-                  Get Free Key from Google AI Studio <ExternalLink className="h-3 w-3" />
-                </a>
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-acc hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    Get Free Key <ExternalLink className="h-3 w-3" />
+                  </a>
+                  {hasGeminiApiKey() && (
+                    <button
+                      type="button"
+                      onClick={() => setShowKeyEditor(false)}
+                      className="text-xs text-mute hover:text-ink font-semibold"
+                    >
+                      Hide
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-mute">
-                AI Menu Lens uses Google Gemini Multimodal Vision to decipher Tamil and English handwriting. Your key is stored only locally in your browser.
+                AI Menu Lens uses Google Gemini Multimodal Vision to decipher Tamil and English handwriting. A built-in system key is active by default.
               </p>
               <div className="flex gap-2">
                 <Input
@@ -250,13 +271,30 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
                 <Button onClick={handleSaveApiKey} className="bg-acc text-accink hover:opacity-95 font-medium px-4 rounded-lg shadow-theme-sm shrink-0">
                   Save Key
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setApiKeyInput(DEFAULT_GEMINI_API_KEY);
+                    setGeminiApiKey(DEFAULT_GEMINI_API_KEY);
+                    setShowKeyEditor(false);
+                    toast({
+                      title: "Default Key Restored",
+                      description: "Standard built-in Gemini API key is active.",
+                    });
+                  }}
+                  className="border-line text-ink font-medium px-3 rounded-lg text-xs shrink-0"
+                >
+                  Reset Default
+                </Button>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between px-3.5 py-2.5 bg-surf2 rounded-lg text-xs text-ink border border-line">
               <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                Gemini AI Vision Ready
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400">Gemini AI Vision Ready</span>
+                <span className="text-mute hidden sm:inline">· Pre-configured & active</span>
               </span>
               <button
                 type="button"

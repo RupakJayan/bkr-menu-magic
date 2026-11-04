@@ -631,6 +631,55 @@ test.describe("UT - Unit Tests", () => {
     expect(JSON.parse(localStorage.getItem(localDataKey) || "{}").id).toBe("evt_preserve_1");
     expect(JSON.parse(localStorage.getItem(localEventsKey) || "[]")).toHaveLength(1);
   });
+
+  test("UT-23: Pre-configured Gemini Vision AI API key resolution and fallback", async () => {
+    // Ensure mock storage exists if running in Node environment
+    const store = new Map<string, string>();
+    const mockStorage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, String(v)),
+      removeItem: (k: string) => store.delete(k),
+      clear: () => store.clear(),
+      key: (i: number) => Array.from(store.keys())[i] ?? null,
+      get length() { return store.size; },
+    };
+
+    if (typeof globalThis.localStorage === "undefined") {
+      (globalThis as any).localStorage = mockStorage;
+    }
+    if (typeof globalThis.sessionStorage === "undefined") {
+      (globalThis as any).sessionStorage = mockStorage;
+    }
+
+    const {
+      DEFAULT_GEMINI_API_KEY,
+      getGeminiApiKey,
+      setGeminiApiKey,
+      hasGeminiApiKey,
+    } = await import("../src/services/aiLensService");
+
+    // 1. Pre-configured built-in key must exist and be valid
+    expect(DEFAULT_GEMINI_API_KEY).toBeTruthy();
+    expect(DEFAULT_GEMINI_API_KEY.length).toBeGreaterThan(20);
+    expect(hasGeminiApiKey()).toBe(true);
+
+    // 2. Resolver returns built-in key when storage is empty
+    globalThis.localStorage.removeItem("bkr-gemini-api-key");
+    globalThis.sessionStorage.removeItem("bkr-gemini-api-key");
+    expect(getGeminiApiKey()).toBe(DEFAULT_GEMINI_API_KEY);
+
+    // 3. Placeholder or broken strings in localStorage are ignored
+    globalThis.localStorage.setItem("bkr-gemini-api-key", "Paste AI Studio API key (AIzaSy...)");
+    expect(getGeminiApiKey()).toBe(DEFAULT_GEMINI_API_KEY);
+
+    // 4. Custom key override works and can be reset
+    setGeminiApiKey("custom-test-key-12345678901234567890");
+    expect(getGeminiApiKey()).toBe("custom-test-key-12345678901234567890");
+
+    // 5. Clearing reverts to built-in key
+    setGeminiApiKey("");
+    expect(getGeminiApiKey()).toBe(DEFAULT_GEMINI_API_KEY);
+  });
 });
 
 
