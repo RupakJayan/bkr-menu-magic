@@ -28,6 +28,55 @@ export type TimeOfDay = "morning" | "afternoon" | "sunset" | "night";
 
 export type WeatherAtmosphere = "clear" | "golden_hour" | "starlight" | "festive_serial_lights";
 
+export type StallGeometryShape =
+  | "rectangular"
+  | "cylindrical_rotunda" // Round 360° counter
+  | "octagonal_pavilion" // 8-sided royal pavilion
+  | "temple_mandapam_shrine" // Grand gold/silver temple statue sanctum with tiered vimana & pillars
+  | "heritage_chariot_cart" // Temple rath / wooden chariot with 3D carved wheels
+  | "stepped_pyramid_uruli"; // Multi-tiered concentric brass/granite round display
+
+export interface Custom3DModelSpec {
+  id: string;
+  name: string;
+  shape: StallGeometryShape;
+  aiPrompt: string;
+  aiLensSummary: {
+    detectedShape: string;
+    dominantPalette: string[];
+    detectedStyle: string;
+    primaryMaterial: "gold_and_silver" | "brass" | "teak_wood" | "black_granite" | "marble";
+    confidence: number;
+  };
+  dimensions: {
+    width: number;
+    depth: number;
+    height: number;
+    radius?: number;
+  };
+  materials: {
+    primaryColor: string;
+    accentColor: string;
+    metalness: number;
+    roughness: number;
+    emissive?: string;
+    emissiveIntensity?: number;
+  };
+  features: {
+    hasDeityStatue?: boolean;
+    hasPillars?: boolean;
+    pillarCount?: number;
+    hasPrabhavaliArch?: boolean;
+    hasBrassVilakku?: boolean;
+    hasTempleGopuram?: boolean;
+    has3DWheels?: boolean;
+    hasConicalRoof?: boolean;
+    hasCenterUruli?: boolean;
+  };
+  sourceImageUrl?: string;
+  createdAt: number;
+}
+
 export interface StallItem {
   id: string;
   type: StallType;
@@ -51,6 +100,7 @@ export interface StallItem {
   wing?: "North" | "South" | "East" | "West" | "Central";
   customPhotoUrl?: string; // photo uploaded to generate this stall's 3D facade
   customTableTextureUrl?: string; // photo / illusion uploaded for dining table linen
+  customModelSpec?: Custom3DModelSpec; // Full parametric AI-synthesized 3D model specification
 }
 
 export interface MandapamVenue {
