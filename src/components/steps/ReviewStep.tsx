@@ -4,7 +4,7 @@ import { buildDishKey, findDishByKey, getManagedMenuCatalog, normalizeDishKeys }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BadgeCheck, Calendar, CalendarDays, Check, ChevronDown, ChevronUp, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X, Sparkles } from 'lucide-react';
+import { BadgeCheck, Calendar, CalendarDays, Check, ChevronDown, ChevronUp, ClipboardList, Coffee, MapPin, Phone, User, Utensils, Edit2, Trash2, Plus, Save, X, Compass } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatISTDate } from '@/utils/istDate';
@@ -676,7 +676,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ menu, onMenuChange, onNe
                     className="text-xs text-pink-600 hover:text-pink-800 font-bold flex items-center gap-1 disabled:opacity-40"
                     title="Auto Translate to Tamil"
                   >
-                    <Sparkles className={`h-3 w-3 ${isAiTranslatingDish ? "animate-spin text-amber-500" : ""}`} />
+                    <Compass className={`h-3 w-3 ${isAiTranslatingDish ? "animate-spin text-amber-500" : ""}`} />
                     <span>{isAiTranslatingDish ? "Translating..." : "✨ Auto Translate"}</span>
                   </button>
                 </div>

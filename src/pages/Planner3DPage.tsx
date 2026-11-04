@@ -12,7 +12,6 @@ import {
   Plus,
   ArrowLeft,
   Share2,
-  Sparkles,
   Zap,
   Droplet,
   Utensils,
@@ -24,6 +23,7 @@ import {
   ExternalLink,
   Mic,
   Sliders,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -35,7 +35,13 @@ import {
   StudioEventBriefingModal,
   StudioBriefingData,
 } from "@/components/planner3d/StudioEventBriefingModal";
-import { LusionParticles } from "@/components/effects/LusionParticles";
+import { VectorGridOverlay } from "@/components/effects/VectorGridOverlay";
+import {
+  CrosshairVector,
+  DatumVector,
+  SpatialGridVector,
+  DimensionCaliperVector,
+} from "@/components/ui/VectorIcons";
 import {
   StallItem,
   StallType,
@@ -401,18 +407,18 @@ export const Planner3DPage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#090a0d] text-[#f4efe6] font-body flex flex-col">
-      {/* Background Studio Constellation Filaments */}
-      <LusionParticles particleCount={30} speed={0.4} />
+    <div className="relative w-screen h-screen overflow-hidden bg-[#090a0d] text-[#f4efe6] font-sans flex flex-col select-none">
+      {/* Precision CAD Vector Grid & Coordinate Tracking */}
+      <VectorGridOverlay opacity={0.25} showCoordinates={true} />
 
       {/* 1. STUDIO TOP HUD HEADER */}
-      <header className="relative z-30 flex items-center justify-between px-4 py-2.5 border-b border-white/[0.08] bg-[#111318]/90 backdrop-blur-2xl">
+      <header className="relative z-30 flex items-center justify-between px-4 py-2 border-b border-white/[0.08] bg-[#111318]/90 backdrop-blur-2xl">
         
         {/* Brand & Return */}
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-[#8e95a5] hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
             title="Back to Home"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -420,15 +426,15 @@ export const Planner3DPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-wider text-sm font-display text-white">
-                BKR 3D STUDIO
+              <span className="font-bold tracking-wider text-xs font-mono text-white">
+                BKR // 3D STAGE PLANNER
               </span>
-              <Badge className="bg-[#222530] text-[#e2c99a] border border-[#e2c99a]/30 text-[10px] font-mono font-semibold px-2 py-0">
-                STAGE RENDER
-              </Badge>
+              <span className="bg-[#222530] text-[#e2c99a] border border-white/10 text-[9px] font-mono font-semibold px-2 py-0.5 rounded">
+                VIEWPORT ACTIVE
+              </span>
             </div>
-            <p className="text-[10px] text-[#8e95a5] hidden sm:block font-mono">
-              Professional 3D Mandapam & Buffet Space Planner
+            <p className="text-[10px] text-neutral-400 hidden sm:block font-mono">
+              Orthographic Mandapam &amp; Live Counter Spatial Engine
             </p>
           </div>
         </div>
@@ -444,10 +450,10 @@ export const Planner3DPage: React.FC = () => {
               <Mic className="h-3 w-3" />
             </div>
             <div className="text-left">
-              <span className="font-bold text-white block flex items-center gap-1 font-display group-hover:text-[#e2c99a] transition-colors">
-                Studio Briefing <span className="text-[10px] text-[#e2c99a] font-mono">✎</span>
+              <span className="font-bold text-white block flex items-center gap-1 font-mono text-xs group-hover:text-[#e2c99a] transition-colors">
+                Event Intake [Briefing]
               </span>
-              <span className="text-[10px] text-[#8e95a5] block font-mono">
+              <span className="text-[10px] text-neutral-400 block font-mono">
                 {headCount.toLocaleString("en-IN")} Pax • {stalls.filter((s) => s.type === "dosa").length}x Dosa Counters
               </span>
             </div>
@@ -460,8 +466,8 @@ export const Planner3DPage: React.FC = () => {
           >
             <MapPin className="h-3.5 w-3.5 text-[#e2c99a]" />
             <div className="text-left">
-              <span className="font-bold text-white block">{selectedVenue.name}</span>
-              <span className="text-[10px] text-[#8e95a5] block font-mono">
+              <span className="font-bold text-white block font-mono text-xs">{selectedVenue.name}</span>
+              <span className="text-[10px] text-neutral-400 block font-mono">
                 {selectedVenue.hallWidth}m × {selectedVenue.hallLength}m
               </span>
             </div>
@@ -477,7 +483,7 @@ export const Planner3DPage: React.FC = () => {
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "orbit"
                   ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-[#8e95a5] hover:text-white"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               3D Orbit
@@ -487,7 +493,7 @@ export const Planner3DPage: React.FC = () => {
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "top_down"
                   ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-[#8e95a5] hover:text-white"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               2D Plan
@@ -497,7 +503,7 @@ export const Planner3DPage: React.FC = () => {
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "walkthrough"
                   ? "bg-[#e2c99a] text-black font-bold shadow-sm"
-                  : "text-[#8e95a5] hover:text-white"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               Walkthrough
@@ -511,7 +517,7 @@ export const Planner3DPage: React.FC = () => {
             className={`p-2 rounded-xl border transition-all text-xs flex items-center gap-1.5 ${
               blueprintOpacity > 0
                 ? "bg-[#222530] border-[#e2c99a] text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
+                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
             }`}
           >
             <Eye className="h-4 w-4" />
@@ -527,7 +533,7 @@ export const Planner3DPage: React.FC = () => {
             className={`p-2 rounded-xl border transition-all ${
               showGrid
                 ? "bg-[#222530] border-[#e2c99a]/50 text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
+                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
             }`}
           >
             <Grid className="h-4 w-4" />
@@ -540,7 +546,7 @@ export const Planner3DPage: React.FC = () => {
             className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
               showCadAisles
                 ? "bg-[#c5a059]/20 border-[#c5a059] text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
+                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
             }`}
           >
             <Compass className="h-4 w-4" />
@@ -553,11 +559,11 @@ export const Planner3DPage: React.FC = () => {
               setShowFocusLights((f) => !f);
               toast.info(!showFocusLights ? "Focus Spotlights Activated" : "Focus Lights Off");
             }}
-            title="Toggle Theatrical Focus Lights on Live Stalls"
+            title="Toggle Focus Lights on Live Stalls"
             className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
               showFocusLights
                 ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a]"
-                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
+                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
             }`}
           >
             <Lightbulb className="h-4 w-4" />
@@ -575,8 +581,8 @@ export const Planner3DPage: React.FC = () => {
             title="Simulate Peak Muhurtham Crowd Movement"
             className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all font-mono ${
               showCrowdSimulation
-                ? "bg-[#e2c99a] text-black font-bold shadow-md shadow-[#e2c99a]/20"
-                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
+                ? "bg-[#e2c99a] text-black font-bold shadow-md"
+                : "bg-[#161822] border-white/[0.08] text-neutral-400 hover:text-white"
             }`}
           >
             <Users className="h-3.5 w-3.5" />
@@ -597,13 +603,13 @@ export const Planner3DPage: React.FC = () => {
                 setIsSidebarOpen(true);
               }
             }}
-            className={`h-8 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all ${
+            className={`h-8 text-xs font-mono font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all ${
               isPitchMode
-                ? "bg-[#e2c99a] text-black font-display font-extrabold"
+                ? "bg-[#e2c99a] text-black"
                 : "bg-[#161822] border border-white/[0.08] text-white hover:text-[#e2c99a]"
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <Maximize2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{isPitchMode ? "Exit Presentation" : "Present 3D"}</span>
           </Button>
 
@@ -611,7 +617,7 @@ export const Planner3DPage: React.FC = () => {
           <Button
             size="sm"
             onClick={handleExportSnapshot}
-            className="h-8 text-xs bg-[#e2c99a] hover:bg-[#c5a059] text-black font-extrabold rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95"
+            className="h-8 text-xs bg-[#e2c99a] hover:bg-[#c5a059] text-black font-mono font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95"
           >
             <Camera className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Export PNG</span>
@@ -631,13 +637,13 @@ export const Planner3DPage: React.FC = () => {
           }`}
         >
           <div className="flex items-center justify-between p-3 border-b border-white/[0.08]">
-            <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5 font-display">
-              <Sparkles className="h-4 w-4 text-[#e2c99a]" />
-              Smart Capacity & Duplication
+            <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5 font-mono">
+              <CrosshairVector size={14} className="text-[#e2c99a]" />
+              CAPACITY &amp; DUPLICATION DYNAMICS
             </span>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="text-[#8e95a5] hover:text-white p-1 rounded-lg"
+              className="text-neutral-400 hover:text-white p-1 rounded-lg"
             >
               ×
             </button>
@@ -664,7 +670,7 @@ export const Planner3DPage: React.FC = () => {
             className="absolute left-3 top-3 z-30 p-2.5 rounded-xl bg-[#161822] border border-white/[0.1] text-[#e2c99a] shadow-xl hover:scale-105 transition-transform"
             title="Open Capacity Advisor"
           >
-            <Sparkles className="h-5 w-5" />
+            <CrosshairVector size={18} />
           </button>
         )}
 
@@ -848,20 +854,20 @@ export const Planner3DPage: React.FC = () => {
       </div>
 
       {/* 3. BOTTOM FLOATING STALL CATALOG DRAWER */}
-      <footer className="relative z-30 px-4 py-2.5 border-t border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl">
+      <footer className="relative z-30 px-4 py-2 border-t border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl">
         <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin pb-1">
           <Button
             size="sm"
             onClick={() => setIsCustomStallModalOpen(true)}
-            className="h-8 text-xs bg-[#222530] border border-white/10 hover:border-[#e2c99a] text-[#e2c99a] font-bold rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
+            className="h-8 text-xs font-mono font-semibold bg-[#222530] border border-white/10 hover:border-[#e2c99a] text-[#e2c99a] rounded-lg shadow-sm flex items-center gap-1.5 shrink-0"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            Photo-to-3D Stall
+            <ImageIcon className="h-3.5 w-3.5" />
+            <span>Photo-to-3D Stall</span>
           </Button>
 
-          <span className="text-xs font-bold uppercase tracking-wider text-[#8e95a5] shrink-0 flex items-center gap-1.5 font-mono">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 shrink-0 flex items-center gap-1.5 font-mono">
             <Plus className="h-3.5 w-3.5 text-[#e2c99a]" />
-            Add Counter:
+            DEPLOY COUNTER:
           </span>
 
           {(Object.keys(STALL_CATALOG) as StallType[]).map((type) => {
@@ -870,15 +876,15 @@ export const Planner3DPage: React.FC = () => {
               <button
                 key={type}
                 onClick={() => handleAddStall(type)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a] hover:bg-white/5 transition-all text-xs shrink-0 group"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a] hover:bg-white/5 transition-all text-xs shrink-0 group font-mono"
               >
                 <div
-                  className="w-2.5 h-2.5 rounded-full group-hover:scale-125 transition-transform"
+                  className="w-2 h-2 rounded-full group-hover:scale-125 transition-transform"
                   style={{ backgroundColor: item.accentColor }}
                 />
                 <span className="font-semibold text-white">{item.name}</span>
-                <span className="text-[10px] text-[#8e95a5] font-mono">
-                  ({item.capacityPerHour}/hr)
+                <span className="text-[10px] text-neutral-400">
+                  [{item.capacityPerHour}/hr]
                 </span>
               </button>
             );

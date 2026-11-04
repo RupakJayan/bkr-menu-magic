@@ -10,23 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Mic,
-  MicOff,
-  Sparkles,
-  Check,
-  Plus,
-  Trash2,
-  Volume2,
-  VolumeX,
-  AlertCircle,
-  Layers,
-  CheckCircle2,
-  Utensils,
-  RefreshCw,
-  Key,
-  ExternalLink,
-} from "lucide-react";
+import { Mic, MicOff, Compass, Check, Plus, Trash2, Volume2, VolumeX, AlertCircle, Layers, CheckCircle2, Utensils, RefreshCw, Key, ExternalLink } from "lucide-react";
 import {
   AudioRecordingController,
   processVoiceWithGemini,
@@ -454,7 +438,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
               {/* Spoken Examples Box */}
               <div className="p-3.5 rounded-xl border border-line bg-surf-2 text-left space-y-2 max-w-lg mx-auto">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-mute flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-acc" />
+                  <Compass className="h-3.5 w-3.5 text-acc" />
                   Try Speaking Naturally Like:
                 </span>
                 <div className="space-y-1.5 text-xs text-ink">
@@ -553,7 +537,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
             <div className="py-12 text-center space-y-4 animate-fade-in">
               <div className="relative inline-flex items-center justify-center">
                 <RefreshCw className="h-12 w-12 text-acc animate-spin" />
-                <Sparkles className="h-5 w-5 text-amber-500 absolute" />
+                <Compass className="h-5 w-5 text-amber-500 absolute" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-ink">
@@ -572,7 +556,7 @@ export const AiVoiceAssistantDialog: React.FC<AiVoiceAssistantDialogProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-ink flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-acc" />
+                    <Compass className="h-4 w-4 text-acc" />
                     Recognized Dishes ({recognizedDishes.filter((d) => d.selected).length} selected)
                   </h3>
                   <p className="text-[11px] text-mute">

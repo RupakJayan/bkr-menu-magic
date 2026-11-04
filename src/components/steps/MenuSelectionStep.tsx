@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronLeft, ChevronRight, Leaf, Mic, MicOff, Plus, Search, Sparkles, TrendingUp, Utensils, Volume2, X, Calendar, Layers, ArrowUpDown } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Leaf, Mic, MicOff, Plus, Search, Compass, TrendingUp, Utensils, Volume2, X, Calendar, Layers, ArrowUpDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoiceTyping } from "@/hooks/useVoiceTyping";
 import { useToast } from "@/hooks/use-toast";
@@ -942,7 +942,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                     }`}
                     title="Hands-free continuous listening: speak multiple items and they will be auto-added to this session!"
                   >
-                    <Sparkles className="h-3 w-3" />
+                    <Compass className="h-3 w-3" />
                     Continuous Menu Add
                   </button>
                 </div>
@@ -1100,7 +1100,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
             <div className="p-3 rounded-xl border border-line/80 bg-surf shadow-sm space-y-2 animate-fade-in">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-ink">
-                  <Sparkles className="h-3.5 w-3.5 text-acc shrink-0" />
+                  <Compass className="h-3.5 w-3.5 text-acc shrink-0" />
                   <span>
                     Voice Activity ({recentResults.filter((r) => r.status === "added").length} added
                     {recentResults.some((r) => r.status === "already-added") &&
@@ -1168,7 +1168,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                 <div className="flex items-center gap-1.5">
                   {normalizedQuery ? (
                     <>
-                      <Sparkles className="h-3.5 w-3.5 text-pink-500 dark:text-amber-400" />
+                      <Compass className="h-3.5 w-3.5 text-pink-500 dark:text-amber-400" />
                       <span>
                         Recommended dishes for &ldquo;<span className="text-pink-600 dark:text-amber-400 font-semibold">{searchQuery}</span>&rdquo;
                       </span>
@@ -1246,7 +1246,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                             <div className="flex items-center gap-1.5">
                               {isAiTranslatingCustom && (
                                 <span className="text-[10px] text-acc font-semibold animate-pulse flex items-center gap-1">
-                                  <Sparkles className="h-2.5 w-2.5 animate-spin text-acc" />
+                                  <Compass className="h-2.5 w-2.5 animate-spin text-acc" />
                                   Translating...
                                 </span>
                               )}
@@ -1257,7 +1257,7 @@ export const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({
                                 className="text-[10px] font-bold text-acc hover:underline flex items-center gap-1 disabled:opacity-40"
                                 title="Auto Translate to Tamil"
                               >
-                                <Sparkles className="h-2.5 w-2.5" />
+                                <Compass className="h-2.5 w-2.5" />
                                 ✨ Auto Translate
                               </button>
                             </div>

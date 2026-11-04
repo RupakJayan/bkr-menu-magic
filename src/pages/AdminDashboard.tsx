@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowDownToLine, CalendarDays, CheckCircle2, Download, FileJson, Key, LogOut, Menu as MenuIcon, Plus, Search, Sparkles, Trash2, Upload, Users } from "lucide-react";
+import { ArrowDownToLine, CalendarDays, CheckCircle2, Download, FileJson, Key, LogOut, Menu as MenuIcon, Plus, Search, Compass, Trash2, Upload, Users } from "lucide-react";
 import type { EventMenu } from "@/types/menu";
 import { AiMenuLensDialog } from "@/components/ai/AiMenuLensDialog";
 import {
@@ -455,7 +455,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               className="border-acc/40 bg-acc/10 hover:bg-acc/15 text-acc dark:text-acc font-semibold shadow-theme-sm"
               title="Convert photo of handwritten catering notes into a menu"
             >
-              <Sparkles className="mr-1.5 h-4 w-4 text-acc" />
+              <Compass className="mr-1.5 h-4 w-4 text-acc" />
               AI Menu Lens
             </Button>
             <Button variant="outline" onClick={() => startBooking()}>Create event</Button>

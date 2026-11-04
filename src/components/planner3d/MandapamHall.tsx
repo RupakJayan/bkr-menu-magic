@@ -224,10 +224,10 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <meshStandardMaterial color="#0c0d16" emissive="#14b8a6" emissiveIntensity={0.35} />
         </mesh>
         <Text position={[0, 2.52, 0.04]} fontSize={0.16} color="#14b8a6" anchorX="center">
-          💧 HANDWASH STATION
+          HANDWASH CONCOURSE // WEST
         </Text>
-        <Text position={[0, 2.3, 0.04]} fontSize={0.14} color="#f8fafc" anchorX="center">
-          கை கழுவும் இடம் ➡️
+        <Text position={[0, 2.3, 0.04]} fontSize={0.13} color="#f8fafc" anchorX="center">
+          கை கழுவும் இடம் [EAST CORRIDOR]
         </Text>
       </group>
 
@@ -244,10 +244,10 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <meshStandardMaterial color="#0c0d16" emissive="#f43f5e" emissiveIntensity={0.35} />
         </mesh>
         <Text position={[0, 2.52, 0.04]} fontSize={0.16} color="#f43f5e" anchorX="center">
-          🎁 TAMBOOLAM & EXIT
+          TAMBOOLAM &amp; RECEPTION EXIT
         </Text>
-        <Text position={[0, 2.3, 0.04]} fontSize={0.14} color="#f8fafc" anchorX="center">
-          ⬅️ நன்றி மீண்டும் வருக
+        <Text position={[0, 2.3, 0.04]} fontSize={0.13} color="#f8fafc" anchorX="center">
+          நன்றி மீண்டும் வருக [SOUTH PORTAL]
         </Text>
       </group>
 
@@ -261,8 +261,8 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <boxGeometry args={[2.8, 0.55, 0.05]} />
           <meshStandardMaterial color="#0c0d16" emissive="#d8b36d" emissiveIntensity={0.25} />
         </mesh>
-        <Text position={[0, 2.6, 0.04]} fontSize={0.17} color="#d8b36d" anchorX="center">
-          🍽️ விருந்து அரங்கம் • DINING BANQUET ⬆️
+        <Text position={[0, 2.6, 0.04]} fontSize={0.16} color="#d8b36d" anchorX="center">
+          DINING BANQUET HALL // விருந்து அரங்கம்
         </Text>
       </group>
 

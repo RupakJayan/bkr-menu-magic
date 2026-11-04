@@ -3,82 +3,86 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Float, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Maximize2, Users, Utensils } from "lucide-react";
+import { Maximize2, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CrosshairVector, DatumVector } from "@/components/ui/VectorIcons";
 
-const HologramStall: React.FC = () => {
+const DosaStallModel: React.FC = () => {
   const meshRef = useRef<THREE.Group | null>(null);
 
   useFrame(({ clock }) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y = clock.getElapsedTime() * 0.4;
+      meshRef.current.rotation.y = clock.getElapsedTime() * 0.35;
     }
   });
 
   return (
     <group ref={meshRef}>
-      {/* Floating Holographic Platform */}
+      {/* 1. Precision Metric Base Plinth */}
       <mesh position={[0, -0.6, 0]}>
-        <cylinderGeometry args={[2.2, 2.4, 0.2, 32]} />
+        <cylinderGeometry args={[2.2, 2.4, 0.16, 32]} />
         <meshStandardMaterial
-          color="#0c0d16"
-          emissive="#e2c99a"
-          emissiveIntensity={0.2}
-          roughness={0.2}
+          color="#0e1017"
+          roughness={0.3}
           metalness={0.8}
         />
       </mesh>
 
-      {/* Hologram Light Rings */}
-      <mesh position={[0, -0.48, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.8, 2.0, 32]} />
-        <meshBasicMaterial color="#e2c99a" side={THREE.DoubleSide} transparent opacity={0.6} />
+      {/* 2. Geometric Coordinate Datum Ring */}
+      <mesh position={[0, -0.51, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.9, 2.05, 32]} />
+        <meshBasicMaterial color="#e2c99a" side={THREE.DoubleSide} transparent opacity={0.35} />
       </mesh>
 
-      {/* 3D Dosa Station Model */}
-      <Float speed={2} rotationIntensity={0.2} floatIntensity={0.3}>
-        {/* Stainless Steel Tawa Base */}
+      {/* 3. 3D Architectural Counter Assembly */}
+      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.15}>
+        {/* Obsidian Stone Counter Base */}
         <mesh position={[0, 0, 0]} castShadow>
           <boxGeometry args={[2.2, 0.8, 1.2]} />
-          <meshStandardMaterial color="#f59e0b" roughness={0.3} metalness={0.4} />
+          <meshStandardMaterial color="#1a1c24" roughness={0.4} metalness={0.6} />
         </mesh>
-        {/* Hot Griddle Top */}
+
+        {/* Stainless Steel Deck Top */}
         <mesh position={[0, 0.42, 0]}>
           <boxGeometry args={[2.3, 0.05, 1.3]} />
-          <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.2} />
+          <meshStandardMaterial color="#2d313d" metalness={0.9} roughness={0.2} />
         </mesh>
-        {/* Golden Roast Dosa */}
+
+        {/* Seasoned Cast Iron Griddle (185°C) */}
         <mesh position={[0, 0.46, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.35, 32]} />
-          <meshStandardMaterial color="#fcd34d" emissive="#f59e0b" emissiveIntensity={0.3} />
+          <circleGeometry args={[0.38, 32]} />
+          <meshStandardMaterial color="#d4af37" emissive="#967822" emissiveIntensity={0.2} />
         </mesh>
-        {/* Brass Pillars */}
+
+        {/* Champagne Titanium Columns */}
         {[-0.95, 0.95].map((x, i) => (
           <React.Fragment key={i}>
             <mesh position={[x, 0.8, -0.45]}>
-              <cylinderGeometry args={[0.03, 0.03, 1.6, 8]} />
-              <meshStandardMaterial color="#d8b36d" metalness={0.9} />
+              <cylinderGeometry args={[0.025, 0.025, 1.6, 8]} />
+              <meshStandardMaterial color="#e2c99a" metalness={0.95} roughness={0.15} />
             </mesh>
             <mesh position={[x, 0.8, 0.45]}>
-              <cylinderGeometry args={[0.03, 0.03, 1.6, 8]} />
-              <meshStandardMaterial color="#d8b36d" metalness={0.9} />
+              <cylinderGeometry args={[0.025, 0.025, 1.6, 8]} />
+              <meshStandardMaterial color="#e2c99a" metalness={0.95} roughness={0.15} />
             </mesh>
           </React.Fragment>
         ))}
-        {/* Canopy Marquee */}
+
+        {/* Overhead Monolith Canopy */}
         <mesh position={[0, 1.6, 0]}>
-          <boxGeometry args={[2.3, 0.2, 1.3]} />
-          <meshStandardMaterial color="#762934" roughness={0.4} />
+          <boxGeometry args={[2.3, 0.16, 1.3]} />
+          <meshStandardMaterial color="#11131a" roughness={0.3} metalness={0.7} />
         </mesh>
-        {/* Signboard Text */}
+
+        {/* Architectural Label */}
         <Text
-          position={[0, 1.8, 0]}
-          fontSize={0.22}
-          color="#e2c99a"
+          position={[0, 1.78, 0.66]}
+          fontSize={0.16}
+          color="#f4f6fa"
           anchorX="center"
           anchorY="middle"
         >
-          LIVE DOSA COUNTER
+          LIVE DOSA // BAY 01
         </Text>
       </Float>
     </group>
@@ -89,50 +93,51 @@ export const Hero3DWidget: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-full max-w-xl mx-auto aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden border border-[#e2c99a]/40 bg-gradient-to-b from-[#0c0d16]/90 via-[#050508]/95 to-[#0c0d16]/90 backdrop-blur-2xl shadow-2xl shadow-[#e2c99a]/10 group">
-      {/* 3D Canvas */}
+    <div className="relative w-full max-w-xl mx-auto aspect-square sm:aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-[#090a0f]/90 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] group select-none">
+      {/* 3D WebGL Canvas */}
       <Canvas shadows camera={{ position: [0, 2.2, 4.2], fov: 42 }}>
-        <ambientLight intensity={1.0} />
+        <ambientLight intensity={0.8} />
         <directionalLight position={[5, 8, 5]} intensity={1.8} castShadow />
-        <pointLight position={[0, 3, 0]} intensity={1.5} color="#e2c99a" />
-        <pointLight position={[0, 1, 2]} intensity={1.0} color="#f59e0b" />
-        <HologramStall />
-        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1.2} maxPolarAngle={Math.PI / 2 - 0.1} />
+        <pointLight position={[0, 3, 0]} intensity={1.2} color="#fff" />
+        <pointLight position={[0, 1, 2]} intensity={0.8} color="#e2c99a" />
+        <DosaStallModel />
+        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1.0} maxPolarAngle={Math.PI / 2 - 0.1} />
       </Canvas>
 
-      {/* Floating HUD Badges & Overlays */}
+      {/* Top Left CAD Telemetry Badge */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e2c99a]/15 border border-[#e2c99a]/40 text-[#e2c99a] text-[11px] font-bold uppercase tracking-wider backdrop-blur-md">
-          <span className="w-2 h-2 rounded-full bg-[#e2c99a] animate-ping" />
-          Interactive 3D Hologram
+        <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#12141c]/90 border border-white/10 text-white text-[10px] font-mono tracking-wider">
+          <DatumVector size={12} className="text-[#e2c99a]" />
+          <span>STALL // 3.0m × 1.5m</span>
         </span>
       </div>
 
+      {/* Top Right Interaction Prompt */}
       <div className="absolute top-4 right-4 z-10">
-        <span className="px-2.5 py-1 rounded-full bg-black/60 border border-white/10 text-white/80 text-[10px] font-mono backdrop-blur-md">
-          Drag to Rotate 360°
+        <span className="px-2.5 py-1 rounded-md bg-black/70 border border-white/10 text-neutral-300 text-[10px] font-mono">
+          DRAG TO ORBIT 360°
         </span>
       </div>
 
-      {/* Bottom Floating Card */}
-      <div className="absolute bottom-4 inset-x-4 z-10 p-3.5 rounded-2xl bg-[#0c0d16]/85 border border-white/10 backdrop-blur-xl flex items-center justify-between gap-3 shadow-xl">
-        <div>
+      {/* Bottom Technical Telemetry Card */}
+      <div className="absolute bottom-4 inset-x-4 z-10 p-3.5 rounded-xl bg-[#0c0e14]/90 border border-white/10 backdrop-blur-xl flex items-center justify-between gap-3">
+        <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <Utensils className="h-4 w-4 text-[#f59e0b]" />
-            <span className="font-bold text-xs text-white">Live Dosa & Buffet Planner</span>
+            <CrosshairVector size={14} className="text-[#e2c99a]" />
+            <span className="font-mono font-bold text-xs text-white">LIVE COOKING MODULE</span>
           </div>
-          <p className="text-[10px] text-white/70 mt-0.5">
-            Auto-recommends <strong>2x Dosa Counters</strong> for &gt;200 guests to eliminate queues.
+          <p className="text-[10px] font-mono text-neutral-400 mt-0.5">
+            Capacity: 1,200 dosas/hr • Thermal recovery: 6.2s • Erlang-C Queue
           </p>
         </div>
 
         <Button
           size="sm"
           onClick={() => navigate("/3d-planner")}
-          className="h-8 px-3.5 text-xs bg-gradient-to-r from-[#e2c99a] to-[#c5a059] hover:opacity-90 text-black font-extrabold rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
+          className="h-8 px-3.5 text-xs font-mono font-bold bg-[#e2c99a] hover:bg-[#c5a059] text-black rounded-lg shadow-sm flex items-center gap-1.5 shrink-0 transition-transform active:scale-95"
         >
           <Maximize2 className="h-3 w-3" />
-          Full 3D Venue
+          <span>Full 3D Stage</span>
         </Button>
       </div>
     </div>

@@ -11,7 +11,6 @@ import {
   Menu as MenuIcon,
   Phone,
   ExternalLink,
-  Sparkles,
   Layers,
   Utensils,
   Maximize2,
@@ -21,7 +20,14 @@ import "./home.css";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
-import { LusionParticles } from "@/components/effects/LusionParticles";
+import { VectorGridOverlay } from "@/components/effects/VectorGridOverlay";
+import { PhysicsHoverCard } from "@/components/ui/PhysicsHoverCard";
+import {
+  CrosshairVector,
+  SpatialGridVector,
+  DimensionCaliperVector,
+  DatumVector,
+} from "@/components/ui/VectorIcons";
 import { Hero3DWidget } from "@/components/planner3d/Hero3DWidget";
 import { assetUrl } from "@/utils/assetUrl";
 import {
@@ -96,14 +102,14 @@ const Home: React.FC = () => {
           <a href="#instagram" onClick={(e) => scrollToSection("instagram", e)}>From our kitchen</a>
           <a href="#contact" onClick={(e) => scrollToSection("contact", e)}>Contact</a>
           <button
-            className="home-nav-3d px-3 py-1.5 rounded-full text-xs font-bold bg-[#e2c99a]/15 text-[#e2c99a] border border-[#e2c99a]/40 hover:bg-[#e2c99a] hover:text-black transition-all flex items-center gap-1.5 shadow-sm"
+            className="home-nav-3d px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-[#161822] text-[#e2c99a] border border-white/10 hover:border-[#e2c99a]/50 transition-all flex items-center gap-1.5 shadow-sm"
             onClick={() => {
               setMobileMenuOpen(false);
               navigate("/3d-planner");
             }}
           >
-            <Sparkles size={13} className="text-[#e2c99a]" />
-            3D Mandapam & Buffet
+            <CrosshairVector size={13} className="text-[#e2c99a]" />
+            <span>3D Venue Planner</span>
           </button>
           <ThemeToggle className="home-theme-toggle" />
           <button className="home-nav-admin" onClick={() => { setMobileMenuOpen(false); navigate("/admin"); }}>
@@ -127,7 +133,7 @@ const Home: React.FC = () => {
 
       <main>
         <section className="home-hero relative overflow-hidden" aria-label="BKR Catering introduction">
-          <LusionParticles particleCount={45} speed={0.5} />
+          <VectorGridOverlay opacity={0.35} showCoordinates={false} />
           <img
             className="home-hero-image"
             src={assetUrl("/home-catering-table.jpg")}
@@ -150,10 +156,10 @@ const Home: React.FC = () => {
                 Plan your event <ArrowRight size={17} />
               </button>
               <button
-                className="home-button home-button-secondary bg-[#0c0d16]/80 text-[#e2c99a] border border-[#e2c99a]/40 hover:bg-[#e2c99a] hover:text-black flex items-center gap-2 transition-all shadow-lg"
+                className="home-button home-button-secondary bg-[#0c0d16]/90 text-[#e2c99a] border border-white/10 hover:border-[#e2c99a]/50 flex items-center gap-2 transition-all shadow-lg font-mono text-xs"
                 onClick={() => navigate("/3d-planner")}
               >
-                <Sparkles size={16} /> 3D Mandapam & Stalls <ArrowRight size={15} />
+                <CrosshairVector size={15} /> 3D Mandapam & Stalls <ArrowRight size={15} />
               </button>
               <a className="home-text-link" href="#how-it-works">
                 See how it works <ArrowDown size={15} />
@@ -170,21 +176,19 @@ const Home: React.FC = () => {
         </section>
 
         {/* 3D MANDAPAM & BUFFET VISUALIZER SHOWCASE */}
-        <section className="py-16 px-4 md:px-8 bg-gradient-to-b from-[#050508] via-[#0c0d16] to-[#050508] border-y border-line text-ink relative overflow-hidden" id="3d-showcase">
-          <LusionParticles particleCount={30} speed={0.3} />
-          <div className="max-w-6xl mx-auto relative z-10 space-y-10">
+        <section className="py-20 px-4 md:px-8 bg-[#090a0f] border-y border-line text-ink relative overflow-hidden select-none" id="3d-showcase">
+          <VectorGridOverlay opacity={0.4} showCoordinates={true} />
+          <div className="max-w-6xl mx-auto relative z-10 space-y-12">
             <div className="text-center max-w-3xl mx-auto space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e2c99a]/10 border border-[#e2c99a]/30 text-[#e2c99a] text-xs font-bold uppercase tracking-wider">
-                <Sparkles size={13} /> Next-Gen 3D Interactive Venue Planner
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#161822] border border-white/10 text-neutral-300 text-xs font-mono tracking-wider">
+                <DatumVector size={13} className="text-[#e2c99a]" />
+                <span>SPATIAL STAGING // 3D VENUE SIMULATOR</span>
               </div>
-              <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-                Visualize Buffet & Live Stalls in{" "}
-                <span className="bg-gradient-to-r from-[#e2c99a] via-[#d4af37] to-[#d8b36d] bg-clip-text text-transparent">
-                  Photorealistic 3D
-                </span>
+              <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-white font-sans">
+                Architectural Mandapam &amp; Live Counter Staging
               </h2>
-              <p className="text-mute text-base md:text-lg">
-                Walk your clients through their actual Mandapam before the event. Project Google Maps floor plans, balance guest flow, and avoid bottlenecks.
+              <p className="text-neutral-400 text-xs md:text-sm font-sans max-w-2xl mx-auto">
+                Orthographic floorplan projection, crowd queue fluidics, and dual-wing service layout calculations for up to 100,000 guests.
               </p>
             </div>
 
@@ -193,48 +197,58 @@ const Home: React.FC = () => {
               <Hero3DWidget />
             </div>
 
+            {/* 3 Technical CAD Specification Cards with Physics Hover */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Feature 1 */}
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#e2c99a]/40 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#e2c99a]/10 border border-[#e2c99a]/30 text-[#e2c99a] flex items-center justify-center">
-                  <Utensils size={20} />
+              <PhysicsHoverCard
+                className="p-6 rounded-xl bg-[#11131a]/90 border border-white/[0.08] backdrop-blur-xl space-y-3 hover:border-[#e2c99a]/50 transition-colors"
+                maxTilt={6}
+              >
+                <div className="w-10 h-10 rounded-lg bg-[#181b24] border border-white/10 text-[#e2c99a] flex items-center justify-center">
+                  <DimensionCaliperVector size={20} />
                 </div>
-                <h3 className="text-lg font-bold text-ink">Smart Counter Duplication</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Single live Dosa or Chaat counters cause huge 25+ min bottlenecks. Our capacity engine automatically recommends <strong>2x Live Dosa stations</strong> (North & South wings) based on your guest headcount.
+                <h3 className="text-base font-bold text-white font-mono">01 // DUAL-WING ROUTING</h3>
+                <p className="text-xs text-neutral-400 leading-relaxed font-sans">
+                  Single live counters cause 25+ min bottlenecks. Erlang-C calculations automatically deploy 2x Live Dosa stations across North and South wings with 5.5m clear corridors.
                 </p>
-              </div>
+              </PhysicsHoverCard>
 
               {/* Feature 2 */}
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#d8b36d]/40 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#d8b36d]/10 border border-[#d8b36d]/30 text-[#d8b36d] flex items-center justify-center">
-                  <MapPin size={20} />
+              <PhysicsHoverCard
+                className="p-6 rounded-xl bg-[#11131a]/90 border border-white/[0.08] backdrop-blur-xl space-y-3 hover:border-[#e2c99a]/50 transition-colors"
+                maxTilt={6}
+              >
+                <div className="w-10 h-10 rounded-lg bg-[#181b24] border border-white/10 text-[#e2c99a] flex items-center justify-center">
+                  <SpatialGridVector size={20} />
                 </div>
-                <h3 className="text-lg font-bold text-ink">Google Maps Hall Projection</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Every Kalyana Mandapam in Pollachi, Coimbatore, and Anaimalai has layout imagery on Google Maps. Project floor plans directly onto the 3D ground plane with adjustable opacity.
+                <h3 className="text-base font-bold text-white font-mono">02 // BLUEPRINT PROJECTION</h3>
+                <p className="text-xs text-neutral-400 leading-relaxed font-sans">
+                  Project aerial Google Maps floorplans directly onto the 3D ground plane with adjustable opacity. Calibrate actual pillar clearances and service aisles.
                 </p>
-              </div>
+              </PhysicsHoverCard>
 
               {/* Feature 3 */}
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#d4af37]/40 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] flex items-center justify-center">
-                  <Maximize2 size={20} />
+              <PhysicsHoverCard
+                className="p-6 rounded-xl bg-[#11131a]/90 border border-white/[0.08] backdrop-blur-xl space-y-3 hover:border-[#e2c99a]/50 transition-colors"
+                maxTilt={6}
+              >
+                <div className="w-10 h-10 rounded-lg bg-[#181b24] border border-white/10 text-[#e2c99a] flex items-center justify-center">
+                  <CrosshairVector size={20} />
                 </div>
-                <h3 className="text-lg font-bold text-ink">360° Walkthrough & Snapshots</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Switch between 3D Orbital Flyover, 2D Architectural Blueprint, and eye-level Guest Walkthrough. Export high-res PNG snapshots to attach to client catering proposals.
+                <h3 className="text-base font-bold text-white font-mono">03 // 360° ORBITAL TELEMETRY</h3>
+                <p className="text-xs text-neutral-400 leading-relaxed font-sans">
+                  Toggle between 3D Orbital Flythrough, 2D CAD Blueprint, and eye-level Walkthrough. Export high-resolution isometric blueprints for client proposals.
                 </p>
-              </div>
+              </PhysicsHoverCard>
             </div>
 
-            <div className="text-center pt-4">
+            <div className="text-center pt-2">
               <Button
                 size="lg"
                 onClick={() => navigate("/3d-planner")}
-                className="h-12 px-8 text-sm bg-gradient-to-r from-[#e2c99a] to-[#c5a059] hover:opacity-90 text-black font-extrabold rounded-2xl shadow-xl shadow-[#e2c99a]/20 inline-flex items-center gap-2.5 transition-transform hover:scale-105 active:scale-95"
+                className="h-11 px-8 text-xs font-mono font-bold bg-[#e2c99a] hover:bg-[#c5a059] text-black rounded-xl shadow-lg inline-flex items-center gap-2 transition-transform hover:scale-102 active:scale-95"
               >
-                <Sparkles size={18} /> Launch 3D Mandapam & Stalls Visualizer <ArrowRight size={17} />
+                <CrosshairVector size={16} /> Launch 3D Venue Simulator <ArrowRight size={16} />
               </Button>
             </div>
           </div>

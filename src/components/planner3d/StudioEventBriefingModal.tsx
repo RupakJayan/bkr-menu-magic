@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Mic,
   MicOff,
-  Sparkles,
   Layers,
   MapPin,
   Users,
@@ -26,6 +25,7 @@ import { PRESET_VENUES } from "@/services/planner3dService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { CrosshairVector, DatumVector, SpatialGridVector } from "@/components/ui/VectorIcons";
 
 export interface StudioBriefingData {
   eventTitle: string;
@@ -226,54 +226,40 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
   };
 
   const handleStartRender = () => {
-    setIsCompiling(true);
-    setCompilingStep(0);
-
-    const stepInterval = setInterval(() => {
-      setCompilingStep((prev) => {
-        if (prev < COMPILING_STAGES.length - 1) {
-          return prev + 1;
-        } else {
-          clearInterval(stepInterval);
-          setTimeout(() => {
-            setIsCompiling(false);
-            onRenderStage(data);
-            onClose();
-            toast.success("3D Scene Rendered Successfully", {
-              description: `${data.headCount.toLocaleString("en-IN")} Pax • ${data.venue.name} • ${data.counterCounts.dosa}x Dosa Counters`,
-            });
-          }, 350);
-          return prev;
-        }
-      });
-    }, 320);
+    onRenderStage(data);
+    onClose();
+    toast.success("Venue Model Initialized", {
+      description: `${data.headCount.toLocaleString("en-IN")} Pax • ${data.venue.name} • ${data.counterCounts.dosa}x Dosa Counters`,
+    });
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-2xl">
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111318] text-[#f4efe6] shadow-2xl flex flex-col font-body">
+      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111318] text-[#f4efe6] shadow-2xl flex flex-col font-sans select-none">
         
         {/* Top Studio HUD Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#161820]">
           <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#e2c99a] shadow-[0_0_10px_rgba(226,201,154,0.6)] animate-pulse" />
+            <div className="w-8 h-8 rounded-lg bg-[#222530] border border-white/10 flex items-center justify-center text-[#e2c99a]">
+              <DatumVector size={16} />
+            </div>
             <div>
-              <h2 className="text-base font-extrabold tracking-wide uppercase font-display text-white">
-                BKR 3D Studio • Event Staging Console
+              <h2 className="text-sm font-bold tracking-wider uppercase font-mono text-white">
+                BKR // SPATIAL EVENT INTAKE CONSOLE
               </h2>
-              <p className="text-xs text-[#8e95a5]">
-                Configure event briefing via speech or custom parameters before rendering the 3D layout
+              <p className="text-[11px] font-mono text-neutral-400">
+                Acoustic speech parsing &amp; physical parameter staging
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-[#222530] text-[#e2c99a] border border-[#e2c99a]/30">
-              STEP 1 • BRIEFING
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#222530] text-[#e2c99a] border border-white/10">
+              STAGE 01 // INTAKE
             </span>
             <button
               onClick={onClose}
-              className="px-2.5 py-1 text-xs text-[#8e95a5] hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1 text-xs font-mono text-neutral-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
             >
               Skip
             </button>
@@ -389,15 +375,15 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       {
-                        label: "🌿 1-Acre Open Lawn Reception (3,500 Pax, 3x Dosa)",
+                        label: "LAWN // 1.0 ACRE (3,500 Pax • 3x Dosa)",
                         prompt: "1 acre open lawn in Coimbatore, 3500 guests with 3 dosa counters, video wall, and golden hour sunset",
                       },
                       {
-                        label: "🏛️ Royal Mandapam Kalyanam (1,500 Pax, Dual Dosa)",
+                        label: "MANDAPAM // 1,500 PAX (Dual-Wing Dosa)",
                         prompt: "Mayor Ramanathan Chettiar Hall, 1500 guests with 2 dosa counters, idli stall, focus spotlights",
                       },
                       {
-                        label: "🎪 Mega Ground Festival (20,000 Pax, 4x Dosa)",
+                        label: "MEGA GROUND // 20,000 PAX (4x Dosa)",
                         prompt: "Mega ground, 20000 guests with 4 dosa counters, continental, night starlight",
                       },
                     ].map((preset, idx) => (
@@ -408,7 +394,7 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                           parseSpokenBrief(preset.prompt);
                           toast.success("Applied preset template");
                         }}
-                        className="text-[11px] px-2.5 py-1 rounded-lg bg-[#222530] border border-white/[0.08] text-[#8e95a5] hover:text-[#e2c99a] hover:border-[#e2c99a]/30 transition-all font-mono"
+                        className="text-[10px] px-2.5 py-1 rounded-md bg-[#222530] border border-white/[0.08] text-neutral-300 hover:text-[#e2c99a] hover:border-[#e2c99a]/40 transition-all font-mono"
                       >
                         {preset.label}
                       </button>
@@ -623,30 +609,23 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
 
         </div>
 
-        {/* Bottom Action Footer with Compilation State */}
+        {/* Bottom Action Footer */}
         <div className="p-5 border-t border-white/[0.08] bg-[#161820] flex items-center justify-between">
-          <div className="text-xs text-[#8e95a5] font-mono">
-            {isCompiling ? (
-              <span className="text-[#e2c99a] flex items-center gap-2">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#e2c99a] animate-ping" />
-                {COMPILING_STAGES[compilingStep]}
-              </span>
-            ) : (
-              <span>
-                Target: <strong>{data.venue.name}</strong> •{" "}
-                <strong>{data.headCount.toLocaleString("en-IN")} Guests</strong> •{" "}
-                <strong>{data.counterCounts.dosa}x Dosa Counters</strong>
-              </span>
-            )}
+          <div className="text-xs text-neutral-400 font-mono">
+            <span>
+              Target: <strong className="text-white">{data.venue.name}</strong> •{" "}
+              <strong className="text-white">{data.headCount.toLocaleString("en-IN")} Guests</strong> •{" "}
+              <strong className="text-[#e2c99a]">{data.counterCounts.dosa}x Dosa Stations</strong>
+            </span>
           </div>
 
           <Button
             size="lg"
-            disabled={isCompiling}
             onClick={handleStartRender}
-            className="px-6 py-2.5 rounded-xl font-display font-extrabold text-sm tracking-wide bg-[#e2c99a] hover:bg-[#c5a059] text-black shadow-lg flex items-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
+            className="px-6 py-2.5 rounded-xl font-mono font-bold text-xs tracking-wider uppercase bg-[#e2c99a] hover:bg-[#c5a059] text-black shadow-lg flex items-center gap-2 transition-transform active:scale-95"
           >
-            <span>⚡ INITIALIZE 3D STUDIO & RENDER</span>
+            <CrosshairVector size={15} />
+            <span>INITIALIZE VENUE ENGINE</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

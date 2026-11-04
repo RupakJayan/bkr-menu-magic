@@ -25,24 +25,7 @@ import {
   fetchAiTamilTranslation,
 } from "@/services/tamilTranslationService";
 import { getDishCourseRank } from "@/services/servingOrderService";
-import {
-  Check,
-  ChevronRight,
-  ChevronUp,
-  ChevronDown,
-  ArrowUpDown,
-  GripVertical,
-  ListOrdered,
-  Edit2,
-  Leaf,
-  Plus,
-  Save,
-  Search,
-  Sparkles,
-  Trash2,
-  Utensils,
-  X,
-} from "lucide-react";
+import { Check, ChevronRight, ChevronUp, ChevronDown, ArrowUpDown, GripVertical, ListOrdered, Edit2, Leaf, Plus, Save, Search, Compass, Trash2, Utensils, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { CatalogDish, DayPlan, Session } from "@/types/menu";
 
@@ -442,7 +425,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
             <div className="p-4 rounded-xl border border-acc/30 bg-acc/5 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-ink flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4 text-[#762934] dark:text-[#d8b36d]" />
+                  <Compass className="h-4 w-4 text-[#762934] dark:text-[#d8b36d]" />
                   Add New Dish with Instant Tamil Name
                 </h4>
                 <Badge variant="outline" className="text-[10px] text-[#762934] dark:text-[#d8b36d] border-[#762934]/30">
@@ -475,7 +458,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                       disabled={isAiTranslating || !newDishEn.trim()}
                       className="text-[11px] text-acc hover:text-acc/80 flex items-center gap-1 font-semibold transition-colors disabled:opacity-40"
                     >
-                      <Sparkles className={`h-3 w-3 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
+                      <Compass className={`h-3 w-3 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
                       <span>{isAiTranslating ? "Translating..." : "✨ Auto Translate"}</span>
                     </button>
                   </label>
@@ -493,7 +476,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                     />
                     {isAiTranslating && (
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                        <Sparkles className="h-3.5 w-3.5 text-acc animate-pulse" />
+                        <Compass className="h-3.5 w-3.5 text-acc animate-pulse" />
                       </span>
                     )}
                   </div>
@@ -570,7 +553,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                   className="h-7 px-2.5 text-[11px] font-semibold text-acc hover:bg-acc/10 border-acc/40 rounded-lg flex items-center gap-1"
                   title="Organize into authentic South Indian wedding course order: Starters → Sweets → Tiffin / Rice → Sambar → Rasam → Curd Rice → Desserts"
                 >
-                  <Sparkles className="h-3 w-3" />
+                  <Compass className="h-3 w-3" />
                   Traditional Course Order
                 </Button>
 
@@ -672,7 +655,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                               className="text-[10px] text-acc hover:text-acc/80 flex items-center gap-1 font-semibold disabled:opacity-40"
                               title="Fetch accurate Tamil translation"
                             >
-                              <Sparkles className={`h-2.5 w-2.5 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
+                              <Compass className={`h-2.5 w-2.5 ${isAiTranslating ? "animate-spin text-amber-500" : ""}`} />
                               <span>{isAiTranslating ? "Translating..." : "✨ Auto Translate"}</span>
                             </button>
                           </label>
@@ -689,7 +672,7 @@ export const SessionMenuManageDialog: React.FC<SessionMenuManageDialogProps> = (
                             />
                             {isAiTranslating && (
                               <span className="absolute right-2 top-1/2 -translate-y-1/2">
-                                <Sparkles className="h-3 w-3 text-acc animate-pulse" />
+                                <Compass className="h-3 w-3 text-acc animate-pulse" />
                               </span>
                             )}
                           </div>
