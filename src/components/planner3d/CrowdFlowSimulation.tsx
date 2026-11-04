@@ -275,7 +275,7 @@ export const CrowdFlowSimulation: React.FC<CrowdFlowSimulationProps> = ({
       // Live Counters: Hot Amber (#f59e0b)
       // Dining: Emerald Green (#10b981)
       // Tamboolam / Exit: Auspicious Rose (#f43f5e)
-      // Transitioning: Lusion Cyan (#00f5d4)
+      // Transitioning: Lusion Cyan (#e2c99a)
       if (g.phase === "handwash") {
         colArray[i * 3] = 0.08;
         colArray[i * 3 + 1] = 0.72;
@@ -354,7 +354,7 @@ export const CrowdFlowSimulation: React.FC<CrowdFlowSimulationProps> = ({
                   ? "#f59e0b"
                   : stall.type === "tamboolam_beeda"
                   ? "#f43f5e"
-                  : "#00f5d4"
+                  : "#e2c99a"
               }
               transparent
               opacity={0.28}

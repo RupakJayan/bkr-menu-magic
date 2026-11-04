@@ -22,6 +22,8 @@ import {
   Users,
   Lightbulb,
   ExternalLink,
+  Mic,
+  Sliders,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -29,6 +31,10 @@ import { ThreeCanvas } from "@/components/planner3d/ThreeCanvas";
 import { SmartCounterAdvisor } from "@/components/planner3d/SmartCounterAdvisor";
 import { MandapamSelectorModal } from "@/components/planner3d/MandapamSelectorModal";
 import { CustomStallCreatorModal } from "@/components/planner3d/CustomStallCreatorModal";
+import {
+  StudioEventBriefingModal,
+  StudioBriefingData,
+} from "@/components/planner3d/StudioEventBriefingModal";
 import { LusionParticles } from "@/components/effects/LusionParticles";
 import {
   StallItem,
@@ -56,11 +62,13 @@ export const Planner3DPage: React.FC = () => {
   const [isVenueModalOpen, setIsVenueModalOpen] = useState(false);
   const [isCustomStallModalOpen, setIsCustomStallModalOpen] = useState(false);
 
-  // Planning state
-  const [headCount, setHeadCount] = useState<number>(350);
-  const [budgetTier, setBudgetTier] = useState<BudgetTier>("classic");
+  // STARTING STEP: Studio Event Briefing Modal (Opens first to let user fill everything via speech or type)
+  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(true);
+
+  // Planning state (Default: 3,500 guests, 2 Dosa counters)
+  const [headCount, setHeadCount] = useState<number>(3500);
   const [stalls, setStalls] = useState<StallItem[]>(() =>
-    getRecommendedStalls(350, "classic", PRESET_VENUES[0])
+    getRecommendedStalls(3500, "classic", PRESET_VENUES[0])
   );
   const [selectedStallId, setSelectedStallId] = useState<string | null>(null);
 
@@ -76,10 +84,10 @@ export const Planner3DPage: React.FC = () => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Capacity analysis recalculation
+  // Capacity analysis recalculation (Custom flow, no budget calculation needed)
   const analysis = useMemo(
-    () => calculateCapacityAnalysis(headCount, stalls, budgetTier),
-    [headCount, stalls, budgetTier]
+    () => calculateCapacityAnalysis(headCount, stalls, "classic"),
+    [headCount, stalls]
   );
 
   const selectedStall = useMemo(
@@ -87,13 +95,177 @@ export const Planner3DPage: React.FC = () => {
     [stalls, selectedStallId]
   );
 
+  // Initial Briefing Data state
+  const initialBriefingData = useMemo<StudioBriefingData>(() => ({
+    eventTitle: "Grand Kalyanam & Reception",
+    venue: selectedVenue,
+    headCount: headCount,
+    counterCounts: {
+      dosa: stalls.filter((s) => s.type === "dosa").length || 2,
+      idli: stalls.filter((s) => s.type === "idli_steamer").length || 1,
+      chaat: stalls.filter((s) => s.type === "chaat").length || 1,
+      continental: stalls.filter((s) => s.type === "continental").length || 1,
+      dessert: 1,
+      tamboolam: 1,
+    },
+    timeOfDay: (selectedVenue.timeOfDay as any) || "sunset",
+    showFocusLights: true,
+    showVideoWall: true,
+    showEcoDustbins: true,
+  }), [selectedVenue, headCount, stalls]);
+
+  // Handle rendering stage from Studio Event Briefing (Speech or Custom Input)
+  const handleRenderFromBriefing = (briefing: StudioBriefingData) => {
+    setSelectedVenue(briefing.venue);
+    setHeadCount(briefing.headCount);
+    setShowFocusLights(briefing.showFocusLights);
+
+    const w = briefing.venue.hallWidth;
+    const l = briefing.venue.hallLength;
+    const newStalls: StallItem[] = [];
+
+    // 1. Entrance Welcome drinks
+    newStalls.push({
+      ...STALL_CATALOG.welcome_drinks,
+      id: "welcome-1",
+      position: [0, 0, briefing.venue.entrancePosition[2] - 3.5],
+      rotation: 0,
+      wing: "North",
+    });
+
+    // 2. Handwash stations (at entrance and dining wings)
+    newStalls.push({
+      ...STALL_CATALOG.handwash_station,
+      id: "handwash-1",
+      position: [w / 2 - 3.5, 0, briefing.venue.entrancePosition[2] - 2],
+      rotation: -Math.PI / 2,
+      wing: "South",
+    });
+    newStalls.push({
+      ...STALL_CATALOG.handwash_station,
+      id: "handwash-2",
+      position: [-w / 2 + 3.5, 0, briefing.venue.entrancePosition[2] - 2],
+      rotation: Math.PI / 2,
+      wing: "North",
+    });
+
+    // 3. Live Dosa counters (duplicated per user instruction: 1x, 2x, 3x, 4x, etc.)
+    const numDosa = Math.max(1, briefing.counterCounts.dosa);
+    for (let i = 0; i < numDosa; i++) {
+      const isNorth = i % 2 === 0;
+      const xPos = isNorth ? -w / 2 + 3.5 : w / 2 - 3.5;
+      const zOffset = -l / 4 + Math.floor(i / 2) * 5.5;
+      newStalls.push({
+        ...STALL_CATALOG.dosa,
+        id: `dosa-${i + 1}`,
+        name:
+          numDosa > 1
+            ? `Live Dosa Station #${i + 1} (${isNorth ? "North Wing" : "South Wing"})`
+            : "Live Dosa Station",
+        position: [xPos, 0, zOffset],
+        rotation: isNorth ? Math.PI / 2 : -Math.PI / 2,
+        wing: isNorth ? "North" : "South",
+      });
+    }
+
+    // 4. Idli & Vada stations
+    const numIdli = Math.max(1, briefing.counterCounts.idli);
+    for (let i = 0; i < numIdli; i++) {
+      const isNorth = i % 2 !== 0;
+      const xPos = isNorth ? -w / 2 + 3.5 : w / 2 - 3.5;
+      const zOffset = l / 6 + Math.floor(i / 2) * 4.5;
+      newStalls.push({
+        ...STALL_CATALOG.idli_steamer,
+        id: `idli-${i + 1}`,
+        name: numIdli > 1 ? `Steaming Idli Station #${i + 1}` : "Steaming Idli Station",
+        position: [xPos, 0, zOffset],
+        rotation: isNorth ? Math.PI / 2 : -Math.PI / 2,
+        wing: isNorth ? "North" : "South",
+      });
+    }
+
+    // 5. Chaat, Continental, Dessert
+    if (briefing.counterCounts.chaat > 0) {
+      newStalls.push({
+        ...STALL_CATALOG.chaat,
+        id: "chaat-1",
+        position: [-w / 2 + 3.5, 0, 0],
+        rotation: Math.PI / 2,
+        wing: "North",
+      });
+    }
+    if (briefing.counterCounts.continental > 0) {
+      newStalls.push({
+        ...STALL_CATALOG.continental,
+        id: "continental-1",
+        position: [w / 2 - 3.5, 0, 0],
+        rotation: -Math.PI / 2,
+        wing: "South",
+      });
+    }
+    newStalls.push({
+      ...STALL_CATALOG.sweet_halwa,
+      id: "dessert-1",
+      position: [w / 2 - 3.5, 0, l / 4],
+      rotation: -Math.PI / 2,
+      wing: "South",
+    });
+
+    // 6. Central Dining Rows
+    const diningRows = Math.min(8, Math.max(3, Math.round(briefing.headCount / 400)));
+    for (let r = 0; r < diningRows; r++) {
+      const z = -l / 3.5 + r * 4.8;
+      newStalls.push({
+        ...STALL_CATALOG.dining_table,
+        id: `dining-${r + 1}`,
+        name: `Royal Dining Row #${r + 1}`,
+        position: [r % 2 === 0 ? -2.2 : 2.2, 0, z],
+        rotation: 0,
+        wing: r % 2 === 0 ? "North" : "South",
+      });
+      // Add adjacent eco pedal dustbin
+      if (briefing.showEcoDustbins) {
+        newStalls.push({
+          ...STALL_CATALOG.dustbin,
+          id: `dustbin-${r + 1}`,
+          position: [r % 2 === 0 ? -4.5 : 4.5, 0, z],
+          rotation: 0,
+          wing: r % 2 === 0 ? "North" : "South",
+        });
+      }
+    }
+
+    // 7. BKR Royal Curved LED Media Wall
+    if (briefing.showVideoWall) {
+      newStalls.push({
+        ...STALL_CATALOG.bkr_video_wall,
+        id: "video-wall-1",
+        position: [0, 0, briefing.venue.stagePosition[2] + 4.5],
+        rotation: Math.PI,
+        wing: "North",
+      });
+    }
+
+    // 8. Exit Tamboolam
+    newStalls.push({
+      ...STALL_CATALOG.tamboolam_counter,
+      id: "tamboolam-1",
+      position: [w / 2 - 4, 0, briefing.venue.entrancePosition[2] - 4],
+      rotation: 0,
+      wing: "South",
+    });
+
+    setStalls(newStalls);
+    setSelectedStallId(null);
+  };
+
   // Apply recommended optimal layout
   const handleApplyOptimalLayout = () => {
-    const freshStalls = getRecommendedStalls(headCount, budgetTier, selectedVenue);
+    const freshStalls = getRecommendedStalls(headCount, "classic", selectedVenue);
     setStalls(freshStalls);
     setSelectedStallId(null);
-    toast.success("Optimal 3D Layout Applied", {
-      description: `Configured ${freshStalls.length} counters balanced for ${headCount} guests.`,
+    toast.success("Optimal 3D Layout Balanced", {
+      description: `Configured ${freshStalls.length} counters balanced for ${headCount.toLocaleString("en-IN")} guests.`,
     });
   };
 
@@ -101,7 +273,6 @@ export const Planner3DPage: React.FC = () => {
   const handleAddStall = (type: StallType) => {
     const catalogItem = STALL_CATALOG[type];
     const newId = `${type}-${Date.now().toString().slice(-4)}`;
-    // Place in an open spot near the center or offset
     const offset = (stalls.length % 5) * 2 - 4;
     const newStall: StallItem = {
       ...catalogItem,
@@ -129,7 +300,7 @@ export const Planner3DPage: React.FC = () => {
     setSelectedStallId(placedStall.id);
   };
 
-  // Duplicate specific stall (e.g. duplicate Dosa counter)
+  // Duplicate specific stall
   const handleDuplicateStall = (stallId: string) => {
     const target = stalls.find((s) => s.id === stallId);
     if (!target) return;
@@ -138,17 +309,17 @@ export const Planner3DPage: React.FC = () => {
       ...target,
       id: newId,
       name: `${target.name} (Counter #${stalls.filter((s) => s.type === target.type).length + 1})`,
-      position: [-target.position[0], 0, target.position[2]], // Mirror to opposite wing
+      position: [-target.position[0], 0, target.position[2]],
       wing: target.position[0] < 0 ? "South" : "North",
     };
     setStalls((prev) => [...prev, cloned]);
     setSelectedStallId(newId);
     toast.success(`Duplicated ${target.name}`, {
-      description: `Placed opposite wing for optimal crowd flow.`,
+      description: `Placed on opposite wing for balanced crowd throughput.`,
     });
   };
 
-  // Place dustbin near a specific dining table
+  // Place dustbin near dining table
   const handlePlaceDustbinNearTable = (tableId: string) => {
     const table = stalls.find((s) => s.id === tableId);
     if (!table) return;
@@ -165,7 +336,7 @@ export const Planner3DPage: React.FC = () => {
     toast.success("Placed Eco Dustbin beside table");
   };
 
-  // Upload or set table illusion texture
+  // Tablecloth illusion
   const handleSetTableTexture = (tableId: string, textureUrl: string) => {
     setStalls((prev) =>
       prev.map((s) => (s.id === tableId ? { ...s, customTableTextureUrl: textureUrl } : s))
@@ -218,7 +389,7 @@ export const Planner3DPage: React.FC = () => {
     try {
       const dataUrl = canvasRef.current.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `cater-o-phobic-3d-plan-${selectedVenue.id}-${headCount}pax.png`;
+      link.download = `bkr-3d-plan-${selectedVenue.id}-${headCount}pax.png`;
       link.href = dataUrl;
       link.click();
       toast.success("High-Res 3D Plan Exported!", {
@@ -230,17 +401,18 @@ export const Planner3DPage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#050508] text-ink font-body flex flex-col">
-      {/* Background Lusion Particles */}
+    <div className="relative w-screen h-screen overflow-hidden bg-[#090a0d] text-[#f4efe6] font-body flex flex-col">
+      {/* Background Studio Constellation Filaments */}
       <LusionParticles particleCount={30} speed={0.4} />
 
-      {/* 1. TOP HUD HEADER */}
-      <header className="relative z-30 flex items-center justify-between px-4 py-2.5 border-b border-line bg-[#0c0d16]/85 backdrop-blur-xl">
+      {/* 1. STUDIO TOP HUD HEADER */}
+      <header className="relative z-30 flex items-center justify-between px-4 py-2.5 border-b border-white/[0.08] bg-[#111318]/90 backdrop-blur-2xl">
+        
         {/* Brand & Return */}
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="p-1.5 rounded-lg bg-white/5 border border-line text-mute hover:text-ink hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-[#8e95a5] hover:text-white hover:bg-white/10 transition-colors"
             title="Back to Home"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -248,44 +420,64 @@ export const Planner3DPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-wider text-sm bg-gradient-to-r from-[#00f5d4] via-[#38bdf8] to-[#d8b36d] bg-clip-text text-transparent">
-                CATER-O-PHOBIC
+              <span className="font-extrabold tracking-wider text-sm font-display text-white">
+                BKR 3D STUDIO
               </span>
-              <Badge className="bg-[#00f5d4]/10 text-[#00f5d4] border-[#00f5d4]/30 text-[10px] font-mono font-semibold px-1.5 py-0">
-                3D LABS
+              <Badge className="bg-[#222530] text-[#e2c99a] border border-[#e2c99a]/30 text-[10px] font-mono font-semibold px-2 py-0">
+                STAGE RENDER
               </Badge>
             </div>
-            <p className="text-[10px] text-mute hidden sm:block">
-              Next-Gen Buffet & Mandapam Stalls Visualizer
+            <p className="text-[10px] text-[#8e95a5] hidden sm:block font-mono">
+              Professional 3D Mandapam & Buffet Space Planner
             </p>
           </div>
         </div>
 
-        {/* Center Venue Selector */}
-        <button
-          onClick={() => setIsVenueModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surf-2 border border-line hover:border-[#00f5d4]/50 transition-all text-xs"
-        >
-          <MapPin className="h-3.5 w-3.5 text-[#00f5d4]" />
-          <div className="text-left">
-            <span className="font-bold text-ink block">{selectedVenue.name}</span>
-            <span className="text-[10px] text-mute block">
-              {selectedVenue.hallWidth}m × {selectedVenue.hallLength}m • Click to switch or upload
-              map
-            </span>
-          </div>
-        </button>
+        {/* Center: Studio Event Briefing Trigger (Quick Edit) */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsBriefingModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a]/60 transition-all text-xs group"
+            title="Re-open Voice Speech & Custom Intake Console"
+          >
+            <div className="w-5 h-5 rounded-md bg-[#222530] text-[#e2c99a] flex items-center justify-center border border-white/10">
+              <Mic className="h-3 w-3" />
+            </div>
+            <div className="text-left">
+              <span className="font-bold text-white block flex items-center gap-1 font-display group-hover:text-[#e2c99a] transition-colors">
+                Studio Briefing <span className="text-[10px] text-[#e2c99a] font-mono">✎</span>
+              </span>
+              <span className="text-[10px] text-[#8e95a5] block font-mono">
+                {headCount.toLocaleString("en-IN")} Pax • {stalls.filter((s) => s.type === "dosa").length}x Dosa Counters
+              </span>
+            </div>
+          </button>
 
-        {/* Camera Views & Controls */}
+          {/* Venue Selector */}
+          <button
+            onClick={() => setIsVenueModalOpen(true)}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a]/50 transition-all text-xs"
+          >
+            <MapPin className="h-3.5 w-3.5 text-[#e2c99a]" />
+            <div className="text-left">
+              <span className="font-bold text-white block">{selectedVenue.name}</span>
+              <span className="text-[10px] text-[#8e95a5] block font-mono">
+                {selectedVenue.hallWidth}m × {selectedVenue.hallLength}m
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {/* Camera Views & Studio Controls */}
         <div className="flex items-center gap-2">
           {/* Camera View Mode Toggle */}
-          <div className="flex items-center p-1 rounded-xl bg-surf border border-line">
+          <div className="flex items-center p-1 rounded-xl bg-[#161822] border border-white/[0.08] font-mono">
             <button
               onClick={() => setViewMode("orbit")}
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "orbit"
-                  ? "bg-[#00f5d4] text-black font-bold shadow-sm"
-                  : "text-mute hover:text-ink"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
+                  : "text-[#8e95a5] hover:text-white"
               }`}
             >
               3D Orbit
@@ -294,8 +486,8 @@ export const Planner3DPage: React.FC = () => {
               onClick={() => setViewMode("top_down")}
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "top_down"
-                  ? "bg-[#00f5d4] text-black font-bold shadow-sm"
-                  : "text-mute hover:text-ink"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
+                  : "text-[#8e95a5] hover:text-white"
               }`}
             >
               2D Plan
@@ -304,8 +496,8 @@ export const Planner3DPage: React.FC = () => {
               onClick={() => setViewMode("walkthrough")}
               className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                 viewMode === "walkthrough"
-                  ? "bg-[#00f5d4] text-black font-bold shadow-sm"
-                  : "text-mute hover:text-ink"
+                  ? "bg-[#e2c99a] text-black font-bold shadow-sm"
+                  : "text-[#8e95a5] hover:text-white"
               }`}
             >
               Walkthrough
@@ -318,8 +510,8 @@ export const Planner3DPage: React.FC = () => {
             title="Toggle Blueprint Projection Overlay"
             className={`p-2 rounded-xl border transition-all text-xs flex items-center gap-1.5 ${
               blueprintOpacity > 0
-                ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4]"
-                : "bg-surf border-line text-mute hover:text-ink"
+                ? "bg-[#222530] border-[#e2c99a] text-[#e2c99a]"
+                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
             }`}
           >
             <Eye className="h-4 w-4" />
@@ -334,8 +526,8 @@ export const Planner3DPage: React.FC = () => {
             title="Toggle Floor Grid"
             className={`p-2 rounded-xl border transition-all ${
               showGrid
-                ? "bg-surf-2 border-[#00f5d4]/40 text-[#00f5d4]"
-                : "bg-surf border-line text-mute hover:text-ink"
+                ? "bg-[#222530] border-[#e2c99a]/50 text-[#e2c99a]"
+                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
             }`}
           >
             <Grid className="h-4 w-4" />
@@ -347,12 +539,12 @@ export const Planner3DPage: React.FC = () => {
             title="Toggle CAD Aisle Widths & Safety Clearances"
             className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
               showCadAisles
-                ? "bg-[#f59e0b]/20 border-[#f59e0b] text-[#f59e0b]"
-                : "bg-surf border-line text-mute hover:text-ink"
+                ? "bg-[#c5a059]/20 border-[#c5a059] text-[#e2c99a]"
+                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
             }`}
           >
             <Compass className="h-4 w-4" />
-            <span className="hidden xl:inline text-[11px] font-semibold">CAD Aisles</span>
+            <span className="hidden xl:inline text-[11px] font-semibold font-mono">CAD Aisles</span>
           </button>
 
           {/* Live Stall Focus Lights Toggle */}
@@ -361,35 +553,37 @@ export const Planner3DPage: React.FC = () => {
               setShowFocusLights((f) => !f);
               toast.info(!showFocusLights ? "Focus Spotlights Activated" : "Focus Lights Off");
             }}
-            title="Toggle Dramatic Focus Lights on Live Stalls"
+            title="Toggle Theatrical Focus Lights on Live Stalls"
             className={`p-2 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
               showFocusLights
-                ? "bg-[#fed7aa]/20 border-[#f97316] text-[#fed7aa] shadow-md shadow-[#f97316]/20"
-                : "bg-surf border-line text-mute hover:text-ink"
+                ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a]"
+                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
             }`}
           >
             <Lightbulb className="h-4 w-4" />
-            <span className="hidden xl:inline text-[11px] font-semibold">Focus Lights</span>
+            <span className="hidden xl:inline text-[11px] font-semibold font-mono">Focus Lights</span>
           </button>
 
           {/* Interactive Crowd Flow Simulation Toggle */}
           <button
             onClick={() => {
               setShowCrowdSimulation((prev) => !prev);
-              toast.info(!showCrowdSimulation ? "Simulating 7:30 PM Peak Dinner Flow" : "Crowd simulation paused");
+              toast.info(
+                !showCrowdSimulation ? "Simulating Peak Guest Flow" : "Crowd simulation paused"
+              );
             }}
             title="Simulate Peak Muhurtham Crowd Movement"
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all font-mono ${
               showCrowdSimulation
-                ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4] shadow-md shadow-[#00f5d4]/20 animate-pulse"
-                : "bg-surf border-line text-mute hover:text-ink"
+                ? "bg-[#e2c99a] text-black font-bold shadow-md shadow-[#e2c99a]/20"
+                : "bg-[#161822] border-white/[0.08] text-[#8e95a5] hover:text-white"
             }`}
           >
             <Users className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{showCrowdSimulation ? "Crowd Active" : "Simulate Crowd"}</span>
+            <span className="hidden lg:inline">{showCrowdSimulation ? "Crowd Active" : "Simulate Flow"}</span>
           </button>
 
-          {/* Client Pitch Presentation Mode Toggle */}
+          {/* Presentation Mode Toggle */}
           <Button
             size="sm"
             onClick={() => {
@@ -398,31 +592,29 @@ export const Planner3DPage: React.FC = () => {
               if (nextState) {
                 setIsSidebarOpen(false);
                 setShowCrowdSimulation(true);
-                toast.success("Client Pitch Mode Activated", {
-                  description: "Cinematic drone orbit & clutter-free presentation view.",
-                });
+                toast.success("Studio Presentation Mode Activated");
               } else {
                 setIsSidebarOpen(true);
               }
             }}
-            className={`h-8 text-xs font-bold rounded-xl shadow-lg flex items-center gap-1.5 transition-all ${
+            className={`h-8 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all ${
               isPitchMode
-                ? "bg-gradient-to-r from-[#d8b36d] to-[#f59e0b] text-black"
-                : "bg-surf-2 border border-line text-ink hover:text-[#00f5d4]"
+                ? "bg-[#e2c99a] text-black font-display font-extrabold"
+                : "bg-[#161822] border border-white/[0.08] text-white hover:text-[#e2c99a]"
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{isPitchMode ? "Exit Pitch" : "Client Pitch Mode"}</span>
+            <span className="hidden sm:inline">{isPitchMode ? "Exit Presentation" : "Present 3D"}</span>
           </Button>
 
           {/* Export Snapshot */}
           <Button
             size="sm"
             onClick={handleExportSnapshot}
-            className="h-8 text-xs bg-gradient-to-r from-[#00f5d4] to-[#0284c7] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5"
+            className="h-8 text-xs bg-[#e2c99a] hover:bg-[#c5a059] text-black font-extrabold rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95"
           >
             <Camera className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Export 3D Snapshot</span>
+            <span className="hidden sm:inline">Export PNG</span>
           </Button>
 
           <ThemeToggle />
@@ -431,20 +623,21 @@ export const Planner3DPage: React.FC = () => {
 
       {/* 2. MAIN 3D WORKSPACE VIEWPORT */}
       <div className="relative flex-1 flex overflow-hidden">
+        
         {/* Left Drawer: Smart Counter Advisor & Capacity Analyzer */}
         <aside
-          className={`relative z-20 transition-all duration-300 ease-in-out border-r border-line bg-[#0c0d16]/90 backdrop-blur-2xl flex flex-col ${
+          className={`relative z-20 transition-all duration-300 ease-in-out border-r border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl flex flex-col ${
             isSidebarOpen ? "w-80 sm:w-96" : "w-0 overflow-hidden border-none"
           }`}
         >
-          <div className="flex items-center justify-between p-3 border-b border-line">
-            <span className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#00f5d4]" />
+          <div className="flex items-center justify-between p-3 border-b border-white/[0.08]">
+            <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5 font-display">
+              <Sparkles className="h-4 w-4 text-[#e2c99a]" />
               Smart Capacity & Duplication
             </span>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="text-mute hover:text-ink p-1 rounded-lg"
+              className="text-[#8e95a5] hover:text-white p-1 rounded-lg"
             >
               ×
             </button>
@@ -453,8 +646,6 @@ export const Planner3DPage: React.FC = () => {
           <SmartCounterAdvisor
             headCount={headCount}
             onHeadCountChange={setHeadCount}
-            budgetTier={budgetTier}
-            onBudgetTierChange={setBudgetTier}
             analysis={analysis}
             stalls={stalls}
             onAddStall={handleAddStall}
@@ -462,6 +653,7 @@ export const Planner3DPage: React.FC = () => {
             onRemoveStall={handleRemoveStall}
             onApplyOptimalLayout={handleApplyOptimalLayout}
             onOpenCustomStallModal={() => setIsCustomStallModalOpen(true)}
+            onOpenBriefingModal={() => setIsBriefingModalOpen(true)}
           />
         </aside>
 
@@ -469,7 +661,7 @@ export const Planner3DPage: React.FC = () => {
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="absolute left-3 top-3 z-30 p-2.5 rounded-xl bg-[#0c0d16] border border-[#00f5d4]/40 text-[#00f5d4] shadow-xl hover:scale-105 transition-transform"
+            className="absolute left-3 top-3 z-30 p-2.5 rounded-xl bg-[#161822] border border-white/[0.1] text-[#e2c99a] shadow-xl hover:scale-105 transition-transform"
             title="Open Capacity Advisor"
           >
             <Sparkles className="h-5 w-5" />
@@ -496,7 +688,7 @@ export const Planner3DPage: React.FC = () => {
           />
 
           {/* Floating Instructions HUD */}
-          <div className="absolute top-4 right-4 pointer-events-none bg-black/60 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 text-[11px] text-white/80 space-y-0.5">
+          <div className="absolute top-4 right-4 pointer-events-none bg-black/60 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-white/10 text-[11px] text-white/80 space-y-0.5 font-mono">
             <p>• Left Click + Drag to rotate 3D view</p>
             <p>• Scroll to zoom in / out</p>
             <p>• Click any stall to select, rotate or duplicate</p>
@@ -505,7 +697,7 @@ export const Planner3DPage: React.FC = () => {
 
           {/* Selected Stall Floating Inspector Card */}
           {selectedStall && (
-            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 bg-[#0c0d16]/95 border border-[#00f5d4]/50 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl w-min(90vw,480px) space-y-3 animate-in fade-in slide-in-from-bottom-4">
+            <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 bg-[#161822]/95 border border-[#e2c99a]/40 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl w-min(90vw,480px) space-y-3 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -513,19 +705,21 @@ export const Planner3DPage: React.FC = () => {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: selectedStall.accentColor }}
                     />
-                    <h4 className="font-bold text-sm text-ink">{selectedStall.name}</h4>
+                    <h4 className="font-bold text-sm text-white font-display">
+                      {selectedStall.name}
+                    </h4>
                   </div>
-                  <p className="text-xs text-[#d8b36d] font-tamil font-medium">
+                  <p className="text-xs text-[#e2c99a] font-medium font-mono">
                     {selectedStall.name_ta}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 font-mono">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={handleRotateSelected}
-                    className="h-8 px-2 text-xs border-line text-ink hover:text-[#00f5d4] hover:bg-white/10 rounded-lg flex items-center gap-1"
+                    className="h-8 px-2 text-xs border-white/15 text-white hover:text-[#e2c99a] hover:bg-white/10 rounded-lg flex items-center gap-1"
                     title="Rotate 45°"
                   >
                     <RotateCw className="h-3.5 w-3.5" />
@@ -535,7 +729,7 @@ export const Planner3DPage: React.FC = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDuplicateStall(selectedStall.id)}
-                    className="h-8 px-2 text-xs border-[#00f5d4]/40 text-[#00f5d4] hover:bg-[#00f5d4]/10 rounded-lg flex items-center gap-1 font-semibold"
+                    className="h-8 px-2 text-xs border-[#e2c99a]/40 text-[#e2c99a] hover:bg-[#e2c99a]/10 rounded-lg flex items-center gap-1 font-semibold"
                     title="Duplicate to opposite wing"
                   >
                     <Copy className="h-3.5 w-3.5" />
@@ -552,7 +746,7 @@ export const Planner3DPage: React.FC = () => {
                   </Button>
                   <button
                     onClick={() => setSelectedStallId(null)}
-                    className="text-mute hover:text-ink text-sm px-1.5"
+                    className="text-[#8e95a5] hover:text-white text-sm px-1.5"
                   >
                     ✕
                   </button>
@@ -560,26 +754,26 @@ export const Planner3DPage: React.FC = () => {
               </div>
 
               {/* Specs & Power details */}
-              <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-line">
-                <div className="flex items-center gap-1 text-mute">
+              <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-white/[0.08] font-mono">
+                <div className="flex items-center gap-1 text-[#8e95a5]">
                   <Zap className="h-3.5 w-3.5 text-amber-400" />
                   <span>{selectedStall.powerRequiredKw} kW</span>
                 </div>
-                <div className="flex items-center gap-1 text-mute">
+                <div className="flex items-center gap-1 text-[#8e95a5]">
                   <Droplet className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{selectedStall.waterRequired ? "Water Line Req" : "Dry Station"}</span>
+                  <span>{selectedStall.waterRequired ? "Water Line" : "Dry Station"}</span>
                 </div>
-                <div className="flex items-center gap-1 text-mute font-mono">
-                  <Utensils className="h-3.5 w-3.5 text-[#00f5d4]" />
+                <div className="flex items-center gap-1 text-[#8e95a5]">
+                  <Utensils className="h-3.5 w-3.5 text-[#e2c99a]" />
                   <span>{selectedStall.capacityPerHour} pax/hr</span>
                 </div>
               </div>
 
               {/* Table Illusion & Dustbin Placement for Dining Tables */}
               {selectedStall.type === "dining_table" && (
-                <div className="space-y-2 pt-2 border-t border-line">
+                <div className="space-y-2 pt-2 border-t border-white/[0.08]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-ink">
+                    <span className="text-[11px] font-bold text-white font-display">
                       Tablecloth & 3D Illusion Linen
                     </span>
                     <Button
@@ -593,7 +787,7 @@ export const Planner3DPage: React.FC = () => {
                   </div>
 
                   {/* Illusion Presets */}
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5 font-mono">
                     {[
                       {
                         label: "3D Illusion",
@@ -613,51 +807,26 @@ export const Planner3DPage: React.FC = () => {
                         onClick={() => handleSetTableTexture(selectedStall.id, pattern.url)}
                         className={`p-1 text-[10px] font-medium rounded border transition-all text-center ${
                           selectedStall.customTableTextureUrl === pattern.url
-                            ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4] font-bold"
-                            : "bg-surf-2 border-line text-mute hover:text-ink"
+                            ? "bg-[#222530] border-[#e2c99a] text-[#e2c99a] font-bold"
+                            : "bg-[#0e1017] border-white/10 text-[#8e95a5] hover:text-white"
                         }`}
                       >
                         {pattern.label}
                       </button>
                     ))}
                   </div>
-
-                  {/* Custom upload */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <label className="text-[10px] text-[#00f5d4] hover:underline cursor-pointer flex items-center gap-1">
-                      <Camera className="h-3 w-3" />
-                      Upload Table Photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              if (ev.target?.result) {
-                                handleSetTableTexture(selectedStall.id, ev.target.result as string);
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
                 </div>
               )}
 
               {/* BKR Video Wall & Instagram Reel Display */}
               {selectedStall.type === "bkr_video_wall" && (
-                <div className="space-y-2 pt-2 border-t border-line">
+                <div className="space-y-2 pt-2 border-t border-white/[0.08]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-bold text-[#fef08a] block">
+                      <span className="text-xs font-bold text-white block font-display">
                         BKR Catering Media Wall
                       </span>
-                      <span className="text-[10px] text-mute block">
+                      <span className="text-[10px] text-[#8e95a5] block">
                         Continuous 30-sec Instagram Reel stream featuring signature wedding feasts & decor
                       </span>
                     </div>
@@ -665,30 +834,11 @@ export const Planner3DPage: React.FC = () => {
                       href="https://www.instagram.com/bkr_events_/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-2.5 py-1 text-[11px] rounded-lg bg-gradient-to-r from-[#d8b36d] to-[#f59e0b] text-black font-bold flex items-center gap-1 shadow-md hover:opacity-90 shrink-0"
+                      className="px-2.5 py-1 text-[11px] rounded-lg bg-[#e2c99a] text-black font-bold flex items-center gap-1 shadow-md hover:bg-[#c5a059] shrink-0 font-mono"
                     >
                       <ExternalLink className="h-3 w-3" />
                       @bkr_events_
                     </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Sample Dishes */}
-              {selectedStall.dishes.length > 0 && selectedStall.type !== "bkr_video_wall" && (
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase tracking-wider text-mute block">
-                    Dishes Served at Counter
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedStall.dishes.slice(0, 4).map((d, i) => (
-                      <span
-                        key={i}
-                        className="text-[10px] px-2 py-0.5 rounded-full bg-surf-2 border border-line text-ink"
-                      >
-                        {d}
-                      </span>
-                    ))}
                   </div>
                 </div>
               )}
@@ -698,20 +848,20 @@ export const Planner3DPage: React.FC = () => {
       </div>
 
       {/* 3. BOTTOM FLOATING STALL CATALOG DRAWER */}
-      <footer className="relative z-30 px-4 py-2.5 border-t border-line bg-[#0c0d16]/90 backdrop-blur-2xl">
+      <footer className="relative z-30 px-4 py-2.5 border-t border-white/[0.08] bg-[#111318]/95 backdrop-blur-2xl">
         <div className="flex items-center gap-3 overflow-x-auto scrollbar-thin pb-1">
           <Button
             size="sm"
             onClick={() => setIsCustomStallModalOpen(true)}
-            className="h-8 text-xs bg-gradient-to-r from-[#8b5cf6] to-[#00f5d4] hover:opacity-90 text-black font-bold rounded-xl shadow-lg flex items-center gap-1.5 shrink-0"
+            className="h-8 text-xs bg-[#222530] border border-white/10 hover:border-[#e2c99a] text-[#e2c99a] font-bold rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Photo-to-3D Stall
           </Button>
 
-          <span className="text-xs font-bold uppercase tracking-wider text-mute shrink-0 flex items-center gap-1.5">
-            <Plus className="h-3.5 w-3.5 text-[#00f5d4]" />
-            Add Stalls:
+          <span className="text-xs font-bold uppercase tracking-wider text-[#8e95a5] shrink-0 flex items-center gap-1.5 font-mono">
+            <Plus className="h-3.5 w-3.5 text-[#e2c99a]" />
+            Add Counter:
           </span>
 
           {(Object.keys(STALL_CATALOG) as StallType[]).map((type) => {
@@ -720,19 +870,29 @@ export const Planner3DPage: React.FC = () => {
               <button
                 key={type}
                 onClick={() => handleAddStall(type)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surf border border-line hover:border-[#00f5d4] hover:bg-white/5 transition-all text-xs shrink-0 group"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-[#e2c99a] hover:bg-white/5 transition-all text-xs shrink-0 group"
               >
                 <div
                   className="w-2.5 h-2.5 rounded-full group-hover:scale-125 transition-transform"
                   style={{ backgroundColor: item.accentColor }}
                 />
-                <span className="font-semibold text-ink">{item.name}</span>
-                <span className="text-[10px] text-mute font-mono">({item.capacityPerHour}/hr)</span>
+                <span className="font-semibold text-white">{item.name}</span>
+                <span className="text-[10px] text-[#8e95a5] font-mono">
+                  ({item.capacityPerHour}/hr)
+                </span>
               </button>
             );
           })}
         </div>
       </footer>
+
+      {/* STARTING STEP: Studio Event Briefing Modal (Voice Speech & Custom Input) */}
+      <StudioEventBriefingModal
+        isOpen={isBriefingModalOpen}
+        onClose={() => setIsBriefingModalOpen(false)}
+        initialData={initialBriefingData}
+        onRenderStage={handleRenderFromBriefing}
+      />
 
       {/* Mandapam Venue & Custom Blueprint Modal */}
       <MandapamSelectorModal
@@ -741,7 +901,7 @@ export const Planner3DPage: React.FC = () => {
         selectedVenue={selectedVenue}
         onSelectVenue={(v) => {
           setSelectedVenue(v);
-          setStalls(getRecommendedStalls(headCount, budgetTier, v));
+          setStalls(getRecommendedStalls(headCount, "classic", v));
           setIsVenueModalOpen(false);
           toast.success(`Loaded ${v.name}`);
         }}

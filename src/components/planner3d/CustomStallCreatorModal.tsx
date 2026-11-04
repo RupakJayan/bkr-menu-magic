@@ -334,7 +334,7 @@ export const CustomStallCreatorModal: React.FC<CustomStallCreatorModalProps> = (
           </Button>
           <Button
             onClick={handleCreateStall}
-            className="bg-gradient-to-r from-[#8b5cf6] to-[#00f5d4] hover:opacity-90 text-black font-bold text-xs h-9 px-5 rounded-xl shadow-lg flex items-center gap-1.5"
+            className="bg-gradient-to-r from-[#8b5cf6] to-[#e2c99a] hover:opacity-90 text-black font-bold text-xs h-9 px-5 rounded-xl shadow-lg flex items-center gap-1.5"
           >
             <Sparkles className="h-4 w-4" />
             Generate 3D Stall

@@ -27,7 +27,7 @@ export const CadAisleOverlay: React.FC<CadAisleOverlayProps> = ({
       {/* 1. Main Aisle Center Line */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[0.08, venue.hallLength * 0.8]} />
-        <meshBasicMaterial color="#00f5d4" transparent opacity={0.4} />
+        <meshBasicMaterial color="#e2c99a" transparent opacity={0.4} />
       </mesh>
 
       {/* Center Aisle Label */}
@@ -35,7 +35,7 @@ export const CadAisleOverlay: React.FC<CadAisleOverlayProps> = ({
         position={[0, 0.2, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.45}
-        color="#00f5d4"
+        color="#e2c99a"
         anchorX="center"
         anchorY="middle"
       >

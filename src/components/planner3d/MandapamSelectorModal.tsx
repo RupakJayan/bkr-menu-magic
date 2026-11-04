@@ -122,7 +122,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
       <DialogContent className="max-w-3xl bg-[#0c0d16] border border-line text-ink p-6 rounded-2xl shadow-2xl backdrop-blur-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2 text-ink">
-            <MapPin className="h-5 w-5 text-[#00f5d4]" />
+            <MapPin className="h-5 w-5 text-[#e2c99a]" />
             Venue, Terrain, 1-Acre Land & Environment Simulator
           </DialogTitle>
           <DialogDescription className="text-mute text-xs">
@@ -146,7 +146,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === tab.id
-                    ? "bg-[#00f5d4] text-black shadow-sm"
+                    ? "bg-[#e2c99a] text-black shadow-sm"
                     : "text-mute hover:text-ink bg-white/5"
                 }`}
               >
@@ -178,7 +178,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                       }}
                       className={`text-left p-3.5 rounded-xl border transition-all relative overflow-hidden flex flex-col justify-between ${
                         isSelected
-                          ? "bg-[#00f5d4]/10 border-[#00f5d4] shadow-md shadow-[#00f5d4]/10"
+                          ? "bg-[#e2c99a]/10 border-[#e2c99a] shadow-md shadow-[#e2c99a]/10"
                           : "bg-surf-2 border-line hover:border-line/80"
                       }`}
                     >
@@ -186,7 +186,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                         <div className="flex items-start justify-between">
                           <span className="font-bold text-sm text-ink">{venue.name}</span>
                           {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-[#00f5d4] text-black flex items-center justify-center shrink-0">
+                            <div className="w-5 h-5 rounded-full bg-[#e2c99a] text-black flex items-center justify-center shrink-0">
                               <Check className="h-3 w-3 stroke-[3]" />
                             </div>
                           )}
@@ -204,7 +204,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                         <span>
                           {venue.hallWidth}m × {venue.hallLength}m
                         </span>
-                        <span className="text-[#00f5d4] font-semibold">
+                        <span className="text-[#e2c99a] font-semibold">
                           Cap: {venue.defaultCapacity.toLocaleString("en-IN")}
                         </span>
                       </div>
@@ -217,10 +217,10 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
               <div className="p-4 rounded-xl bg-white/5 border border-line space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-semibold text-ink flex items-center gap-1.5">
-                    <Eye className="h-4 w-4 text-[#00f5d4]" />
+                    <Eye className="h-4 w-4 text-[#e2c99a]" />
                     Google Maps / CAD Blueprint Floor Projection Opacity
                   </Label>
-                  <span className="text-xs font-mono font-bold text-[#00f5d4]">
+                  <span className="text-xs font-mono font-bold text-[#e2c99a]">
                     {Math.round(blueprintOpacity * 100)}%
                   </span>
                 </div>
@@ -241,7 +241,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                 </div>
                 <Label
                   htmlFor="blueprint-file-tab1"
-                  className="px-3 py-1.5 rounded-lg bg-[#00f5d4]/10 border border-[#00f5d4]/40 text-[#00f5d4] hover:bg-[#00f5d4]/20 cursor-pointer text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                  className="px-3 py-1.5 rounded-lg bg-[#e2c99a]/10 border border-[#e2c99a]/40 text-[#e2c99a] hover:bg-[#e2c99a]/20 cursor-pointer text-xs font-semibold flex items-center gap-1.5 shrink-0"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   Upload Map
@@ -324,7 +324,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
               <div className="flex justify-end">
                 <Button
                   onClick={handleApplyDimensions}
-                  className="bg-[#00f5d4] hover:bg-[#00d2b6] text-black font-bold text-xs h-9 px-4 rounded-xl"
+                  className="bg-[#e2c99a] hover:bg-[#c5a059] text-black font-bold text-xs h-9 px-4 rounded-xl"
                 >
                   Apply Ground Dimensions
                 </Button>
@@ -359,7 +359,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                       }
                       className={`p-3 rounded-xl border text-left transition-all ${
                         isSelected
-                          ? "bg-[#00f5d4]/15 border-[#00f5d4] shadow-md shadow-[#00f5d4]/10"
+                          ? "bg-[#e2c99a]/15 border-[#e2c99a] shadow-md shadow-[#e2c99a]/10"
                           : "bg-surf-2 border-line text-mute hover:text-ink"
                       }`}
                     >
@@ -400,7 +400,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                     }
                     className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
                       selectedVenue.weather === "clear"
-                        ? "bg-[#00f5d4]/20 border-[#00f5d4] text-[#00f5d4]"
+                        ? "bg-[#e2c99a]/20 border-[#e2c99a] text-[#e2c99a]"
                         : "bg-surf-2 border-line text-mute hover:text-ink"
                     }`}
                   >
@@ -426,9 +426,9 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                 <Label className="text-xs font-semibold text-ink">Upload 360° Panoramic Hall / Ground Image</Label>
                 <Label
                   htmlFor="skybox-file-input"
-                  className="flex flex-col items-center justify-center border-2 border-dashed border-line hover:border-[#00f5d4] rounded-xl p-6 cursor-pointer transition-colors text-center"
+                  className="flex flex-col items-center justify-center border-2 border-dashed border-line hover:border-[#e2c99a] rounded-xl p-6 cursor-pointer transition-colors text-center"
                 >
-                  <ImageIcon className="h-8 w-8 text-[#00f5d4] mb-2" />
+                  <ImageIcon className="h-8 w-8 text-[#e2c99a] mb-2" />
                   <span className="text-xs font-bold text-ink">Upload Panoramic Photo (360° / Equirectangular)</span>
                   <span className="text-[11px] text-mute mt-0.5">JPG or PNG (e.g. captured with mobile panoramic mode)</span>
                   <input
@@ -463,7 +463,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                           panoramicSkyboxUrl: preset.url,
                         })
                       }
-                      className="p-2.5 rounded-xl border border-line bg-surf-2 hover:border-[#00f5d4] text-xs font-semibold text-ink text-left"
+                      className="p-2.5 rounded-xl border border-line bg-surf-2 hover:border-[#e2c99a] text-xs font-semibold text-ink text-left"
                     >
                       {preset.label}
                     </button>
@@ -481,7 +481,7 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
           </span>
           <Button
             onClick={() => onOpenChange(false)}
-            className="bg-[#00f5d4] hover:bg-[#00d2b6] text-black font-bold text-xs h-9 px-5 rounded-xl shadow-lg"
+            className="bg-[#e2c99a] hover:bg-[#c5a059] text-black font-bold text-xs h-9 px-5 rounded-xl shadow-lg"
           >
             Done Planning
           </Button>

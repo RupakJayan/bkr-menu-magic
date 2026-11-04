@@ -96,13 +96,13 @@ const Home: React.FC = () => {
           <a href="#instagram" onClick={(e) => scrollToSection("instagram", e)}>From our kitchen</a>
           <a href="#contact" onClick={(e) => scrollToSection("contact", e)}>Contact</a>
           <button
-            className="home-nav-3d px-3 py-1.5 rounded-full text-xs font-bold bg-[#00f5d4]/15 text-[#00f5d4] border border-[#00f5d4]/40 hover:bg-[#00f5d4] hover:text-black transition-all flex items-center gap-1.5 shadow-sm"
+            className="home-nav-3d px-3 py-1.5 rounded-full text-xs font-bold bg-[#e2c99a]/15 text-[#e2c99a] border border-[#e2c99a]/40 hover:bg-[#e2c99a] hover:text-black transition-all flex items-center gap-1.5 shadow-sm"
             onClick={() => {
               setMobileMenuOpen(false);
               navigate("/3d-planner");
             }}
           >
-            <Sparkles size={13} className="text-[#00f5d4]" />
+            <Sparkles size={13} className="text-[#e2c99a]" />
             3D Mandapam & Buffet
           </button>
           <ThemeToggle className="home-theme-toggle" />
@@ -150,7 +150,7 @@ const Home: React.FC = () => {
                 Plan your event <ArrowRight size={17} />
               </button>
               <button
-                className="home-button home-button-secondary bg-[#0c0d16]/80 text-[#00f5d4] border border-[#00f5d4]/40 hover:bg-[#00f5d4] hover:text-black flex items-center gap-2 transition-all shadow-lg"
+                className="home-button home-button-secondary bg-[#0c0d16]/80 text-[#e2c99a] border border-[#e2c99a]/40 hover:bg-[#e2c99a] hover:text-black flex items-center gap-2 transition-all shadow-lg"
                 onClick={() => navigate("/3d-planner")}
               >
                 <Sparkles size={16} /> 3D Mandapam & Stalls <ArrowRight size={15} />
@@ -174,12 +174,12 @@ const Home: React.FC = () => {
           <LusionParticles particleCount={30} speed={0.3} />
           <div className="max-w-6xl mx-auto relative z-10 space-y-10">
             <div className="text-center max-w-3xl mx-auto space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f5d4]/10 border border-[#00f5d4]/30 text-[#00f5d4] text-xs font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e2c99a]/10 border border-[#e2c99a]/30 text-[#e2c99a] text-xs font-bold uppercase tracking-wider">
                 <Sparkles size={13} /> Next-Gen 3D Interactive Venue Planner
               </div>
               <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
                 Visualize Buffet & Live Stalls in{" "}
-                <span className="bg-gradient-to-r from-[#00f5d4] via-[#38bdf8] to-[#d8b36d] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#e2c99a] via-[#d4af37] to-[#d8b36d] bg-clip-text text-transparent">
                   Photorealistic 3D
                 </span>
               </h2>
@@ -195,8 +195,8 @@ const Home: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Feature 1 */}
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#00f5d4]/40 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#00f5d4]/10 border border-[#00f5d4]/30 text-[#00f5d4] flex items-center justify-center">
+              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#e2c99a]/40 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-[#e2c99a]/10 border border-[#e2c99a]/30 text-[#e2c99a] flex items-center justify-center">
                   <Utensils size={20} />
                 </div>
                 <h3 className="text-lg font-bold text-ink">Smart Counter Duplication</h3>
@@ -217,8 +217,8 @@ const Home: React.FC = () => {
               </div>
 
               {/* Feature 3 */}
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#38bdf8]/40 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] flex items-center justify-center">
+              <div className="p-6 rounded-2xl bg-white/[0.03] border border-line backdrop-blur-xl space-y-3 hover:border-[#d4af37]/40 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] flex items-center justify-center">
                   <Maximize2 size={20} />
                 </div>
                 <h3 className="text-lg font-bold text-ink">360° Walkthrough & Snapshots</h3>
@@ -232,7 +232,7 @@ const Home: React.FC = () => {
               <Button
                 size="lg"
                 onClick={() => navigate("/3d-planner")}
-                className="h-12 px-8 text-sm bg-gradient-to-r from-[#00f5d4] to-[#0284c7] hover:opacity-90 text-black font-extrabold rounded-2xl shadow-xl shadow-[#00f5d4]/20 inline-flex items-center gap-2.5 transition-transform hover:scale-105 active:scale-95"
+                className="h-12 px-8 text-sm bg-gradient-to-r from-[#e2c99a] to-[#c5a059] hover:opacity-90 text-black font-extrabold rounded-2xl shadow-xl shadow-[#e2c99a]/20 inline-flex items-center gap-2.5 transition-transform hover:scale-105 active:scale-95"
               >
                 <Sparkles size={18} /> Launch 3D Mandapam & Stalls Visualizer <ArrowRight size={17} />
               </Button>

@@ -21,8 +21,8 @@ interface LusionParticlesProps {
 
 export const LusionParticles: React.FC<LusionParticlesProps> = ({
   className = "",
-  particleCount = 55,
-  speed = 0.6,
+  particleCount = 45,
+  speed = 0.5,
   interactive = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -68,26 +68,26 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
       canvas.parentElement.addEventListener("mouseleave", handleMouseLeave);
     }
 
-    // Color palettes for Lusion effect
+    // Studio 3D Palettes: Warm Champagne, Brushed Brass, Titanium Pearl
     const darkPalette = [
-      "rgba(0, 245, 212, ",   // Lusion Cyan
-      "rgba(56, 189, 248, ",  // Sky Glow
-      "rgba(216, 179, 109, ", // Celestial Gold
-      "rgba(168, 85, 247, ",  // Violet Nebula
+      "rgba(226, 201, 154, ", // Brushed Champagne Gold
+      "rgba(197, 160, 89, ",  // Warm Antique Brass
+      "rgba(244, 239, 230, ", // Polished Titanium Pearl
+      "rgba(180, 140, 75, ",  // Deep Amber Ochre
     ];
 
     const lightPalette = [
-      "rgba(118, 41, 52, ",   // BKR Royal Burgundy
-      "rgba(183, 138, 75, ",  // Warm Gold Brass
-      "rgba(2, 132, 199, ",   // Sapphire Accent
+      "rgba(118, 41, 52, ",   // BKR Heritage Maroon
+      "rgba(197, 160, 89, ",  // Warm Gold Brass
+      "rgba(85, 80, 75, ",    // Studio Graphite
     ];
 
     const palette = isDark ? darkPalette : lightPalette;
-    const effectiveCount = window.innerWidth < 768 ? Math.min(25, particleCount) : particleCount;
+    const effectiveCount = window.innerWidth < 768 ? Math.min(20, particleCount) : particleCount;
 
     const particles: Particle[] = [];
     for (let i = 0; i < effectiveCount; i++) {
-      const baseRadius = Math.random() * 2.2 + 0.8;
+      const baseRadius = Math.random() * 2.0 + 0.8;
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -96,14 +96,14 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
         radius: baseRadius,
         baseRadius,
         color: palette[Math.floor(Math.random() * palette.length)],
-        alpha: Math.random() * 0.6 + 0.25,
+        alpha: Math.random() * 0.5 + 0.2,
       });
     }
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Render constellation filaments
+      // Render architectural filaments
       const maxDist = 110;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -112,53 +112,53 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
           const dist = Math.hypot(dx, dy);
 
           if (dist < maxDist) {
-            const lineAlpha = (1 - dist / maxDist) * (isDark ? 0.18 : 0.12);
+            const lineAlpha = (1 - dist / maxDist) * (isDark ? 0.16 : 0.1);
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.strokeStyle = isDark
-              ? `rgba(0, 245, 212, ${lineAlpha})`
-              : `rgba(183, 138, 75, ${lineAlpha})`;
-            ctx.lineWidth = 0.8;
+              ? `rgba(226, 201, 154, ${lineAlpha})`
+              : `rgba(197, 160, 89, ${lineAlpha})`;
+            ctx.lineWidth = 0.75;
             ctx.stroke();
           }
         }
       }
 
-      // Update and draw particles
-      for (const p of particles) {
+      // Draw and update particles
+      particles.forEach((p) => {
+        // Subtle Mouse repulsion
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < mouse.radius) {
+          const force = (1 - dist / mouse.radius) * 1.5;
+          p.x += (dx / dist) * force;
+          p.y += (dy / dist) * force;
+          p.radius = p.baseRadius * 1.35;
+        } else {
+          p.radius = THREE_Math_lerp(p.radius, p.baseRadius, 0.05);
+        }
+
         // Move
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounce off edges
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+        // Wrap boundaries
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
 
-        // Mouse interaction (repulsion + growth)
-        const dx = mouse.x - p.x;
-        const dy = mouse.y - p.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist < mouse.radius) {
-          const force = (mouse.radius - dist) / mouse.radius;
-          const angle = Math.atan2(dy, dx);
-          p.x -= Math.cos(angle) * force * 3;
-          p.y -= Math.sin(angle) * force * 3;
-          p.radius = p.baseRadius * (1 + force * 1.5);
-        } else {
-          p.radius = Math.max(p.baseRadius, p.radius * 0.95);
-        }
-
-        // Draw particle with soft radial bloom
+        // Draw particle with soft glow
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `${p.color}${p.alpha})`;
-        ctx.shadowColor = isDark ? "#00f5d4" : "#b78a4b";
         ctx.shadowBlur = isDark ? 8 : 4;
+        ctx.shadowColor = isDark ? "rgba(226, 201, 154, 0.35)" : "rgba(197, 160, 89, 0.2)";
         ctx.fill();
-        ctx.shadowBlur = 0; // reset
-      }
+        ctx.shadowBlur = 0;
+      });
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -178,8 +178,11 @@ export const LusionParticles: React.FC<LusionParticlesProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className={`pointer-events-none absolute inset-0 z-0 h-full w-full ${className}`}
-      aria-hidden="true"
+      className={`pointer-events-none absolute inset-0 z-0 opacity-80 ${className}`}
     />
   );
 };
+
+function THREE_Math_lerp(x: number, y: number, t: number) {
+  return (1 - t) * x + t * y;
+}
