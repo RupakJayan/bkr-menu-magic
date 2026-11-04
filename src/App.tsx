@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { OpeningLoader } from "@/components/OpeningLoader";
+import { LuxuryShowroom } from "@/components/showroom/LuxuryShowroom";
 import Home from "./pages/Home";
 import MenuCreator from "./pages/MenuCreator";
 import AdminAccess from "./pages/AdminAccess";
@@ -43,7 +44,9 @@ const App = () => {
           }}
         >
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<LuxuryShowroom />} />
+            <Route path="/showroom" element={<LuxuryShowroom />} />
+            <Route path="/classic" element={<Home />} />
             <Route path="/instagram" element={<Home />} />
             <Route path="/our-approach" element={<Home />} />
             <Route path="/experience" element={<Home />} />
