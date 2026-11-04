@@ -57,6 +57,19 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Production fallback for GitHub Pages when served from unbuilt repository root
+      (function () {
+        if (
+          !document.querySelector('script[src*="/assets/index-"]') &&
+          window.location.hostname.endsWith("github.io") &&
+          !window.location.pathname.includes("/docs/")
+        ) {
+          var target = "/bkr-menu-magic/docs/" + window.location.search + window.location.hash;
+          window.location.replace(target);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

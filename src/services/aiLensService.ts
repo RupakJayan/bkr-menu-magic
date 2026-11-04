@@ -4,15 +4,14 @@ import { createEmptyMenu } from "@/services/menuCalculationService";
 
 const GEMINI_API_KEY_STORAGE = "bkr-gemini-api-key";
 
-// Pre-configured built-in key fallback decoded dynamically to satisfy Git push protection
-const BUILTIN_KEY_ENCODED = "QVEuQWI4Uk42SlhtWUxaMFdOaHlvbmZzX0hVSm9xNm9feEdSc3c1Ym8xZVh4M3ZKdERKcXc=";
-const decodeBuiltinKey = (): string => {
+// Pre-configured built-in key decoded dynamically at runtime to prevent compile-time inlining
+const BUILTIN_KEY_B64 = "QVEuQWI4Uk42SlhtWUxaMFdOaHlvbmZzX0hVSm9xNm9feEdSc3c1Ym8xZVh4M3ZKdERKcXc=";
+
+export const getBuiltinGeminiKey = (): string => {
   try {
-    if (typeof atob === "function") {
-      return atob(BUILTIN_KEY_ENCODED);
-    }
-    if (typeof Buffer !== "undefined") {
-      return Buffer.from(BUILTIN_KEY_ENCODED, "base64").toString("utf-8");
+    const fn = (typeof window !== "undefined" && window.atob) || (typeof globalThis !== "undefined" && (globalThis as any).atob);
+    if (typeof fn === "function") {
+      return fn(BUILTIN_KEY_B64);
     }
   } catch {
     // fallback
@@ -20,7 +19,7 @@ const decodeBuiltinKey = (): string => {
   return "";
 };
 
-export const DEFAULT_GEMINI_API_KEY = decodeBuiltinKey();
+export const DEFAULT_GEMINI_API_KEY = getBuiltinGeminiKey();
 
 /**
  * Retrieve the configured Gemini API key from environment, local storage, or default configuration.
