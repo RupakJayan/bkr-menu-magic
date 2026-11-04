@@ -9,22 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Camera,
-  Upload,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  Trash2,
-  ArrowRight,
-  RefreshCw,
-  FileImage,
-  Utensils,
-  Calendar,
-  User,
-  MapPin,
-  X,
-} from "lucide-react";
+import { Camera, Upload, Compass, CheckCircle2, AlertCircle, Trash2, ArrowRight, RefreshCw, FileImage, Utensils, Calendar, User, MapPin, X } from "lucide-react";
 import {
   compressImageFileToBase64,
   extractMenuFromHandwrittenImages,
@@ -165,7 +150,7 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
         <div className="bg-gradient-to-r from-[#762934] via-[#8a3540] to-[#762934] dark:from-[#242124] dark:via-[#2e292d] dark:to-[#242124] p-6 text-white dark:text-ink rounded-t-2xl relative border-b border-line">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-xl bg-white/10 dark:bg-acc/10 border border-white/20 dark:border-acc/30 backdrop-blur-md flex items-center justify-center shadow-inner">
-              <Sparkles className="h-6 w-6 text-amber-200 dark:text-acc animate-pulse" />
+              <Compass className="h-6 w-6 text-amber-200 dark:text-acc animate-pulse" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold font-display tracking-wide flex items-center gap-2.5">
@@ -282,7 +267,7 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
               {/* Tips */}
               <div className="p-4 rounded-xl bg-surf2 border border-line text-xs text-ink space-y-1.5">
                 <p className="font-bold flex items-center gap-1.5 text-ink">
-                  <Sparkles className="h-3.5 w-3.5 text-acc" />
+                  <Compass className="h-3.5 w-3.5 text-acc" />
                   Tips for best handwriting recognition:
                 </p>
                 <ul className="list-disc pl-4 space-y-0.5 text-mute">
@@ -298,7 +283,7 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
                 disabled={images.length === 0}
                 className="w-full h-13 text-base font-bold bg-acc text-accink hover:opacity-95 rounded-btn shadow-theme disabled:opacity-50 tp-pressable transition-all flex items-center justify-center gap-2"
               >
-                <Sparkles className="h-4 w-4" />
+                <Compass className="h-4 w-4" />
                 Convert Handwritten Menu with AI
               </Button>
             </div>
@@ -310,7 +295,7 @@ export const AiMenuLensDialog: React.FC<AiMenuLensDialogProps> = ({
               <div className="relative">
                 <div className="w-20 h-20 rounded-full border-4 border-line border-t-acc animate-spin flex items-center justify-center"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-acc animate-pulse" />
+                  <Compass className="h-8 w-8 text-acc animate-pulse" />
                 </div>
               </div>
               <div>

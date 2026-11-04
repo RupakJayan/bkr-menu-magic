@@ -25,11 +25,11 @@ import {
   Sun,
   Moon,
   Sunset,
-  Sparkles,
   Maximize2,
   Compass,
   Image as ImageIcon,
 } from "lucide-react";
+import { CrosshairVector, DatumVector, SpatialGridVector } from "@/components/ui/VectorIcons";
 
 interface MandapamSelectorModalProps {
   open: boolean;
@@ -260,9 +260,8 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
           {/* TAB 2: OPEN LAND & CUSTOM DIMENSIONS */}
           {activeTab === "dimensions" && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300">
-                💡 <strong>Open Land Simulation:</strong> Not restricted to hall walls! You can simulate
-                1-Acre, 2.5-Acre open banquets or specify custom Length × Width × Height in meters.
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-300">
+                [SPATIAL SIMULATION] Unbounded terrain modeling. Simulate 0.5-Acre to 5.0-Acre open banquets or define exact metric boundaries (L × W × H).
               </div>
 
               {/* Quick Acre Presets */}
@@ -388,8 +387,8 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
                         : "bg-surf-2 border-line text-mute hover:text-ink"
                     }`}
                   >
-                    <Sparkles className="h-4 w-4" />
-                    Festive Serial Fairy Light Garlands (ON)
+                    <Sunset className="h-4 w-4" />
+                    Festive Serial Light Garlands (Active)
                   </button>
                   <button
                     onClick={() =>
@@ -415,10 +414,8 @@ export const MandapamSelectorModal: React.FC<MandapamSelectorModalProps> = ({
           {/* TAB 4: 360° PANORAMIC SKYBOX */}
           {activeTab === "skybox" && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-300">
-                📸 <strong>Custom 360° Skybox:</strong> Upload a panoramic photo or angle photos of the
-                hall/ground. The visualizer maps it into a full spherical background so clients see the
-                exact real-world surroundings.
+              <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs font-mono text-purple-300">
+                [PANORAMIC ENVIRONMENT MAP] Spherical HDRI / panoramic photography projected as 360° celestial environment background.
               </div>
 
               {/* Upload file */}

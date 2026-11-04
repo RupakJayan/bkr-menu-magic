@@ -4,6 +4,7 @@ import { GlassHeader } from "./GlassHeader";
 import { ScrollSections } from "./ScrollSections";
 import { HotspotDetailCard } from "./HotspotDetailCard";
 import { LuxuryPreloader } from "./LuxuryPreloader";
+import { VectorGridOverlay } from "@/components/effects/VectorGridOverlay";
 
 export const LuxuryShowroom: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -32,33 +33,36 @@ export const LuxuryShowroom: React.FC = () => {
 
   return (
     <div className="relative bg-[#07080a] text-white min-h-screen selection:bg-[#e2c99a] selection:text-black overflow-x-hidden">
-      {/* 1. Luxury Branded Preloader */}
+      {/* 1. Precision CAD Vector Grid & Coordinate Tracking */}
+      <VectorGridOverlay opacity={0.35} showCoordinates={true} />
+
+      {/* 2. Luxury Branded Preloader */}
       <LuxuryPreloader />
 
-      {/* 2. Floating Frosted Glass Header */}
+      {/* 3. Floating Frosted Glass Header with Spring Physics */}
       <GlassHeader onScrollToStage={handleScrollToStage} />
 
-      {/* 3. Hardware-Accelerated WebGL 3D Viewport */}
+      {/* 4. Hardware-Accelerated WebGL 3D Viewport */}
       <LuxuryCanvas
         scrollProgress={scrollProgress}
         activeHotspot={activeHotspot}
         onSelectHotspot={setActiveHotspot}
       />
 
-      {/* 4. Semantic, Accessible Scroll-Driven Text Layers */}
+      {/* 5. Semantic, Accessible Scroll-Driven Text Layers with Physics Cards */}
       <ScrollSections onSelectHotspot={setActiveHotspot} />
 
-      {/* 5. Interactive 3D Hotspot Inspection Card */}
+      {/* 6. Interactive 3D Hotspot Inspection Card */}
       <HotspotDetailCard
         activeHotspot={activeHotspot}
         onClose={() => setActiveHotspot(null)}
       />
 
-      {/* 6. Fixed HUD Telemetry Footer */}
+      {/* 7. Fixed Architectural Telemetry Footer */}
       <footer className="fixed bottom-5 left-6 md:left-10 z-30 pointer-events-none hidden sm:flex items-center gap-3">
-        <div className="px-3 py-1.5 rounded-xl bg-[#090a0d]/80 border border-white/10 backdrop-blur-md flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#e2c99a] animate-pulse" />
-          <span className="text-[10px] font-mono text-neutral-400 uppercase">CAMERA PATH</span>
+        <div className="px-3 py-1.5 rounded-xl bg-[#090a0d]/90 border border-white/10 backdrop-blur-md flex items-center gap-2.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#e2c99a]" />
+          <span className="text-[10px] font-mono text-neutral-400 uppercase">CAMERA TRAJECTORY</span>
           <span className="text-[10px] font-mono font-bold text-[#e2c99a]">
             {Math.round(scrollProgress * 100)}%
           </span>

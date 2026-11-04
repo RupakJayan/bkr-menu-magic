@@ -10,7 +10,8 @@ import { StallItem } from "@/types/planner3d";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Sparkles, Image as ImageIcon, Check } from "lucide-react";
+import { Upload, Image as ImageIcon, Check } from "lucide-react";
+import { CrosshairVector, DatumVector, SpatialGridVector } from "@/components/ui/VectorIcons";
 import { toast } from "sonner";
 
 interface CustomStallCreatorModalProps {
@@ -139,13 +140,12 @@ export const CustomStallCreatorModal: React.FC<CustomStallCreatorModalProps> = (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-[#0c0d16] border border-line text-ink p-6 rounded-2xl shadow-2xl backdrop-blur-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2 text-ink">
-            <Sparkles className="h-5 w-5 text-[#8b5cf6]" />
-            On-The-Spot 3D Stall Generator
+          <DialogTitle className="text-lg font-bold flex items-center gap-2 text-white font-mono uppercase tracking-wider">
+            <SpatialGridVector size={18} className="text-[#e2c99a]" />
+            3D Stall Synthesis from Photography
           </DialogTitle>
-          <DialogDescription className="text-mute text-xs">
-            Upload a photo of any catering stall or live food counter. We instantly build and render
-            its photorealistic 3D stall model in the layout.
+          <DialogDescription className="text-neutral-400 text-xs font-sans">
+            Synthesize physical geometry, dimensions, and texture mapping from custom stall photography into the 3D scene.
           </DialogDescription>
         </DialogHeader>
 
@@ -334,10 +334,10 @@ export const CustomStallCreatorModal: React.FC<CustomStallCreatorModalProps> = (
           </Button>
           <Button
             onClick={handleCreateStall}
-            className="bg-gradient-to-r from-[#8b5cf6] to-[#e2c99a] hover:opacity-90 text-black font-bold text-xs h-9 px-5 rounded-xl shadow-lg flex items-center gap-1.5"
+            className="bg-[#e2c99a] hover:bg-[#c5a059] text-black font-mono font-bold text-xs h-9 px-5 rounded-lg shadow-sm flex items-center gap-1.5 transition-transform active:scale-95 uppercase tracking-wider"
           >
-            <Sparkles className="h-4 w-4" />
-            Generate 3D Stall
+            <CrosshairVector size={14} />
+            <span>Instantiate 3D Stall</span>
           </Button>
         </div>
       </DialogContent>

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getTamilSolarDate } from '@/utils/tamilDate';
 import { differenceInCalendarDays } from '@/utils/istDate';
-import { CalendarDays, Camera, Clock3, Coffee, MapPin, NotebookPen, Sparkles, UserRound } from 'lucide-react';
+import { CalendarDays, Camera, Clock3, Coffee, MapPin, NotebookPen, Compass, UserRound } from "lucide-react";
 import { VenueLocationPicker } from '@/components/venue/VenueLocationPicker';
 
 interface EventDetailsStepProps {
@@ -95,7 +95,7 @@ export const EventDetailsStep: React.FC<EventDetailsStepProps> = ({ menu, onMenu
           <div className="p-4 rounded-xl border border-line bg-surf shadow-theme-sm flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full bg-acc text-accink flex items-center justify-center shrink-0 shadow-theme-sm">
-                <Sparkles className="h-5 w-5" />
+                <Compass className="h-5 w-5" />
               </div>
               <div>
                 <p className="font-bold text-ink text-sm flex items-center gap-2">

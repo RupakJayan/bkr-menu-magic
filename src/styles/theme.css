@@ -85,8 +85,8 @@
   --tp-tex: none;
   --tp-blur: none;
 
-  --tp-font-display: 'Cormorant Garamond', Georgia, serif;
-  --tp-font-body: 'Hanken Grotesk', system-ui, sans-serif;
+  --tp-font-display: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --tp-font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --tp-font-mono: 'JetBrains Mono', monospace;
   --tp-w-display: 500;
   --tp-track-display: 0.02em;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useProgress } from "@react-three/drei";
-import { SphereIcon } from "./CustomIcons";
+import { CrosshairVector, DatumVector } from "@/components/ui/VectorIcons";
 
 interface LuxuryPreloaderProps {
   onComplete?: () => void;
@@ -13,7 +13,7 @@ export const LuxuryPreloader: React.FC<LuxuryPreloaderProps> = ({ onComplete }) 
 
   useEffect(() => {
     const startTime = Date.now();
-    const duration = 1400; // 1.4s luxury animation reveal
+    const duration = 1000; // 1.0s fast precision preloader
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -27,9 +27,9 @@ export const LuxuryPreloader: React.FC<LuxuryPreloaderProps> = ({ onComplete }) 
         setTimeout(() => {
           setIsDismissed(true);
           onComplete?.();
-        }, 400);
+        }, 200);
       }
-    }, 25);
+    }, 20);
 
     return () => clearInterval(interval);
   }, [progress, onComplete]);
@@ -38,46 +38,43 @@ export const LuxuryPreloader: React.FC<LuxuryPreloaderProps> = ({ onComplete }) 
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#07080a] text-white transition-all duration-500 pointer-events-none ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#07080b] text-white transition-opacity duration-300 pointer-events-none select-none ${
         displayProgress >= 100 ? "opacity-0" : "opacity-100"
       }`}
     >
-      {/* Background Subtle Radial Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(226,201,154,0.08)_0%,transparent_70%)] pointer-events-none" />
-
-      {/* Central Rotating Emblem */}
+      {/* Central Precision CAD Caliper Emblem */}
       <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
-        {/* Outer Pulsing Ring */}
-        <div className="absolute inset-0 rounded-full border border-[#e2c99a]/20 animate-ping" />
-        {/* Middle Rotating Dashed Ring */}
-        <div className="absolute inset-0 rounded-full border border-dashed border-[#e2c99a]/50 animate-[spin_6s_linear_infinite]" />
-        {/* Core Icon */}
-        <div className="w-12 h-12 rounded-full bg-[#111318] border border-[#e2c99a]/60 flex items-center justify-center shadow-[0_0_25px_rgba(226,201,154,0.3)]">
-          <SphereIcon size={24} className="text-[#e2c99a]" />
+        {/* Outer Rotating Coordinate Ring */}
+        <div className="absolute inset-0 rounded-full border border-white/10 animate-[spin_10s_linear_infinite]" />
+        {/* Inner Dashed Caliper Ring */}
+        <div className="absolute inset-2 rounded-full border border-dashed border-[#e2c99a]/40 animate-[spin_5s_linear_infinite_reverse]" />
+        {/* Core Datum Point */}
+        <div className="w-10 h-10 rounded-lg bg-[#12151e] border border-white/15 flex items-center justify-center text-[#e2c99a]">
+          <DatumVector size={20} />
         </div>
       </div>
 
-      {/* Numerical Percentage */}
-      <div className="text-4xl font-syne font-extrabold tracking-tight mb-2">
-        {Math.round(displayProgress)}
-        <span className="text-[#e2c99a] font-mono text-lg ml-1">%</span>
-      </div>
+      {/* Numerical Telemetry Percentage */}
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-baseline gap-1.5 font-mono">
+          <span className="text-2xl font-bold tracking-tight text-white">
+            {displayProgress}
+          </span>
+          <span className="text-xs text-[#e2c99a] font-normal">%</span>
+        </div>
 
-      {/* Technical Status Milestones */}
-      <p className="text-[11px] font-mono tracking-widest text-neutral-400 uppercase">
-        {displayProgress < 40
-          ? "Compiling WebGL Shaders..."
-          : displayProgress < 80
-          ? "Synthesizing PBR Materials..."
-          : "Mounting 3D Viewport..."}
-      </p>
+        {/* Precision Progress Bar */}
+        <div className="w-48 h-1 rounded-full bg-white/[0.08] overflow-hidden">
+          <div
+            className="h-full bg-[#e2c99a] transition-all duration-150 ease-out"
+            style={{ width: `${displayProgress}%` }}
+          />
+        </div>
 
-      {/* Minimalist Champagne Progress Line */}
-      <div className="w-56 h-[2px] bg-white/10 rounded-full mt-6 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-[#c5a059] to-[#e2c99a] transition-all duration-150 ease-out shadow-[0_0_10px_rgba(226,201,154,0.8)]"
-          style={{ width: `${displayProgress}%` }}
-        />
+        {/* Technical Sub-Label */}
+        <span className="text-[10px] font-mono tracking-widest text-neutral-400 uppercase mt-2">
+          COMPUTING SPATIAL GEOMETRY &amp; SHADOWS
+        </span>
       </div>
     </div>
   );

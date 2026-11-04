@@ -6,7 +6,7 @@ import { EventPlanningFlow } from '@/components/EventPlanningFlow';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { BrandLogo } from '@/components/BrandLogo';
-import { ArrowLeft, Check, Download, FileText, PlusCircle, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileText, PlusCircle, Save, Compass } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { exportMenuJSON, saveEventMenu } from '@/services/localAdminService';
 import { hasAdminSession } from '@/services/adminAccessService';
@@ -140,7 +140,7 @@ const MenuCreator: React.FC = () => {
               aria-label="Scan handwritten menu using AI Lens"
               title="Scan photo of handwritten catering notes with AI"
             >
-              <Sparkles className="h-3.5 w-3.5 text-acc shrink-0" />
+              <Compass className="h-3.5 w-3.5 text-acc shrink-0" />
               <span>AI Menu Lens</span>
             </Button>
             <Button

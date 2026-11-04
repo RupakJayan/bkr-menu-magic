@@ -247,31 +247,31 @@ export const HeroModel: React.FC<HeroModelProps> = ({ activeHotspot, onSelectHot
               >
                 {/* Hotspot Outer Kinetic Ring */}
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-500 ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 ${
                     isSelected
-                      ? "border-2 border-[#e2c99a] bg-[#e2c99a]/30 scale-125 shadow-[0_0_20px_rgba(226,201,154,0.8)]"
-                      : "border border-white/30 bg-black/60 hover:scale-110 hover:border-[#e2c99a]"
+                      ? "border-2 border-[#e2c99a] bg-[#e2c99a]/25 scale-110 shadow-[0_0_15px_rgba(226,201,154,0.5)]"
+                      : "border border-white/40 bg-black/70 hover:scale-105 hover:border-[#e2c99a]"
                   }`}
                 >
                   <span
-                    className={`w-2 h-2 rounded-full transition-transform duration-300 ${
-                      isSelected ? "bg-[#e2c99a] scale-125 animate-ping" : "bg-white group-hover:bg-[#e2c99a]"
+                    className={`w-2 h-2 rounded-full transition-transform duration-200 ${
+                      isSelected ? "bg-[#e2c99a] scale-110" : "bg-white group-hover:bg-[#e2c99a]"
                     }`}
                   />
                 </div>
 
                 {/* Micro Hover Tooltip Flag */}
                 <div
-                  className={`absolute left-9 top-1/2 -translate-y-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg bg-[#0b0d13]/95 border border-white/10 backdrop-blur-xl shadow-2xl transition-all duration-300 pointer-events-none ${
+                  className={`absolute left-9 top-1/2 -translate-y-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg bg-[#0b0d13]/95 border border-white/15 backdrop-blur-xl shadow-2xl transition-all duration-200 pointer-events-none ${
                     isSelected
-                      ? "opacity-100 translate-x-0 border-[#e2c99a]/50"
+                      ? "opacity-100 translate-x-0 border-[#e2c99a]/60"
                       : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
                   }`}
                 >
                   <p className="text-[9px] font-mono font-bold tracking-widest text-[#e2c99a] uppercase">
                     {spot.tag}
                   </p>
-                  <p className="text-xs font-semibold text-white tracking-wide">{spot.label}</p>
+                  <p className="text-xs font-mono font-medium text-white tracking-wide">{spot.label}</p>
                 </div>
               </div>
             </Html>
