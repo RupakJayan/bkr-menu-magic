@@ -2,26 +2,28 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Mic,
   MicOff,
-  Layers,
   MapPin,
   Users,
   Utensils,
   Sun,
   Moon,
   Sunset,
-  Lightbulb,
   Check,
-  Compass,
   ArrowRight,
-  Tv,
-  Volume2,
   Sliders,
-  Type,
-  Maximize2,
-  Trash2,
+  Image as ImageIcon,
+  Upload,
+  Activity,
+  Radio,
+  Sparkles as SparklesIcon,
 } from "lucide-react";
-import { MandapamVenue, StallType } from "@/types/planner3d";
-import { PRESET_VENUES } from "@/services/planner3dService";
+import { MandapamVenue } from "@/types/planner3d";
+import {
+  PRESET_VENUES,
+  synthesizeVenueFromQuery,
+  synthesizeVenueFromImage,
+  generateVenueBlueprintCanvas,
+} from "@/services/venueSynthesisService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -61,25 +63,47 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
   if (!isOpen) return null;
 
   // Form states
-  const [data, setData] = useState<StudioBriefingData>(initialData);
-  const [activeTab, setActiveTab] = useState<"speech" | "custom">("speech");
+  const [data, setData] = useState<StudioBriefingData>(() => {
+    // Ensure initial venue has a generated blueprint URL if not already present
+    const v = initialData.venue;
+    if (!v.blueprintUrl) {
+      return { ...initialData, venue: { ...v, blueprintUrl: generateVenueBlueprintCanvas(v) } };
+    }
+    return initialData;
+  });
+
+  const [activeTab, setActiveTab] = useState<"speech" | "image" | "custom">("speech");
   const [typedPrompt, setTypedPrompt] = useState<string>("");
 
-  // Speech recognition states
+  // Live Web Audio API States
   const [isListening, setIsListening] = useState(false);
   const [speechTranscript, setSpeechTranscript] = useState("");
+  const [audioLevels, setAudioLevels] = useState<number[]>(new Array(24).fill(8));
+  const [decibelReading, setDecibelReading] = useState<number>(-42);
+  
   const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animFrameRef = useRef<number | null>(null);
 
-  // Compilation / rendering loading state
+  // Image Upload / Projection States
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [customVenueName, setCustomVenueName] = useState<string>("Custom Architectural Venue");
+  const [customWidth, setCustomWidth] = useState<number>(45);
+  const [customLength, setCustomLength] = useState<number>(30);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Compilation / rendering transition state
   const [isCompiling, setIsCompiling] = useState(false);
   const [compilingStep, setCompilingStep] = useState(0);
 
   const COMPILING_STAGES = [
-    "Analyzing spatial footprint & terrain limits...",
-    "Synthesizing 3D live counters & wing positions...",
-    "Calibrating theatrical focus spotlights & shadows...",
-    "Mounting BKR Royal curved LED media wall...",
-    "Finalizing crowd walkthrough aisles & rendering 3D stage...",
+    "Synthesizing 3D Architectural Blueprint...",
+    "Erecting Structural Space-Frame Trusses...",
+    "Mounting Live Counters & Spatial Aisles...",
+    "Calibrating Theatrical Stage Lighting...",
+    "Finalizing CAD Viewport...",
   ];
 
   // Initialize Speech Recognition
@@ -104,10 +128,12 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
 
       recognition.onerror = (e: any) => {
         console.warn("Speech recognition error:", e.error);
+        stopAudioAnalysis();
         setIsListening(false);
       };
 
       recognition.onend = () => {
+        stopAudioAnalysis();
         setIsListening(false);
       };
 
@@ -115,6 +141,7 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
     }
 
     return () => {
+      stopAudioAnalysis();
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -123,26 +150,114 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
     };
   }, []);
 
+  // Web Audio API Frequency Analysis
+  const startAudioAnalysis = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioCtx();
+      audioContextRef.current = audioCtx;
+
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      analyserRef.current = analyser;
+
+      const source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const updateFrequencyData = () => {
+        analyser.getByteFrequencyData(dataArray);
+
+        // Convert 32 frequency bins to 24 UI bars
+        const bars: number[] = [];
+        let totalEnergy = 0;
+        for (let i = 0; i < 24; i++) {
+          const idx = Math.floor((i / 24) * bufferLength);
+          const val = dataArray[idx] || 0;
+          bars.push(Math.max(6, Math.round((val / 255) * 48)));
+          totalEnergy += val;
+        }
+        setAudioLevels(bars);
+
+        const avg = totalEnergy / 24;
+        const dB = avg > 0 ? Math.round(20 * Math.log10(avg / 255)) : -50;
+        setDecibelReading(dB);
+
+        animFrameRef.current = requestAnimationFrame(updateFrequencyData);
+      };
+
+      updateFrequencyData();
+    } catch (err) {
+      console.warn("Direct microphone stream not available, falling back to procedural audio oscillator", err);
+      // Fallback: procedural audio wave animation while listening
+      let frame = 0;
+      const loop = () => {
+        frame++;
+        const bars = Array.from({ length: 24 }).map((_, i) => {
+          const wave = Math.sin(frame * 0.15 + i * 0.4) * 0.5 + 0.5;
+          return Math.round(8 + wave * 36);
+        });
+        setAudioLevels(bars);
+        setDecibelReading(-24 + Math.round(Math.sin(frame * 0.1) * 8));
+        animFrameRef.current = requestAnimationFrame(loop);
+      };
+      loop();
+    }
+  };
+
+  const stopAudioAnalysis = () => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    setAudioLevels(new Array(24).fill(6));
+    setDecibelReading(-48);
+  };
+
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      toast.error("Speech Recognition is not supported in this browser. Please use the text input below.");
+      // Fallback for browsers without speech recognition
+      if (!isListening) {
+        setIsListening(true);
+        startAudioAnalysis();
+        toast.info("Microphone analysis active. Type your brief below or speak.");
+      } else {
+        setIsListening(false);
+        stopAudioAnalysis();
+      }
       return;
     }
 
     if (isListening) {
       recognitionRef.current.stop();
+      stopAudioAnalysis();
       setIsListening(false);
-      toast.info("Voice recording paused");
+      toast.info("Voice intake paused");
     } else {
       setSpeechTranscript("");
       try {
         recognitionRef.current.start();
         setIsListening(true);
-        toast.success("Listening... Speak your event details", {
-          description: "e.g. '1 acre open lawn, 3500 guests, 3 dosa counters, video wall, golden hour'",
+        startAudioAnalysis();
+        toast.success("Listening... Speak any venue or catering brief", {
+          description: "e.g. 'Codissia Hall E, 4000 pax, 3 dosa counters, sunset golden hour'",
         });
       } catch (err) {
         setIsListening(false);
+        stopAudioAnalysis();
       }
     }
   };
@@ -151,10 +266,23 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
   const parseSpokenBrief = (text: string) => {
     const lower = text.toLowerCase();
 
-    // 1. Parse guest count (e.g. "3000 guests", "4000 pax", "1 lakh", "2500 people")
-    const lakhMatch = lower.match(/(1|one)\s*(lakh|lac)/);
+    // 1. Synthesize 3D Venue from Spoken Text (Codissia, ITC Chola, MRC Hall, Lawn, or Custom!)
+    const synthesizedVenue = synthesizeVenueFromQuery(text);
+    if (synthesizedVenue) {
+      setData((prev) => ({
+        ...prev,
+        venue: synthesizedVenue,
+      }));
+    }
+
+    // 2. Parse guest count (e.g. "3000 guests", "4000 pax", "1 lakh", "2500 people")
+    const lakhMatch = lower.match(/(\d+|one|two|three)?\s*(lakh|lac|laksh)/);
     if (lakhMatch) {
-      setData((prev) => ({ ...prev, headCount: 100000 }));
+      const numStr = lakhMatch[1];
+      let mult = 1;
+      if (numStr === "two" || numStr === "2") mult = 2;
+      if (numStr === "three" || numStr === "3") mult = 3;
+      setData((prev) => ({ ...prev, headCount: mult * 100000 }));
     } else {
       const countMatch = lower.match(/(\d[\d,]*)\s*(guests?|pax|people|heads?)/);
       if (countMatch) {
@@ -165,26 +293,15 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
       }
     }
 
-    // 2. Parse venue footprint (open lawn / acres vs hall)
-    if (lower.includes("open lawn") || lower.includes("open ground") || lower.includes("lawn") || lower.includes("acre")) {
-      const openVenue = PRESET_VENUES.find((v) => v.terrainType === "open_lawn") || PRESET_VENUES[3];
-      setData((prev) => ({ ...prev, venue: openVenue }));
-    } else if (lower.includes("ramanathan") || lower.includes("mayor")) {
-      const v = PRESET_VENUES.find((v) => v.id === "mrc-hall") || PRESET_VENUES[0];
-      setData((prev) => ({ ...prev, venue: v }));
-    } else if (lower.includes("vari") || lower.includes("kalyana mandapam")) {
-      const v = PRESET_VENUES.find((v) => v.id === "sri-vari") || PRESET_VENUES[1];
-      setData((prev) => ({ ...prev, venue: v }));
-    }
-
     // 3. Parse Dosa stations
-    const dosaMatch = lower.match(/(\d+|two|three|four|dual|triple)\s*(dosa|dosai)/);
+    const dosaMatch = lower.match(/(\d+|two|three|four|five|dual|triple)\s*(dosa|dosai)/);
     if (dosaMatch) {
       const word = dosaMatch[1];
       let qty = 2;
       if (word === "two" || word === "dual" || word === "2") qty = 2;
       if (word === "three" || word === "triple" || word === "3") qty = 3;
       if (word === "four" || word === "4") qty = 4;
+      if (word === "five" || word === "5") qty = 5;
       setData((prev) => ({
         ...prev,
         counterCounts: { ...prev.counterCounts, dosa: qty },
@@ -201,7 +318,15 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
       }));
     }
 
-    // 5. Time of day / Atmosphere
+    // 5. Parse Chaat counters
+    if (lower.includes("chaat") || lower.includes("pani puri")) {
+      setData((prev) => ({
+        ...prev,
+        counterCounts: { ...prev.counterCounts, chaat: 2 },
+      }));
+    }
+
+    // 6. Time of day / Atmosphere
     if (lower.includes("sunset") || lower.includes("golden hour") || lower.includes("evening")) {
       setData((prev) => ({ ...prev, timeOfDay: "sunset" }));
     } else if (lower.includes("night") || lower.includes("serial light") || lower.includes("starlight")) {
@@ -210,7 +335,7 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
       setData((prev) => ({ ...prev, timeOfDay: "morning" }));
     }
 
-    // 6. Amenities
+    // 7. Amenities
     if (lower.includes("video wall") || lower.includes("led wall") || lower.includes("screen")) {
       setData((prev) => ({ ...prev, showVideoWall: true }));
     }
@@ -222,15 +347,76 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
   const handleApplyTypedPrompt = () => {
     if (!typedPrompt.trim()) return;
     parseSpokenBrief(typedPrompt);
-    toast.success("Brief parsed and applied to scene settings");
+    toast.success("Venue & Parameters Synthesized", {
+      description: `3D Model ready for ${data.venue.name}`,
+    });
+  };
+
+  // Image File Upload Handler
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setUploadedImageUrl(dataUrl);
+
+      // Create an image object to calculate natural aspect ratio
+      const img = new Image();
+      img.onload = () => {
+        const aspect = img.naturalWidth / img.naturalHeight;
+        const estWidth = 45;
+        const estLength = Math.round(estWidth / aspect);
+        setCustomWidth(estWidth);
+        setCustomLength(estLength);
+
+        const venueFromImg = synthesizeVenueFromImage(dataUrl, {
+          venueName: file.name.replace(/\.[^/.]+$/, ""),
+          aspectRatio: aspect,
+          estimatedWidth: estWidth,
+        });
+
+        setData((prev) => ({ ...prev, venue: venueFromImg }));
+        toast.success("Floorplan Image Ingested!", {
+          description: `Generated 3D venue floorplan (${venueFromImg.hallWidth}m × ${venueFromImg.hallLength}m).`,
+        });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleApplyImageProjection = () => {
+    if (!uploadedImageUrl) {
+      toast.error("Please upload an image first.");
+      return;
+    }
+    const venueFromImg = synthesizeVenueFromImage(uploadedImageUrl, {
+      venueName: customVenueName,
+      aspectRatio: customWidth / customLength,
+      estimatedWidth: customWidth,
+    });
+    setData((prev) => ({ ...prev, venue: venueFromImg }));
+    toast.success("Applied Custom Image to 3D Stage Plane");
   };
 
   const handleStartRender = () => {
-    onRenderStage(data);
-    onClose();
-    toast.success("Venue Model Initialized", {
-      description: `${data.headCount.toLocaleString("en-IN")} Pax • ${data.venue.name} • ${data.counterCounts.dosa}x Dosa Counters`,
-    });
+    setIsCompiling(true);
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      setCompilingStep(step);
+      if (step >= COMPILING_STAGES.length) {
+        clearInterval(interval);
+        setIsCompiling(false);
+        onRenderStage(data);
+        onClose();
+        toast.success("3D Venue Model Initialized", {
+          description: `${data.headCount.toLocaleString("en-IN")} Pax • ${data.venue.name} • ${data.counterCounts.dosa}x Dosa Counters`,
+        });
+      }
+    }, 280);
   };
 
   return (
@@ -238,24 +424,24 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
       <div className="relative w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111318] text-[#f4efe6] shadow-2xl flex flex-col font-sans select-none">
         
         {/* Top Studio HUD Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#161820]">
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-white/[0.08] bg-[#161820]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#222530] border border-white/10 flex items-center justify-center text-[#e2c99a]">
               <DatumVector size={16} />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-wider uppercase font-mono text-white">
-                BKR // SPATIAL EVENT INTAKE CONSOLE
+              <h2 className="text-xs font-bold tracking-wider uppercase font-mono text-white">
+                BKR // SPATIAL EVENT &amp; VENUE INTAKE
               </h2>
-              <p className="text-[11px] font-mono text-neutral-400">
-                Acoustic speech parsing &amp; physical parameter staging
+              <p className="text-[10px] font-mono text-neutral-400">
+                Acoustic speech parsing &amp; physical 3D venue synthesizer
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#222530] text-[#e2c99a] border border-white/10">
-              STAGE 01 // INTAKE
+              STAGE 01 // ARCHITECTURAL SYNTHESIS
             </span>
             <button
               onClick={onClose}
@@ -266,46 +452,90 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
           </div>
         </div>
 
-        {/* Studio Content Area */}
+        {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
           
-          {/* 1. SPEECH OR TYPE MODALITY SELECTOR */}
-          <div className="flex items-center gap-3 border-b border-white/[0.08] pb-3">
+          {/* 1. THREE MODALITY TABS */}
+          <div className="flex items-center gap-2 border-b border-white/[0.08] pb-3">
             <button
               onClick={() => setActiveTab("speech")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all font-mono ${
                 activeTab === "speech"
                   ? "bg-[#222530] text-[#e2c99a] border border-[#e2c99a]/40 shadow-sm"
-                  : "text-[#8e95a5] hover:text-white hover:bg-white/5"
+                  : "text-neutral-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Mic className="h-4 w-4" />
-              <span>Voice Speech Input</span>
+              <Mic className="h-3.5 w-3.5" />
+              <span>Voice Speech Intake</span>
               {isListening && (
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping ml-1" />
               )}
             </button>
 
             <button
-              onClick={() => setActiveTab("custom")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === "custom"
+              onClick={() => setActiveTab("image")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all font-mono ${
+                activeTab === "image"
                   ? "bg-[#222530] text-[#e2c99a] border border-[#e2c99a]/40 shadow-sm"
-                  : "text-[#8e95a5] hover:text-white hover:bg-white/5"
+                  : "text-neutral-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Sliders className="h-4 w-4" />
-              <span>Custom Specification Sliders</span>
+              <ImageIcon className="h-3.5 w-3.5" />
+              <span>Upload Venue Image to 3D</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("custom")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all font-mono ${
+                activeTab === "custom"
+                  ? "bg-[#222530] text-[#e2c99a] border border-[#e2c99a]/40 shadow-sm"
+                  : "text-neutral-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Sliders className="h-3.5 w-3.5" />
+              <span>Manual Parameters</span>
             </button>
           </div>
 
-          {/* TAB CONTENT: SPEECH OR PROMPT */}
-          {activeTab === "speech" ? (
+          {/* TAB 1: SPEECH INTAKE WITH LIVE AUDIO FREQUENCY ANALYZER */}
+          {activeTab === "speech" && (
             <div className="space-y-4">
-              {/* Interactive Speech Card */}
               <div className="relative p-6 rounded-2xl border border-white/[0.08] bg-[#161820] flex flex-col items-center justify-center text-center space-y-4">
                 
-                {/* Large Tactile Mic Button */}
+                {/* Live Audio Visualizer Bars Display */}
+                <div className="w-full flex flex-col items-center justify-center py-2">
+                  <div className="flex items-end justify-center gap-1.5 h-14 w-full max-w-md px-4">
+                    {audioLevels.map((lvl, idx) => (
+                      <div
+                        key={idx}
+                        className="flex-1 rounded-t transition-all duration-75"
+                        style={{
+                          height: `${Math.max(4, lvl)}px`,
+                          backgroundColor: isListening
+                            ? idx % 2 === 0
+                              ? "#e2c99a"
+                              : "#38bdf8"
+                            : "#2a3040",
+                          opacity: isListening ? 0.95 : 0.35,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Audio Status HUD */}
+                  <div className="flex items-center gap-3 mt-2 text-[10px] font-mono text-neutral-400">
+                    <span className="flex items-center gap-1">
+                      <Radio className={`h-3 w-3 ${isListening ? "text-emerald-400 animate-pulse" : "text-neutral-500"}`} />
+                      {isListening ? "AUDIO STREAM: ACTIVE" : "MICROPHONE STANDBY"}
+                    </span>
+                    <span>•</span>
+                    <span>GAIN: {decibelReading} dB</span>
+                    <span>•</span>
+                    <span>44.1 kHz NLP PIPELINE</span>
+                  </div>
+                </div>
+
+                {/* Tactile Record Mic Button */}
                 <button
                   onClick={toggleListening}
                   className={`relative p-5 rounded-full transition-all duration-300 shadow-xl flex items-center justify-center ${
@@ -326,19 +556,19 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                 </button>
 
                 <div>
-                  <h3 className="text-sm font-bold text-white font-display">
-                    {isListening ? "Listening to your Event Brief..." : "Tap the Mic to Speak your Catering Brief"}
+                  <h3 className="text-sm font-bold text-white font-mono">
+                    {isListening ? "Listening... Speak your venue or catering brief" : "Tap the Mic to Speak your Event Details"}
                   </h3>
-                  <p className="text-xs text-[#8e95a5] mt-1 max-w-md">
-                    Speak your guest count, venue type, dosa counter numbers, or time of day naturally.
+                  <p className="text-xs text-neutral-400 mt-1 max-w-md font-mono">
+                    Say any venue (Codissia, ITC Grand Chola, MRC Hall, 1-Acre Lawn, or custom), guest count, and live stations.
                   </p>
                 </div>
 
-                {/* Real-Time Spoken Transcript Display */}
+                {/* Real-Time Live Transcript Display */}
                 {(isListening || speechTranscript) && (
                   <div className="w-full p-3.5 rounded-xl bg-[#0e1015] border border-white/[0.08] text-left">
                     <span className="text-[10px] font-mono text-[#e2c99a] uppercase block mb-1">
-                      Live Voice Recognition:
+                      Live Voice Recognition Transcript:
                     </span>
                     <p className="text-xs font-mono text-white leading-relaxed">
                       {speechTranscript || "Listening... speak now."}
@@ -346,45 +576,49 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                   </div>
                 )}
 
-                {/* Or Type Prompt Alternative */}
-                <div className="w-full pt-2 flex items-center gap-2">
+                {/* Or Type Prompt Input */}
+                <div className="w-full pt-1 flex items-center gap-2">
                   <div className="relative flex-1">
                     <input
                       type="text"
                       value={typedPrompt}
                       onChange={(e) => setTypedPrompt(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleApplyTypedPrompt()}
-                      placeholder="Or type here: e.g. '1 acre open lawn, 4000 guests, 3 dosa counters, video wall'"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#0e1015] border border-white/[0.08] text-xs text-white placeholder-[#8e95a5] focus:outline-none focus:border-[#e2c99a]"
+                      placeholder="Or type here: e.g. 'Codissia Hall E, 4000 guests, 3 dosa counters, video wall'"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#0e1015] border border-white/[0.08] text-xs text-white placeholder-neutral-500 font-mono focus:outline-none focus:border-[#e2c99a]"
                     />
                   </div>
                   <Button
                     size="sm"
                     onClick={handleApplyTypedPrompt}
-                    className="h-9 px-4 text-xs font-bold bg-[#e2c99a] text-black hover:bg-[#c5a059]"
+                    className="h-9 px-4 text-xs font-mono font-bold bg-[#e2c99a] text-black hover:bg-[#c5a059]"
                   >
-                    Parse Brief
+                    Synthesize
                   </Button>
                 </div>
 
-                {/* Sample One-Click Speech Presets */}
+                {/* One-Click Presets */}
                 <div className="w-full pt-2">
-                  <span className="text-[10px] font-mono text-[#8e95a5] block text-left mb-2 uppercase">
-                    Sample Inquiries (Click to autofill):
+                  <span className="text-[10px] font-mono text-neutral-400 block text-left mb-1.5 uppercase">
+                    Sample Venues &amp; Briefs (Click to load):
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       {
-                        label: "LAWN // 1.0 ACRE (3,500 Pax • 3x Dosa)",
-                        prompt: "1 acre open lawn in Coimbatore, 3500 guests with 3 dosa counters, video wall, and golden hour sunset",
+                        label: "CODISSIA // 4,000 PAX (Hall E • 3x Dosa)",
+                        prompt: "CODISSIA Trade Fair Complex Hall E, 4000 guests, 3 dosa counters, video wall, golden hour sunset",
                       },
                       {
-                        label: "MANDAPAM // 1,500 PAX (Dual-Wing Dosa)",
-                        prompt: "Mayor Ramanathan Chettiar Hall, 1500 guests with 2 dosa counters, idli stall, focus spotlights",
+                        label: "ITC GRAND CHOLA // 2,500 PAX (Rajendra Hall)",
+                        prompt: "ITC Grand Chola Rajendra Hall, 2500 guests with 2 dosa counters, idli stall, starlight night",
                       },
                       {
-                        label: "MEGA GROUND // 20,000 PAX (4x Dosa)",
-                        prompt: "Mega ground, 20000 guests with 4 dosa counters, continental, night starlight",
+                        label: "MRC HALL CHENNAI // 2,000 PAX (Chettinad)",
+                        prompt: "Mayor Ramanathan Chettiar Hall, 2000 guests, 2 dosa counters, continental, morning muhurtham",
+                      },
+                      {
+                        label: "LAWN // 1.0 ACRE (3,500 Pax • Starlight)",
+                        prompt: "1 acre open lawn in Coimbatore, 3500 guests with 3 dosa counters, festive serial lights",
                       },
                     ].map((preset, idx) => (
                       <button
@@ -392,7 +626,7 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                         onClick={() => {
                           setTypedPrompt(preset.prompt);
                           parseSpokenBrief(preset.prompt);
-                          toast.success("Applied preset template");
+                          toast.success("Synthesized 3D venue from brief");
                         }}
                         className="text-[10px] px-2.5 py-1 rounded-md bg-[#222530] border border-white/[0.08] text-neutral-300 hover:text-[#e2c99a] hover:border-[#e2c99a]/40 transition-all font-mono"
                       >
@@ -403,97 +637,179 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                 </div>
               </div>
             </div>
-          ) : null}
+          )}
 
-          {/* 2. STRUCTURED SPECIFICATIONS OVERVIEW */}
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider font-mono text-[#e2c99a]">
-                Custom Venue & Counter Allocation
-              </h3>
-              <span className="text-[11px] font-mono text-[#8e95a5]">
-                Customizable anytime in 3D viewport
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              {/* Left Column: Venue & Footprint */}
-              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#161820] space-y-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-[#e2c99a]" />
-                  <span className="text-xs font-bold text-white">Venue Footprint & Terrain</span>
+          {/* TAB 2: UPLOAD VENUE IMAGE TO 3D */}
+          {activeTab === "image" && (
+            <div className="p-6 rounded-2xl border border-white/[0.08] bg-[#161820] space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#222530] border border-white/10 flex items-center justify-center text-[#e2c99a]">
+                  <Upload className="h-4 w-4" />
                 </div>
-
-                <div className="space-y-2">
-                  {PRESET_VENUES.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => setData((prev) => ({ ...prev, venue: v }))}
-                      className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        data.venue.id === v.id
-                          ? "bg-[#222530] border-[#e2c99a] text-white shadow-sm"
-                          : "bg-[#0e1015] border-white/[0.05] text-[#8e95a5] hover:text-white"
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold">{v.name}</div>
-                        <div className="text-[10px] text-[#8e95a5] font-mono mt-0.5">
-                          {v.hallWidth}m × {v.hallLength}m • {v.capacity} pax cap
-                        </div>
-                      </div>
-                      {data.venue.id === v.id && (
-                        <Check className="h-4 w-4 text-[#e2c99a]" />
-                      )}
-                    </button>
-                  ))}
+                <div>
+                  <h3 className="text-xs font-bold text-white uppercase font-mono">
+                    Floorplan Image to 3D Projection Engine
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    Drop any architectural blueprint, satellite map, or venue photo to render as the 3D ground plane.
+                  </p>
                 </div>
               </div>
 
-              {/* Right Column: Guest Capacity & Counters */}
-              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#161820] space-y-4">
-                
-                {/* Guest Capacity */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-[#e2c99a]" />
-                      <span className="text-xs font-bold text-white">Guest Head Count</span>
-                    </div>
-                    <span className="text-sm font-extrabold text-[#e2c99a] font-mono">
-                      {data.headCount.toLocaleString("en-IN")} Pax
-                    </span>
+              {/* Upload Dropzone */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer border-2 border-dashed border-white/15 hover:border-[#e2c99a]/60 rounded-xl p-6 text-center bg-[#0e1015]/60 transition-colors"
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageFileUpload}
+                  className="hidden"
+                />
+                <Upload className="h-8 w-8 mx-auto text-[#e2c99a] mb-2" />
+                <span className="text-xs font-mono font-bold text-white block">
+                  Click or Drag &amp; Drop Venue Floorplan Image
+                </span>
+                <span className="text-[10px] font-mono text-neutral-400 block mt-1">
+                  Supports PNG, JPG, WebP, SVG architectural drawings
+                </span>
+              </div>
+
+              {/* Image Preview & Custom Dimensions */}
+              {uploadedImageUrl && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="rounded-xl overflow-hidden border border-white/10 bg-black max-h-48 flex items-center justify-center">
+                    <img
+                      src={uploadedImageUrl}
+                      alt="Uploaded Blueprint"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
 
-                  {/* Headcount Quick Chips */}
+                  <div className="space-y-3 font-mono text-xs">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">
+                        Venue Identifier Name:
+                      </label>
+                      <input
+                        type="text"
+                        value={customVenueName}
+                        onChange={(e) => setCustomVenueName(e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-lg bg-[#0e1015] border border-white/10 text-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-neutral-400 block mb-1">
+                          Width ({customWidth}m):
+                        </label>
+                        <input
+                          type="range"
+                          min={20}
+                          max={100}
+                          value={customWidth}
+                          onChange={(e) => setCustomWidth(Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-neutral-400 block mb-1">
+                          Length ({customLength}m):
+                        </label>
+                        <input
+                          type="range"
+                          min={20}
+                          max={100}
+                          value={customLength}
+                          onChange={(e) => setCustomLength(Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={handleApplyImageProjection}
+                      className="w-full bg-[#e2c99a] text-black font-bold font-mono hover:bg-[#c5a059]"
+                    >
+                      Project Image onto 3D Ground
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: MANUAL PARAMETERS */}
+          {activeTab === "custom" && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Preset Venues Selector */}
+                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#161820] space-y-3">
+                  <span className="text-xs font-bold text-white font-mono block">
+                    Select Architectural Footprint
+                  </span>
+                  <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                    {PRESET_VENUES.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() =>
+                          setData((prev) => ({
+                            ...prev,
+                            venue: { ...v, blueprintUrl: generateVenueBlueprintCanvas(v) },
+                          }))
+                        }
+                        className={`w-full p-2 rounded-xl border text-left flex items-center justify-between transition-all font-mono text-xs ${
+                          data.venue.id === v.id
+                            ? "bg-[#222530] border-[#e2c99a] text-white shadow-sm"
+                            : "bg-[#0e1015] border-white/[0.05] text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <div>
+                          <div className="font-bold text-white">{v.name}</div>
+                          <div className="text-[10px] text-neutral-400 mt-0.5">
+                            {v.hallWidth}m × {v.hallLength}m • {v.defaultCapacity.toLocaleString("en-IN")} Pax
+                          </div>
+                        </div>
+                        {data.venue.id === v.id && (
+                          <Check className="h-4 w-4 text-[#e2c99a]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Headcount and Live Counters */}
+                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#161820] space-y-3 font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">Target Headcount:</span>
+                    <span className="text-sm font-bold text-[#e2c99a]">
+                      {data.headCount.toLocaleString("en-IN")} PAX
+                    </span>
+                  </div>
                   <div className="grid grid-cols-5 gap-1">
                     {[500, 1500, 3500, 10000, 100000].map((num) => (
                       <button
                         key={num}
                         onClick={() => setData((prev) => ({ ...prev, headCount: num }))}
-                        className={`py-1 rounded-lg text-[10px] font-mono border transition-all ${
+                        className={`py-1 rounded-lg text-[10px] border transition-all ${
                           data.headCount === num
                             ? "bg-[#e2c99a] text-black font-bold border-[#e2c99a]"
-                            : "bg-[#0e1015] border-white/[0.05] text-[#8e95a5] hover:text-white"
+                            : "bg-[#0e1015] border-white/[0.05] text-neutral-400 hover:text-white"
                         }`}
                       >
                         {num >= 100000 ? "1 Lakh" : num >= 1000 ? `${num / 1000}K` : num}
                       </button>
                     ))}
                   </div>
-                </div>
 
-                {/* Counter Multipliers */}
-                <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-                  <span className="text-xs font-bold text-white block">
-                    Live Counter Duplication Setup
-                  </span>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {/* Dosa Counters */}
-                    <div className="p-2.5 rounded-lg bg-[#0e1015] border border-white/[0.05] flex items-center justify-between">
-                      <span className="text-[#8e95a5]">Dosa Griddles:</span>
-                      <div className="flex items-center gap-1.5 font-mono">
+                  <div className="pt-2 border-t border-white/[0.08] space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-neutral-400">Dosa Live Griddles:</span>
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
                             setData((prev) => ({
@@ -504,11 +820,11 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                               },
                             }))
                           }
-                          className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold"
+                          className="w-5 h-5 rounded bg-white/10 text-white flex items-center justify-center font-bold"
                         >
                           -
                         </button>
-                        <span className="font-bold text-[#e2c99a]">
+                        <span className="text-[#e2c99a] font-bold">
                           {data.counterCounts.dosa}x
                         </span>
                         <button
@@ -521,45 +837,7 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                               },
                             }))
                           }
-                          className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Idli Counters */}
-                    <div className="p-2.5 rounded-lg bg-[#0e1015] border border-white/[0.05] flex items-center justify-between">
-                      <span className="text-[#8e95a5]">Idli / Vada:</span>
-                      <div className="flex items-center gap-1.5 font-mono">
-                        <button
-                          onClick={() =>
-                            setData((prev) => ({
-                              ...prev,
-                              counterCounts: {
-                                ...prev.counterCounts,
-                                idli: Math.max(1, prev.counterCounts.idli - 1),
-                              },
-                            }))
-                          }
-                          className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold"
-                        >
-                          -
-                        </button>
-                        <span className="font-bold text-[#e2c99a]">
-                          {data.counterCounts.idli}x
-                        </span>
-                        <button
-                          onClick={() =>
-                            setData((prev) => ({
-                              ...prev,
-                              counterCounts: {
-                                ...prev.counterCounts,
-                                idli: Math.min(4, prev.counterCounts.idli + 1),
-                              },
-                            }))
-                          }
-                          className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold"
+                          className="w-5 h-5 rounded bg-white/10 text-white flex items-center justify-center font-bold"
                         >
                           +
                         </button>
@@ -567,65 +845,84 @@ export const StudioEventBriefingModal: React.FC<StudioEventBriefingModalProps> =
                     </div>
                   </div>
                 </div>
-
-                {/* Lighting Atmosphere */}
-                <div className="space-y-1.5 pt-2 border-t border-white/[0.08]">
-                  <span className="text-xs font-bold text-white block">
-                    Atmospheric Lighting & Time
-                  </span>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {[
-                      { id: "morning", label: "Muhurtham", icon: Sun },
-                      { id: "sunset", label: "Sunset Gold", icon: Sunset },
-                      { id: "night", label: "Starlight Gala", icon: Moon },
-                    ].map((time) => {
-                      const Icon = time.icon;
-                      return (
-                        <button
-                          key={time.id}
-                          onClick={() =>
-                            setData((prev) => ({
-                              ...prev,
-                              timeOfDay: time.id as any,
-                            }))
-                          }
-                          className={`p-1.5 rounded-lg border text-center flex items-center justify-center gap-1 text-[11px] transition-all ${
-                            data.timeOfDay === time.id
-                              ? "bg-[#e2c99a] text-black font-bold border-[#e2c99a]"
-                              : "bg-[#0e1015] border-white/[0.05] text-[#8e95a5] hover:text-white"
-                          }`}
-                        >
-                          <Icon className="h-3 w-3" />
-                          <span>{time.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
               </div>
             </div>
+          )}
+
+          {/* 2. REAL-TIME DETECTED ENTITIES HUD & BLUEPRINT PREVIEW */}
+          <div className="p-4 rounded-xl border border-white/[0.08] bg-[#161820] space-y-3 font-mono">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+              <span className="text-[11px] font-bold text-[#e2c99a] uppercase tracking-wider flex items-center gap-1.5">
+                <DatumVector size={13} />
+                Live Synthesized Venue Model Parameters
+              </span>
+              <span className="text-[10px] text-neutral-400">
+                Automatic CAD Blueprint Ready
+              </span>
+            </div>
+
+            {/* Entity Chips */}
+            <div className="flex flex-wrap gap-2 text-xs">
+              <div className="px-3 py-1 rounded-lg bg-[#222530] border border-white/10 text-white flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-[#e2c99a]" />
+                <span>VENUE: <strong>{data.venue.name}</strong> ({data.venue.hallWidth}m × {data.venue.hallLength}m)</span>
+              </div>
+              <div className="px-3 py-1 rounded-lg bg-[#222530] border border-white/10 text-white flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-[#e2c99a]" />
+                <span>PAX: <strong>{data.headCount.toLocaleString("en-IN")} GUESTS</strong></span>
+              </div>
+              <div className="px-3 py-1 rounded-lg bg-[#222530] border border-white/10 text-white flex items-center gap-2">
+                <Utensils className="h-3.5 w-3.5 text-[#e2c99a]" />
+                <span>STATIONS: <strong>{data.counterCounts.dosa}x DOSA • {data.counterCounts.idli}x IDLI • {data.counterCounts.chaat}x CHAAT</strong></span>
+              </div>
+              <div className="px-3 py-1 rounded-lg bg-[#222530] border border-white/10 text-white flex items-center gap-2">
+                <Sun className="h-3.5 w-3.5 text-[#e2c99a]" />
+                <span>ATMOSPHERE: <strong>{data.timeOfDay.toUpperCase()}</strong></span>
+              </div>
+            </div>
+
+            {/* Generated 2D Blueprint Graphic Preview */}
+            {data.venue.blueprintUrl && (
+              <div className="pt-2">
+                <span className="text-[10px] text-neutral-400 block mb-1.5">
+                  GENERATED CAD BLUEPRINT TEXTURE (RENDERED IN 3D WORLD):
+                </span>
+                <div className="rounded-xl overflow-hidden border border-white/10 bg-[#080c18] max-h-40 flex items-center justify-center p-1">
+                  <img
+                    src={data.venue.blueprintUrl}
+                    alt="Synthesized 3D Blueprint"
+                    className="w-full h-full object-contain max-h-36"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
 
-        {/* Bottom Action Footer */}
-        <div className="p-5 border-t border-white/[0.08] bg-[#161820] flex items-center justify-between">
+        {/* Modal Footer / Action Button */}
+        <div className="p-4 border-t border-white/[0.08] bg-[#161820] flex items-center justify-between">
           <div className="text-xs text-neutral-400 font-mono">
-            <span>
-              Target: <strong className="text-white">{data.venue.name}</strong> •{" "}
-              <strong className="text-white">{data.headCount.toLocaleString("en-IN")} Guests</strong> •{" "}
-              <strong className="text-[#e2c99a]">{data.counterCounts.dosa}x Dosa Stations</strong>
-            </span>
+            {isCompiling ? (
+              <span className="text-[#e2c99a] animate-pulse">
+                {COMPILING_STAGES[compilingStep] || "Mounting 3D Viewport..."}
+              </span>
+            ) : (
+              <span>
+                Target: <strong className="text-white">{data.venue.name}</strong> •{" "}
+                <strong className="text-[#e2c99a]">{data.headCount.toLocaleString("en-IN")} Pax</strong>
+              </span>
+            )}
           </div>
 
           <Button
             size="lg"
+            disabled={isCompiling}
             onClick={handleStartRender}
             className="px-6 py-2.5 rounded-xl font-mono font-bold text-xs tracking-wider uppercase bg-[#e2c99a] hover:bg-[#c5a059] text-black shadow-lg flex items-center gap-2 transition-transform active:scale-95"
           >
             <CrosshairVector size={15} />
-            <span>INITIALIZE VENUE ENGINE</span>
+            <span>{isCompiling ? "GENERATING 3D MODEL..." : "RENDER IN 3D VIEWPORT"}</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

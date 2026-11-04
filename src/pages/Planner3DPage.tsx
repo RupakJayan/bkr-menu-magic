@@ -55,6 +55,11 @@ import {
   calculateCapacityAnalysis,
   getRecommendedStalls,
 } from "@/services/planner3dService";
+import {
+  synthesizeVenueFromQuery,
+  synthesizeVenueFromImage,
+  generateVenueBlueprintCanvas,
+} from "@/services/venueSynthesisService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -64,9 +69,95 @@ export const Planner3DPage: React.FC = () => {
   const isDark = resolvedTheme === "dark";
 
   // Venue state
-  const [selectedVenue, setSelectedVenue] = useState<MandapamVenue>(PRESET_VENUES[0]);
+  const [selectedVenue, setSelectedVenue] = useState<MandapamVenue>(() => {
+    const v = PRESET_VENUES[0];
+    return {
+      ...v,
+      blueprintUrl: v.blueprintUrl || generateVenueBlueprintCanvas(v),
+    };
+  });
   const [isVenueModalOpen, setIsVenueModalOpen] = useState(false);
   const [isCustomStallModalOpen, setIsCustomStallModalOpen] = useState(false);
+
+  // Instant Top Bar Synthesizer States
+  const [venueQueryInput, setVenueQueryInput] = useState("");
+  const [isTopBarListening, setIsTopBarListening] = useState(false);
+
+  const handleSynthesizeTopBarVenue = (overrideQuery?: string) => {
+    const q = overrideQuery || venueQueryInput;
+    if (!q.trim()) return;
+    const synthesized = synthesizeVenueFromQuery(q);
+    setSelectedVenue(synthesized);
+    toast.success(`Synthesized 3D Venue: ${synthesized.name}`, {
+      description: `3D Blueprint projected (${synthesized.hallWidth}m × ${synthesized.hallLength}m).`,
+    });
+    setVenueQueryInput("");
+  };
+
+  const handleSelectPresetVenue = (preset: MandapamVenue) => {
+    const withBlueprint = {
+      ...preset,
+      blueprintUrl: preset.blueprintUrl || generateVenueBlueprintCanvas(preset),
+    };
+    setSelectedVenue(withBlueprint);
+    toast.info(`Switched to ${preset.name}`);
+  };
+
+  const handleDirectImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const aspect = img.naturalWidth / img.naturalHeight;
+        const estWidth = 45;
+        const venueFromImg = synthesizeVenueFromImage(dataUrl, {
+          venueName: file.name.replace(/\.[^/.]+$/, ""),
+          aspectRatio: aspect,
+          estimatedWidth: estWidth,
+        });
+        setSelectedVenue(venueFromImg);
+        toast.success("Venue Image Projected into 3D World!", {
+          description: `Rendered blueprint plane (${venueFromImg.hallWidth}m × ${venueFromImg.hallLength}m).`,
+        });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const toggleTopBarListening = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition is not supported in this browser. Please type the venue name.");
+      return;
+    }
+    if (isTopBarListening) {
+      setIsTopBarListening(false);
+      return;
+    }
+    try {
+      const recog = new SpeechRecognition();
+      recog.lang = "en-IN";
+      recog.continuous = false;
+      recog.onresult = (e: any) => {
+        const spoken = e.results[0][0].transcript;
+        setVenueQueryInput(spoken);
+        handleSynthesizeTopBarVenue(spoken);
+        setIsTopBarListening(false);
+      };
+      recog.onerror = () => setIsTopBarListening(false);
+      recog.onend = () => setIsTopBarListening(false);
+      recog.start();
+      setIsTopBarListening(true);
+      toast.info("Listening... Say any venue name");
+    } catch {
+      setIsTopBarListening(false);
+    }
+  };
 
   // STARTING STEP: Studio Event Briefing Modal (Opens first to let user fill everything via speech or type)
   const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(true);
@@ -626,6 +717,74 @@ export const Planner3DPage: React.FC = () => {
           <ThemeToggle />
         </div>
       </header>
+
+      {/* 1.5 INSTANT 3D VENUE SYNTHESIZER & IMAGE-TO-3D PROJECTION BAR */}
+      <div className="relative z-20 px-4 py-2 bg-[#141722]/95 border-b border-white/[0.08] backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 font-mono">
+        <div className="flex items-center gap-2 flex-1 min-w-[320px]">
+          {/* Quick Voice Mic for Venue */}
+          <button
+            onClick={toggleTopBarListening}
+            className={`p-2 rounded-xl border transition-all flex items-center justify-center ${
+              isTopBarListening
+                ? "bg-rose-500 text-white border-rose-400 animate-pulse"
+                : "bg-[#222530] text-[#e2c99a] border-white/10 hover:border-[#e2c99a]"
+            }`}
+            title={isTopBarListening ? "Stop Listening" : "Speak Venue Name"}
+          >
+            <Mic className="h-4 w-4" />
+          </button>
+
+          {/* Text Input for Venue Synthesis */}
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={venueQueryInput}
+              onChange={(e) => setVenueQueryInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSynthesizeTopBarVenue()}
+              placeholder="Synthesize 3D venue: e.g. 'Codissia Hall E', 'ITC Grand Chola', '1-Acre Lawn', 'Taj Coromandel 40x25m'..."
+              className="w-full px-3.5 py-1.5 rounded-xl bg-[#090b12] border border-white/10 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#e2c99a]"
+            />
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => handleSynthesizeTopBarVenue()}
+            className="h-8 px-3 text-xs bg-[#e2c99a] text-black font-bold hover:bg-[#c5a059]"
+          >
+            Synthesize 3D
+          </Button>
+
+          {/* Upload Image to 3D Button */}
+          <label className="cursor-pointer h-8 px-3 rounded-xl bg-[#222530] border border-white/10 hover:border-[#e2c99a]/50 text-xs text-white hover:text-[#e2c99a] flex items-center gap-1.5 transition-colors">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleDirectImageUpload}
+              className="hidden"
+            />
+            <ImageIcon className="h-3.5 w-3.5 text-[#e2c99a]" />
+            <span className="hidden sm:inline">Upload Image to 3D</span>
+          </label>
+        </div>
+
+        {/* Quick Venue Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto text-[10px]">
+          <span className="text-neutral-500 uppercase mr-1 hidden lg:inline">Presets:</span>
+          {PRESET_VENUES.slice(0, 5).map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => handleSelectPresetVenue(preset)}
+              className={`px-2.5 py-1 rounded-lg border transition-all ${
+                selectedVenue.id === preset.id
+                  ? "bg-[#e2c99a] text-black font-bold border-[#e2c99a]"
+                  : "bg-[#222530] border-white/10 text-neutral-300 hover:text-white hover:border-[#e2c99a]/40"
+              }`}
+            >
+              {preset.name.split(" (")[0]} ({preset.hallWidth}×{preset.hallLength}m)
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* 2. MAIN 3D WORKSPACE VIEWPORT */}
       <div className="relative flex-1 flex overflow-hidden">

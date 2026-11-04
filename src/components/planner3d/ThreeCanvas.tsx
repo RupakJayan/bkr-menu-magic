@@ -34,10 +34,12 @@ const CameraRig: React.FC<{
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
+  const dim = Math.max(venue.hallWidth, venue.hallLength);
+
   useEffect(() => {
     if (viewMode === "top_down") {
-      // 2D Blueprint top-down view
-      camera.position.set(0, Math.max(venue.hallWidth, venue.hallLength) * 1.1, 0.01);
+      // 2D Blueprint top-down orthographic view
+      camera.position.set(0, dim * 1.15, 0.01);
       camera.lookAt(0, 0, 0);
       if (controlsRef.current) {
         controlsRef.current.target.set(0, 0, 0);
@@ -54,8 +56,11 @@ const CameraRig: React.FC<{
         controlsRef.current.update();
       }
     } else {
-      // Standard 3D Orbit view
-      camera.position.set(18, 22, 26);
+      // Dynamic 3D Orbit view scaled to venue dimensions
+      const camX = Math.max(16, dim * 0.42);
+      const camY = Math.max(18, dim * 0.48);
+      const camZ = Math.max(22, dim * 0.58);
+      camera.position.set(camX, camY, camZ);
       camera.lookAt(0, 0, 0);
       if (controlsRef.current) {
         controlsRef.current.target.set(0, 0, 0);
@@ -63,7 +68,7 @@ const CameraRig: React.FC<{
         controlsRef.current.update();
       }
     }
-  }, [viewMode, venue, camera]);
+  }, [viewMode, venue, camera, dim]);
 
   return (
     <OrbitControls
@@ -73,7 +78,7 @@ const CameraRig: React.FC<{
       autoRotateSpeed={0.9}
       maxPolarAngle={viewMode === "top_down" ? 0.05 : Math.PI / 2 - 0.05}
       minDistance={4}
-      maxDistance={70}
+      maxDistance={Math.max(120, dim * 2.5)}
       dampingFactor={0.08}
     />
   );

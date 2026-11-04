@@ -12,6 +12,81 @@ interface StallMeshProps {
   showFocusLights?: boolean;
 }
 
+const StallDimensionCalipers3D: React.FC<{
+  w: number;
+  d: number;
+  h: number;
+  isSelected: boolean;
+}> = ({ w, d, h, isSelected }) => {
+  const caliperColor = isSelected ? "#c5a059" : "#38bdf8";
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* 1. Width Dimension Caliper Line (Front of Stall) */}
+      <group position={[0, 0.05, d / 2 + 0.45]}>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[w, 0.015, 0.015]} />
+          <meshBasicMaterial color={caliperColor} />
+        </mesh>
+        <mesh position={[-w / 2, 0, 0]}>
+          <boxGeometry args={[0.015, 0.015, 0.12]} />
+          <meshBasicMaterial color={caliperColor} />
+        </mesh>
+        <mesh position={[w / 2, 0, 0]}>
+          <boxGeometry args={[0.015, 0.015, 0.12]} />
+          <meshBasicMaterial color={caliperColor} />
+        </mesh>
+        <Text
+          position={[0, 0.22, 0]}
+          fontSize={0.24}
+          color={caliperColor}
+          anchorX="center"
+          anchorY="middle"
+        >
+          {`|← ${w.toFixed(1)}m →|`}
+        </Text>
+      </group>
+
+      {/* 2. Depth Dimension Caliper Line (Right Flank of Stall) */}
+      <group position={[w / 2 + 0.45, 0.05, 0]}>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.015, 0.015, d]} />
+          <meshBasicMaterial color={caliperColor} />
+        </mesh>
+        <mesh position={[0, 0, -d / 2]}>
+          <boxGeometry args={[0.12, 0.015, 0.015]} />
+          <meshBasicMaterial color={caliperColor} />
+        </mesh>
+        <mesh position={[0, 0, d / 2]}>
+          <boxGeometry args={[0.12, 0.015, 0.015]} />
+          <meshBasicMaterial color={caliperColor} />
+        </mesh>
+        <Text
+          position={[0, 0.22, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
+          fontSize={0.24}
+          color={caliperColor}
+          anchorX="center"
+          anchorY="middle"
+        >
+          {`|← ${d.toFixed(1)}m →|`}
+        </Text>
+      </group>
+
+      {/* 3. Safety Clearance Ring on Floor */}
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[Math.max(w, d) * 0.7, Math.max(w, d) * 0.75 + 0.08, 32]} />
+        <meshBasicMaterial
+          color={caliperColor}
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.45}
+        />
+      </mesh>
+    </group>
+  );
+};
+
 export const StallMesh: React.FC<StallMeshProps> = ({
   stall,
   isSelected,
@@ -19,6 +94,21 @@ export const StallMesh: React.FC<StallMeshProps> = ({
   showFocusLights = true,
 }) => {
   const steamRef = useRef<THREE.Points | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const elevationGroupRef = useRef<THREE.Group | null>(null);
+
+  // Smooth Physics Elevation Lift on Hover & Selection
+  useFrame((_, delta) => {
+    if (elevationGroupRef.current) {
+      const targetY = isSelected ? 0.22 : isHovered ? 0.14 : 0.0;
+      elevationGroupRef.current.position.y = THREE.MathUtils.damp(
+        elevationGroupRef.current.position.y,
+        targetY,
+        14,
+        delta
+      );
+    }
+  });
 
   // Subtle floating steam animation for live cooking stalls (Dosa, Idli, Sweet)
   useFrame(({ clock }) => {
@@ -110,7 +200,59 @@ export const StallMesh: React.FC<StallMeshProps> = ({
         e.stopPropagation();
         onSelect(stall);
       }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setIsHovered(true);
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={() => {
+        setIsHovered(false);
+        document.body.style.cursor = "default";
+      }}
     >
+      {/* Dynamic Floor Contact Shadow */}
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[w * 1.1, d * 1.1]} />
+        <meshBasicMaterial
+          color="#000000"
+          transparent
+          opacity={isHovered || isSelected ? 0.3 : 0.6}
+        />
+      </mesh>
+
+      {/* 3D CAD Calipers & Safety Ring */}
+      {(isHovered || isSelected) && (
+        <StallDimensionCalipers3D w={w} d={d} h={h} isSelected={isSelected} />
+      )}
+
+      {/* Floating 3D Precision Datum & Coordinates Tag */}
+      {(isHovered || isSelected) && (
+        <group position={[0, h + 0.65, 0]}>
+          <mesh position={[0, 0, 0]}>
+            <planeGeometry args={[Math.max(w * 0.95, 2.8), 0.55]} />
+            <meshBasicMaterial color="#090b12" transparent opacity={0.92} />
+          </mesh>
+          <Text
+            position={[0, 0.12, 0.01]}
+            fontSize={0.17}
+            color="#e2c99a"
+            anchorX="center"
+          >
+            {stall.name.toUpperCase()}
+          </Text>
+          <Text
+            position={[0, -0.12, 0.01]}
+            fontSize={0.12}
+            color="#94a3b8"
+            anchorX="center"
+          >
+            {`X: ${stall.position[0] >= 0 ? "+" : ""}${stall.position[0].toFixed(1)}m | Z: ${stall.position[2] >= 0 ? "+" : ""}${stall.position[2].toFixed(1)}m | ${stall.capacityPerHour} Pax/Hr`}
+          </Text>
+        </group>
+      )}
+
+      {/* Elevating Physical Mesh Group with Smooth Spring Physics */}
+      <group ref={elevationGroupRef}>
       {/* Selection Glow / Ring */}
       {isSelected && (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -554,6 +696,7 @@ export const StallMesh: React.FC<StallMeshProps> = ({
           />
         </points>
       )}
+      </group>
     </group>
   );
 };
