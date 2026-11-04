@@ -32,6 +32,17 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
     return tex;
   }, [venue.blueprintUrl, venue]);
 
+  // Stage Panoramic / Backdrop Photo Texture (e.g. from Google Maps or Temple Photo)
+  const backdropTexture = React.useMemo(() => {
+    if (!venue.panoramicSkyboxUrl) return null;
+    const loader = new THREE.TextureLoader();
+    const tex = loader.load(venue.panoramicSkyboxUrl);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.anisotropy = 16;
+    return tex;
+  }, [venue.panoramicSkyboxUrl]);
+
   const pillarCountX = Math.min(10, Math.max(4, Math.round(l / 6)));
   const pillarSpacingZ = l / (pillarCountX - 1);
 
@@ -114,8 +125,8 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           args={[
             Math.max(w, l),
             Math.round(Math.max(w, l)),
-            isDark ? "#c5a059" : "#762934",
-            isDark ? (isOutdoor ? "#1a3320" : "#172033") : "#94a3b8",
+            isDark ? "#f0c889" : "#b38238",
+            isDark ? (isOutdoor ? "#1a3320" : "#172033") : "#cbd5e1",
           ]}
           position={[0, 0.022, 0]}
         />
@@ -227,13 +238,13 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
             <group key={`tick-x-${i}`} position={[xVal, 0, l / 2 + 0.35]}>
               <mesh rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[0.08, 0.6]} />
-                <meshBasicMaterial color={isDark ? "#c5a059" : "#762934"} />
+                <meshBasicMaterial color={isDark ? "#f0c889" : "#b38238"} />
               </mesh>
               <Text
                 position={[0, 0.05, 0.6]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.38}
-                color={isDark ? "#c5a059" : "#762934"}
+                color={isDark ? "#f0c889" : "#b38238"}
                 anchorX="center"
                 anchorY="middle"
               >
@@ -250,13 +261,13 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
             <group key={`tick-z-${j}`} position={[-w / 2 - 0.35, 0, zVal]}>
               <mesh rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[0.6, 0.08]} />
-                <meshBasicMaterial color={isDark ? "#c5a059" : "#762934"} />
+                <meshBasicMaterial color={isDark ? "#f0c889" : "#b38238"} />
               </mesh>
               <Text
                 position={[-0.6, 0.05, 0]}
                 rotation={[-Math.PI / 2, 0, Math.PI / 2]}
                 fontSize={0.38}
-                color={isDark ? "#c5a059" : "#762934"}
+                color={isDark ? "#f0c889" : "#b38238"}
                 anchorX="center"
                 anchorY="middle"
               >
@@ -299,13 +310,17 @@ export const MandapamHall: React.FC<MandapamHallProps> = ({
           <boxGeometry args={[Math.min(w * 0.66, 24.2), 0.06, 0.12]} />
           <meshStandardMaterial color={isDark ? "#f0c889" : "#b38238"} metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Ceremonial Backdrop Screen */}
+        {/* Ceremonial Backdrop Screen (Supports Real Venue / Temple Photography) */}
         <mesh position={[0, 3.2, -2.8]}>
           <boxGeometry args={[Math.min(w * 0.6, 22), 4.5, 0.2]} />
-          <meshStandardMaterial
-            color={isDark ? "#0c0e15" : "#fffdfa"}
-            roughness={0.3}
-          />
+          {backdropTexture ? (
+            <meshStandardMaterial map={backdropTexture} roughness={0.3} />
+          ) : (
+            <meshStandardMaterial
+              color={isDark ? "#0c0e15" : "#fffdfa"}
+              roughness={0.3}
+            />
+          )}
         </mesh>
         {/* Stage Golden Floral Arch */}
         <mesh position={[0, 4.8, -2.6]}>
