@@ -6,6 +6,9 @@ import { AlertCircle, CalendarDays, CheckCircle, Coffee, Download, FileText, Glo
 import { generateEventMenuPDF, generateChefKitchenPDF } from '@/services/pdfExportService';
 import { generateEventMenuDOCX } from '@/services/docxExportService';
 import { saveEventMenu } from '@/services/localAdminService';
+import { downloadUnifiedMasterReportPDF } from '@/services/unifiedReportPdfService';
+import { getRecommendedStalls, calculateCapacityAnalysis } from '@/services/planner3dService';
+import { MandapamVenue } from '@/types/planner3d';
 
 type DocumentType = 'pdf-en' | 'pdf-ta' | 'pdf-chef-ta' | 'docx-en' | 'docx-ta';
 
@@ -37,6 +40,45 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
   const [generating, setGenerating] = useState<DocumentType | null>(null);
   const [generated, setGenerated] = useState<DocumentType[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [generatingMasterDossier, setGeneratingMasterDossier] = useState(false);
+
+  const handleGenerateMasterDossier = async () => {
+    try {
+      setGeneratingMasterDossier(true);
+      const headCount = menu.guestCount || 3500;
+      const venue: MandapamVenue = {
+        id: "venue_event_dossier",
+        name: menu.clientName ? `${menu.clientName} Wedding & Reception` : "Sri Krishna Kalyana Mandapam",
+        name_ta: menu.clientName ? `${menu.clientName} திருமண விழா` : "ஸ்ரீ கிருஷ்ணா கல்யாண மண்டபம்",
+        location: menu.deliveryAddress || "Coimbatore, Tamil Nadu",
+        terrainType: "hall",
+        hallLength: 36,
+        hallWidth: 24,
+        hallHeight: 6.5,
+        defaultCapacity: headCount,
+        stagePosition: [0, 0, -14],
+        entrancePosition: [0, 0, 15],
+        description: `BKR Premium Catering event for ${headCount.toLocaleString("en-IN")} guests. Complete South Indian feast schedule.`,
+      };
+
+      const budgetTier = (menu.budgetTier as any) || "classic";
+      const stalls = getRecommendedStalls(headCount, budgetTier, venue);
+      const analysis = calculateCapacityAnalysis(headCount, stalls, budgetTier);
+
+      await downloadUnifiedMasterReportPDF({
+        venue,
+        stalls,
+        headCount,
+        analysis,
+        budgetTier,
+      });
+    } catch (e) {
+      console.error("Failed to generate master dossier:", e);
+      setErrorMessage(e instanceof Error ? e.message : "Could not generate Master Dossier PDF.");
+    } finally {
+      setGeneratingMasterDossier(false);
+    }
+  };
 
   const handleGenerate = async (type: DocumentType) => {
     setGenerating(type);
@@ -230,6 +272,51 @@ export const DocumentGenerationStep: React.FC<DocumentGenerationStepProps> = ({ 
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* 🌟 BKR UNIFIED MASTER EVENT DOSSIER (3-IN-1 MASTER REPORT) */}
+      <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 p-6 shadow-md">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className="bg-amber-600 text-white font-mono text-[10px] tracking-wider uppercase">
+                🌟 Master 3-in-1 Executive Report
+              </Badge>
+              <span className="text-xs font-bold text-amber-800">
+                மூன்றும் ஒருங்கிணைந்த முழு அறிக்கை
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">
+              BKR Integrated Master Event Dossier (PDF)
+            </h3>
+            <p className="text-xs text-gray-600 max-w-2xl leading-relaxed">
+              Integrates all 3 core reports into a unified 3-page executive presentation:
+              <br />
+              <strong>1. 3D Spatial CAD Blueprint & Venue Architecture</strong> • <strong>2. Catering Counters, 3-Phase Utilities (kW) & Queue Capacity Flow</strong> • <strong>3. Commercial Proposal, Menu Schedule & FSSAI Seal</strong>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={handleGenerateMasterDossier}
+              disabled={generatingMasterDossier}
+              className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              <span>
+                {generatingMasterDossier
+                  ? "Generating 3-in-1 Dossier..."
+                  : "Download Master Dossier (3-in-1 PDF)"}
+              </span>
+            </Button>
+            <a
+              href="/planner-3d"
+              className="px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white text-amber-900 font-bold text-xs hover:bg-amber-50 transition-colors shadow-xs flex items-center gap-1.5"
+            >
+              <span>🌐 Open 3D Viewport</span>
+            </a>
+          </div>
         </div>
       </div>
 

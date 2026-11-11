@@ -42,6 +42,7 @@ import {
 import { GoogleMapsVenueSearchDialog } from "@/components/planner3d/GoogleMapsVenueSearchDialog";
 import { PrecisionDimensionsInspector } from "@/components/planner3d/PrecisionDimensionsInspector";
 import { CommandPaletteDialog } from "@/components/planner3d/CommandPaletteDialog";
+import { UnifiedMasterReportModal } from "@/components/planner3d/UnifiedMasterReportModal";
 import { PhysicsCard } from "@/components/ui/PhysicsCard";
 import {
   playTactileClick,
@@ -180,6 +181,8 @@ export const Planner3DPage: React.FC = () => {
   const [sidebarTab, setSidebarTab] = useState<"inspector" | "advisor">("inspector");
 
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isUnifiedReportModalOpen, setIsUnifiedReportModalOpen] = useState(false);
+  const [reportSnapshotDataUrl, setReportSnapshotDataUrl] = useState<string | undefined>(undefined);
   const [showMagneticGuides, setShowMagneticGuides] = useState(true);
   const [isAudioMutedState, setIsAudioMutedState] = useState(() => isMuted());
 
@@ -189,7 +192,8 @@ export const Planner3DPage: React.FC = () => {
     isGoogleMapsModalOpen ||
     isVenueModalOpen ||
     isCustomStallModalOpen ||
-    isCommandPaletteOpen;
+    isCommandPaletteOpen ||
+    isUnifiedReportModalOpen;
 
   // Global Keyboard Shortcuts (Ctrl+K, Cmd+K, 2D/3D toggles, etc.)
   React.useEffect(() => {
@@ -274,6 +278,7 @@ export const Planner3DPage: React.FC = () => {
 
   // Planning state (Default: 3,500 guests, 2 Dosa counters)
   const [headCount, setHeadCount] = useState<number>(3500);
+  const [budgetTier, setBudgetTier] = useState<BudgetTier>("classic");
   const [stalls, setStalls] = useState<StallItem[]>(() =>
     getRecommendedStalls(3500, "classic", PRESET_VENUES[0])
   );
@@ -331,10 +336,10 @@ export const Planner3DPage: React.FC = () => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Capacity analysis recalculation (Custom flow, no budget calculation needed)
+  // Capacity analysis recalculation (Custom flow with budget calculation)
   const analysis = useMemo(
-    () => calculateCapacityAnalysis(headCount, stalls, "classic"),
-    [headCount, stalls]
+    () => calculateCapacityAnalysis(headCount, stalls, budgetTier),
+    [headCount, stalls, budgetTier]
   );
 
   const selectedStall = useMemo(
@@ -630,21 +635,24 @@ export const Planner3DPage: React.FC = () => {
     });
   };
 
-  // Snapshot capture
-  const handleExportSnapshot = () => {
-    if (!canvasRef.current) return;
-    try {
-      const dataUrl = canvasRef.current.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.download = `bkr-3d-plan-${selectedVenue.id}-${headCount}pax.png`;
-      link.href = dataUrl;
-      link.click();
-      toast.success("High-Res 3D Plan Exported!", {
-        description: "Snapshot downloaded for client catering proposal.",
-      });
-    } catch {
-      toast.error("Could not capture snapshot. Please try again.");
+  // Master 3-in-1 Report Dossier (மூன்றும் ஒருங்கிணைந்த முழு அறிக்கை)
+  const handleOpenMasterReport = () => {
+    let dataUrl: string | undefined = undefined;
+    if (canvasRef.current) {
+      try {
+        dataUrl = canvasRef.current.toDataURL("image/png");
+      } catch (e) {
+        console.warn("Could not capture 3D canvas snapshot:", e);
+      }
     }
+    setReportSnapshotDataUrl(dataUrl);
+    setIsUnifiedReportModalOpen(true);
+    playTactileClick(600);
+  };
+
+  // Snapshot capture direct fallback
+  const handleExportSnapshot = () => {
+    handleOpenMasterReport();
   };
 
   return (
@@ -848,18 +856,20 @@ export const Planner3DPage: React.FC = () => {
             <kbd className="text-[9px] px-1 py-0.5 rounded bg-black/40 border border-white/10 text-neutral-400">⌘K</kbd>
           </button>
 
-          {/* Export PNG */}
+          {/* Master 3-in-1 Report Dossier (மூன்றும் ஒருங்கிணைந்த முழு அறிக்கை) */}
           <Button
             size="sm"
-            onClick={handleExportSnapshot}
-            className={`h-8 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 ${
+            onClick={handleOpenMasterReport}
+            className={`h-8 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all active:scale-95 ${
               isDark
-                ? "bg-[#f0c889] hover:bg-[#d4a359] text-black"
-                : "bg-[#b38238] hover:bg-[#946824] text-white"
+                ? "bg-gradient-to-r from-[#f0c889] to-[#d4a359] hover:from-[#e0b879] hover:to-[#c49349] text-black font-semibold"
+                : "bg-gradient-to-r from-[#b38238] to-[#946824] hover:from-[#9e712a] hover:to-[#845a1c] text-white font-semibold"
             }`}
+            title="Open Master 3-in-1 Event Dossier (மூன்றும் ஒருங்கிணைந்த முழு அறிக்கை)"
           >
             <Camera className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">Master Report</span>
+            <span className="hidden md:inline text-[10px] opacity-80">(முழு அறிக்கை)</span>
           </Button>
 
           <ThemeToggle />
@@ -1687,6 +1697,19 @@ export const Planner3DPage: React.FC = () => {
         onToggleCadAisles={() => setShowCadAisles((p) => !p)}
         onExportSnapshot={handleExportSnapshot}
         onResetLayout={handleResetLayout}
+      />
+
+      {/* Unified Master 3-in-1 Report Dossier Modal (3D CAD Spatial Blueprint + Counters & Utilities + Commercial Budget Proposal) */}
+      <UnifiedMasterReportModal
+        isOpen={isUnifiedReportModalOpen}
+        onClose={() => setIsUnifiedReportModalOpen(false)}
+        venue={selectedVenue}
+        stalls={stalls}
+        headCount={headCount}
+        analysis={analysis}
+        budgetTier={budgetTier}
+        snapshotDataUrl={reportSnapshotDataUrl}
+        isDark={isDark}
       />
     </div>
   );
