@@ -22,6 +22,25 @@ export interface VenueTemplate {
 
 export const PRESET_VENUES: MandapamVenue[] = [
   {
+    id: "shanthi_mahal_avinashi",
+    name: "Sri Shanthi Mahal Kalyana Mandapam, Avinashi",
+    name_ta: "ஸ்ரீ சாந்தி மஹால் திருமண மண்டபம், அவிநாசி",
+    location: "Mangalam Road, Near New Bus Stand, Avinashi, Tiruppur",
+    terrainType: "hall",
+    hallLength: 48,
+    hallWidth: 32,
+    hallHeight: 8.0,
+    defaultCapacity: 2200,
+    blueprintUrl: "",
+    stagePosition: [0, 0, -19],
+    entrancePosition: [0, 0, 20],
+    handwashPosition: [-12, 0, 16],
+    timeOfDay: "morning",
+    weather: "clear",
+    panoramicSkyboxUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+    description: "Premier air-conditioned wedding mahal located on Mangalam Road near the New Bus Stand in Avinashi, Tiruppur District. Features a 1,536 m² main auditorium, 2,200 Pax reception capacity, dedicated 450 Pax dining wing, AC green rooms, and full layout compatibility with BKR Catering live counters.",
+  },
+  {
     id: "vasavi_anaimalai",
     name: "Sri Vasavi Kanyaka Parameswari Temple & Kalyana Mandapam",
     name_ta: "ஸ்ரீ வாசவி கன்னிகா பரமேஸ்வரி திருக்கோவில் மற்றும் மண்டபம்",
@@ -446,6 +465,8 @@ export function synthesizeVenueFromQuery(query: string): MandapamVenue {
     if (
       lower.includes(key.split(" ")[0].toLowerCase()) ||
       lower.includes(preset.id.replace(/_/g, " ")) ||
+      (preset.id === "shanthi_mahal_avinashi" &&
+        (lower.includes("shanthi") || lower.includes("santhi") || lower.includes("avinashi") || lower.includes("avinaashi"))) ||
       (preset.id === "vasavi_anaimalai" &&
         (lower.includes("vasavi") ||
           lower.includes("kanyaka") ||

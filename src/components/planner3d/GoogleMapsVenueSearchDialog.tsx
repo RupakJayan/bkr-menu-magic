@@ -40,6 +40,7 @@ interface GoogleMapsVenueSearchDialogProps {
 }
 
 const POPULAR_SUGGESTIONS = [
+  { label: "Shanthi Mahal Avinashi", query: "Sri Shanthi Mahal Avinashi" },
   { label: "Vasavi Temple Anaimalai", query: "Vasavi Kanyaka Parameswari Temple Anaimalai" },
   { label: "Masani Amman Anaimalai", query: "Masani Amman Temple Anaimalai" },
   { label: "Codissia Coimbatore", query: "Codissia Trade Fair Complex Coimbatore" },
