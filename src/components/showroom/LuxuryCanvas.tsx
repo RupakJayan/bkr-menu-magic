@@ -1,6 +1,6 @@
 import React, { Suspense, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, ContactShadows, Float } from "@react-three/drei";
+import { ContactShadows, Float } from "@react-three/drei";
 import * as THREE from "three";
 import { HeroModel } from "./HeroModel";
 import { CameraScrollRig } from "./CameraScrollRig";
@@ -19,7 +19,8 @@ function DynamicLighting() {
 
   return (
     <>
-      <ambientLight intensity={0.45} />
+      <ambientLight intensity={0.55} />
+      <hemisphereLight args={["#ffe6c4", "#0b0d13", 0.9]} />
       <directionalLight
         ref={lightRef}
         position={[4, 5, 4]}
@@ -32,13 +33,13 @@ function DynamicLighting() {
       {/* Warm Champagne Gold Rim Light */}
       <spotLight
         position={[-5, 2.5, -4]}
-        intensity={2.0}
+        intensity={2.2}
         color="#e2c99a"
         angle={0.65}
         penumbra={0.8}
       />
       {/* Cold Deep Titanium Fill */}
-      <pointLight position={[0, -2.5, 2]} intensity={0.6} color="#7a8da3" />
+      <pointLight position={[0, -2.5, 2]} intensity={0.8} color="#7a8da3" />
     </>
   );
 }
@@ -70,8 +71,6 @@ export const LuxuryCanvas: React.FC<LuxuryCanvasProps> = ({
       >
         <Suspense fallback={null}>
           <DynamicLighting />
-          <Environment preset="city" environmentIntensity={0.5} />
-
           <CameraScrollRig scrollProgress={scrollProgress} activeHotspot={activeHotspot} />
 
           <Float speed={1.2} rotationIntensity={0.12} floatIntensity={0.2}>
