@@ -1,5 +1,6 @@
 import { EventMenu, Session, DayPlan, Dish } from "@/types/menu";
-import { getManagedMenuCatalog, buildCatalogKey } from "@/services/localAdminService";
+import { getManagedMenuCatalog, buildCatalogKey, addCustomDishToCatalog } from "@/services/localAdminService";
+import { registerDishToDictionary } from "@/services/tamilTranslationService";
 import { createEmptyMenu } from "@/services/menuCalculationService";
 
 const GEMINI_API_KEY_STORAGE = "bkr-gemini-api-key";
@@ -398,16 +399,49 @@ Respond ONLY with valid, parseable JSON matching this schema:
       // Post-process sessions and enrich matched dishes
       const enrichedSessions: ExtractedSession[] = (parsed.sessions || []).map((sess: any) => {
         const dishes: ExtractedDish[] = (sess.dishes || []).map((d: any) => {
-          const match = matchDishToCatalog(d.name_en || d.rawText, d.name_ta || "", d.category);
+          const rawName = (d.name_en || d.rawText || "").trim();
+          const rawTa = (d.name_ta || "").trim();
+          const match = matchDishToCatalog(rawName, rawTa, d.category);
+
+          if (match.catalogKey && match.matchedDish) {
+            return {
+              rawText: d.rawText || rawName,
+              name_en: match.matchedDish.name_en || rawName,
+              name_ta: match.matchedDish.name_ta || rawTa,
+              category: match.category || d.category || "Special Dishes",
+              catalogKey: match.catalogKey,
+              isCatalogMatch: true,
+              image: match.matchedDish.image,
+              isVegetarian: match.matchedDish.isVegetarian ?? true,
+            };
+          }
+
+          // If dish is not in catalog, register it as a custom dish so it is preserved everywhere
+          const dishCategory = d.category?.trim() || "Special Dishes";
+          const newCustomDish = addCustomDishToCatalog({
+            category: dishCategory,
+            name_en: rawName || rawTa || "Custom Dish",
+            name_ta: rawTa || rawName || "சிறப்பு உணவு",
+            isVegetarian: d.isVegetarian ?? true,
+          });
+
+          registerDishToDictionary(
+            newCustomDish.name_en,
+            newCustomDish.name_ta,
+            newCustomDish.category
+          );
+
+          const catalogKey = buildCatalogKey(newCustomDish.category, newCustomDish.id);
+
           return {
-            rawText: d.rawText || d.name_en,
-            name_en: match.matchedDish?.name_en || d.name_en || d.rawText,
-            name_ta: match.matchedDish?.name_ta || d.name_ta || "",
-            category: match.category || d.category || "Custom Menu Items",
-            catalogKey: match.catalogKey,
-            isCatalogMatch: Boolean(match.catalogKey),
-            image: match.matchedDish?.image,
-            isVegetarian: match.matchedDish?.isVegetarian ?? true,
+            rawText: d.rawText || rawName,
+            name_en: newCustomDish.name_en,
+            name_ta: newCustomDish.name_ta,
+            category: newCustomDish.category,
+            catalogKey,
+            isCatalogMatch: true,
+            image: newCustomDish.image,
+            isVegetarian: newCustomDish.isVegetarian,
           };
         });
 
@@ -463,10 +497,17 @@ export const buildEventMenuFromExtractedData = (
     dayNumber: 1,
     date: startDate,
     sessions: extracted.sessions.map((sess, idx) => {
-      // Gather dish keys: if catalog key exists, use it; else generate custom key
+      // Gather dish keys: guaranteed to be valid registered catalog keys
       const selectedDishes = sess.dishes.map((d) => {
         if (d.catalogKey) return d.catalogKey;
-        return buildCatalogKey(d.category || "Custom Menu Items", `custom_${Date.now()}_${idx}`);
+        const newDish = addCustomDishToCatalog({
+          category: d.category || "Special Dishes",
+          name_en: d.name_en || d.rawText || "Custom Dish",
+          name_ta: d.name_ta || d.name_en || "சிறப்பு உணவு",
+          isVegetarian: d.isVegetarian ?? true,
+        });
+        registerDishToDictionary(newDish.name_en, newDish.name_ta, newDish.category);
+        return buildCatalogKey(newDish.category, newDish.id);
       });
 
       return {

@@ -439,10 +439,17 @@ export const resolveDishForOrdering = (key: string): CatalogDish => {
   const found = findDishByKey(key);
   if (found) return found;
   const { category, dishId } = parseDishKey(key);
-  const cleanName = dishId
+  let cleanName = dishId
     .replace(/^custom_/, "")
     .replace(/_[a-z0-9]+$/, "")
-    .replace(/[-_]+/g, " ");
+    .replace(/[-_]+/g, " ")
+    .trim();
+
+  // Guard against Unix timestamp IDs (e.g. 1730729382104) or pure numbers displaying as dish names
+  if (!cleanName || /^\d+$/.test(cleanName) || cleanName.length <= 1) {
+    cleanName = "Special Catering Dish";
+  }
+
   return {
     id: dishId,
     name: cleanName,
