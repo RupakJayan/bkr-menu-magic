@@ -1,24 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>Redirecting...</title>
+    <meta charset="utf-8" />
+    <title>Redirecting to BKR Catering...</title>
     <script>
-      (function() {
-        var path = window.location.pathname;
-        var prefix = "/bkr-menu-magic";
-        if (path.startsWith(prefix)) {
-          var subPath = path.slice(prefix.length);
-          if (subPath && subPath !== "/") {
-            window.location.replace(prefix + "/#" + subPath + window.location.search);
-            return;
-          }
+      (function () {
+        var pathname = window.location.pathname;
+        var search = window.location.search || "";
+        var hash = window.location.hash || "";
+
+        // Match base repository folder (e.g., /bkr-menu-magic or /cater-o-phobic)
+        var match = pathname.match(/^\/([^\/]+)/);
+        var base = match ? "/" + match[1] : "";
+        var rest = pathname.slice(base.length);
+
+        // Strip leading and trailing slashes and index.html
+        rest = rest.replace(/^\/+/, "").replace(/\/+$/, "");
+        if (rest === "index.html" || rest === "404.html") {
+          rest = "";
         }
-        window.location.replace(prefix + "/");
+
+        // Build canonical HashRouter destination without double slashes
+        var targetHash = rest ? "#/" + rest : "#/";
+        var destination = base + "/" + targetHash + search;
+
+        // Fallback for root domains
+        if (!base) {
+          destination = "/" + targetHash + search;
+        }
+
+        window.location.replace(destination);
       })();
     </script>
   </head>
-  <body>
-    <p>Redirecting to <a href="/bkr-menu-magic/">BKR Catering</a>...</p>
+  <body style="background:#07080b;color:#f4efe6;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+    <div style="text-align:center;padding:20px;">
+      <h2 style="font-size:18px;letter-spacing:1px;color:#e2c99a;">BKR CATERING // REDIRECTING</h2>
+      <p style="font-size:13px;color:#a1a1aa;">Loading architectural 3D viewport...</p>
+    </div>
   </body>
 </html>

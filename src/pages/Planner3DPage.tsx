@@ -506,6 +506,23 @@ export const Planner3DPage: React.FC = () => {
       wing: "South",
     });
 
+    // 9. Texture Map Custom / Menu-Uploaded Stall Photographs onto 3D Mesh
+    if (briefing.customStallPhotos) {
+      newStalls.forEach((s) => {
+        if (s.type.includes("dosa") && briefing.customStallPhotos!["dosa_live"]) {
+          s.customPhotoUrl = briefing.customStallPhotos!["dosa_live"];
+        } else if (s.type.includes("idli") && briefing.customStallPhotos!["idli_steamer"]) {
+          s.customPhotoUrl = briefing.customStallPhotos!["idli_steamer"];
+        } else if (s.type.includes("dining") && briefing.customStallPhotos!["traditional_leaf"]) {
+          s.customPhotoUrl = briefing.customStallPhotos!["traditional_leaf"];
+        } else if (s.type.includes("chaat") && briefing.customStallPhotos!["evening_chaat"]) {
+          s.customPhotoUrl = briefing.customStallPhotos!["evening_chaat"];
+        } else if (s.type.includes("dessert") && briefing.customStallPhotos!["royal_sweets"]) {
+          s.customPhotoUrl = briefing.customStallPhotos!["royal_sweets"];
+        }
+      });
+    }
+
     setStalls(newStalls);
     setSelectedStallId(null);
   };

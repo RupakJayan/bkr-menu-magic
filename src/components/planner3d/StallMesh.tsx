@@ -769,15 +769,39 @@ export const StallMesh: React.FC<StallMeshProps> = ({
     return pos;
   }, [w, d]);
 
-  // Custom photo billboard texture if stall was generated from uploaded photo
+  // Stall photo texture (custom uploaded photo or authentic Tamil catering stall photo)
   const customTexture = useMemo(() => {
-    if (!stall.customPhotoUrl) return null;
-    const loader = new THREE.TextureLoader();
-    const tex = loader.load(stall.customPhotoUrl);
-    tex.wrapS = THREE.ClampToEdgeWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
-    return tex;
-  }, [stall.customPhotoUrl]);
+    let photoUrl = stall.customPhotoUrl;
+    if (!photoUrl) {
+      const type = stall.type;
+      const lower = stall.name.toLowerCase();
+      if (type === "dosa" || lower.includes("dosa")) {
+        photoUrl = assetUrl("/home-south-indian-food.jpg");
+      } else if (type === "traditional_service" || lower.includes("leaf") || lower.includes("feast") || lower.includes("meals")) {
+        photoUrl = assetUrl("/home-south-indian-feast.jpg");
+      } else if (type === "chaat" || type === "chaat_live" || lower.includes("snack") || lower.includes("chaat")) {
+        photoUrl = assetUrl("/home-south-indian-snacks.jpg");
+      } else if (type === "beverage_bar" || lower.includes("coffee") || lower.includes("drink")) {
+        photoUrl = assetUrl("/home-catering-table.jpg");
+      } else if (type === "dessert_counter" || type === "sweet_halwa" || lower.includes("sweet") || lower.includes("payasam")) {
+        photoUrl = assetUrl("/bkr-catering-reference.png");
+      } else if (type === "dining_table") {
+        photoUrl = assetUrl("/home-south-indian-feast.jpg");
+      } else if (type === "custom_stall") {
+        photoUrl = assetUrl("/home-catering-table.jpg");
+      }
+    }
+    if (!photoUrl) return null;
+    try {
+      const loader = new THREE.TextureLoader();
+      const tex = loader.load(photoUrl);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    } catch {
+      return null;
+    }
+  }, [stall.customPhotoUrl, stall.type, stall.name]);
 
   // Custom dining table linen / optical illusion texture
   const tableTexture = useMemo(() => {
@@ -1093,10 +1117,18 @@ export const StallMesh: React.FC<StallMeshProps> = ({
               </>
             )}
 
-            {/* Custom live station shadowbox if custom texture is present on rectangular counter */}
-            {stall.type === "custom_stall" && customTexture && (
-              <mesh position={[0, 0.45, d / 2 + 0.01]}>
-                <planeGeometry args={[w * 0.88, 0.78]} />
+            {/* Real Photographic Facade / Stall Image on Front of Counter */}
+            {customTexture && stall.type !== "dining_table" && (
+              <mesh position={[0, 0.45, d / 2 + 0.015]}>
+                <planeGeometry args={[w * 0.9, 0.74]} />
+                <meshBasicMaterial map={customTexture} />
+              </mesh>
+            )}
+
+            {/* Real Photographic Signage on Canopy Marquee */}
+            {customTexture && stall.type !== "dining_table" && (
+              <mesh position={[0, h + 0.2, 0.025]}>
+                <planeGeometry args={[w * 0.76, 0.22]} />
                 <meshBasicMaterial map={customTexture} />
               </mesh>
             )}

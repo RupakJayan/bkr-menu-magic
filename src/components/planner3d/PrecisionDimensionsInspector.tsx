@@ -21,12 +21,16 @@ import {
   ShieldCheck,
   Eye,
   SlidersHorizontal,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { StallItem, MandapamVenue, StallType } from "@/types/planner3d";
 import { STALL_CATALOG } from "@/services/planner3dService";
 import { Button } from "@/components/ui/button";
 import { DimensionCaliperVector, CrosshairVector, DatumVector } from "@/components/ui/VectorIcons";
 import { playTactileClick } from "@/utils/soundFeedback";
+import { assetUrl } from "@/utils/assetUrl";
+import { toast } from "sonner";
 
 interface PrecisionDimensionsInspectorProps {
   selectedStall: StallItem | null;
@@ -198,6 +202,72 @@ export const PrecisionDimensionsInspector: React.FC<PrecisionDimensionsInspector
                     : "bg-slate-50 border-slate-300 text-slate-900 focus:border-[#b38238]"
                 }`}
               />
+            </div>
+
+            {/* REAL-WORLD STALL PHOTOGRAPH & TEXTURE */}
+            <div
+              className={`p-3 rounded-xl border space-y-2 ${
+                isDark ? "bg-[#0c0e15] border-white/[0.08]" : "bg-slate-50 border-slate-200"
+              }`}
+            >
+              <div className="flex items-center justify-between border-b pb-1.5 border-white/[0.06]">
+                <span className={`text-[10px] font-bold uppercase flex items-center gap-1.5 ${isDark ? "text-[#f0c889]" : "text-[#b38238]"}`}>
+                  <Camera size={13} />
+                  Real Stall Appearance:
+                </span>
+                <span className="text-[9px] text-neutral-400">
+                  Texture Mapped in 3D
+                </span>
+              </div>
+
+              {/* Stall Photograph Preview */}
+              <div className="relative h-28 w-full rounded-lg overflow-hidden bg-black border border-white/10 group">
+                <img
+                  src={
+                    selectedStall.customPhotoUrl ||
+                    (selectedStall.type.includes("dosa")
+                      ? assetUrl("/home-south-indian-food.jpg")
+                      : selectedStall.type.includes("traditional") || selectedStall.type.includes("dining")
+                      ? assetUrl("/home-south-indian-feast.jpg")
+                      : selectedStall.type.includes("chaat")
+                      ? assetUrl("/home-south-indian-snacks.jpg")
+                      : selectedStall.type.includes("beverage")
+                      ? assetUrl("/home-catering-table.jpg")
+                      : selectedStall.type.includes("dessert") || selectedStall.type.includes("sweet")
+                      ? assetUrl("/bkr-catering-reference.png")
+                      : assetUrl("/home-catering-table.jpg"))
+                  }
+                  alt={selectedStall.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[10px] font-mono text-white transition-opacity cursor-pointer">
+                  <Upload size={16} className="text-[#f0c889] mb-1" />
+                  <span>Upload Stall Photograph</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const url = ev.target?.result as string;
+                        onUpdateStall({ ...selectedStall, customPhotoUrl: url });
+                        toast.success("Updated Stall 3D Texture Photo");
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-neutral-400">
+                <span>{selectedStall.tamilName || selectedStall.name}</span>
+                <span className="text-[#f0c889]">
+                  {selectedStall.customPhotoUrl ? "✓ Custom Image" : "✓ Authentic BKR Photo"}
+                </span>
+              </div>
             </div>
 
             {/* Wing / Concourse Assignment & Custom Accent Color */}

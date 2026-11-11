@@ -65,7 +65,8 @@
           window.location.hostname.endsWith("github.io") &&
           !window.location.pathname.includes("/docs/")
         ) {
-          var target = "/bkr-menu-magic/docs/" + window.location.search + window.location.hash;
+          var hash = window.location.hash ? window.location.hash : "#/";
+          var target = "/bkr-menu-magic/docs/" + hash + window.location.search;
           window.location.replace(target);
         }
       })();
